@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400">
+<ellipse cx="200" cy="352" rx="150" ry="13" fill="#2B2D42" opacity="0.08"/>
+<g>
+<animateTransform attributeName="transform" type="translate" values="0 40;0 -30;0 40" dur="1.8s" repeatCount="indefinite" calcMode="spline" keySplines="0.45 0 0.55 1;0.45 0 0.55 1"/>
+<rect x="100" y="186" width="200" height="28" rx="10" fill="#8D99AE"/>
+<rect x="60" y="130" width="46" height="140" rx="14" fill="#2B2D42"/><rect x="24" y="156" width="40" height="88" rx="12" fill="#4B5563"/>
+<rect x="294" y="130" width="46" height="140" rx="14" fill="#2B2D42"/><rect x="336" y="156" width="40" height="88" rx="12" fill="#4B5563"/>
+</g>
+<g fill="#4FA3FF"><path d="M200 70 C212 88 212 100 200 106 C188 100 188 88 200 70 Z"><animate attributeName="opacity" values="0;1;0" dur="1.8s" repeatCount="indefinite"/></path></g>
+</svg>

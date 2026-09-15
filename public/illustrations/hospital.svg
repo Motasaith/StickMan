@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400">
+<ellipse cx="200" cy="352" rx="160" ry="13" fill="#2B2D42" opacity="0.08"/>
+<rect x="70" y="120" width="260" height="226" rx="10" fill="#EDF2FB"/>
+<rect x="140" y="70" width="120" height="60" rx="8" fill="#FFFFFF"/>
+<rect x="70" y="120" width="260" height="20" fill="#D9E1EC"/>
+<g fill="#FF5A6E" transform-origin="200 100">
+<animateTransform attributeName="transform" type="scale" values="1;1.12;1" dur="1.4s" repeatCount="indefinite" calcMode="spline" keySplines="0.45 0 0.55 1;0.45 0 0.55 1"/>
+<rect x="190" y="78" width="20" height="44" rx="4"/><rect x="178" y="90" width="44" height="20" rx="4"/>
+</g>
+<g fill="#7BB8FF">
+<rect x="96" y="164" width="44" height="40" rx="6"/><rect x="178" y="164" width="44" height="40" rx="6"/><rect x="260" y="164" width="44" height="40" rx="6"/>
+<rect x="96" y="226" width="44" height="40" rx="6"/><rect x="260" y="226" width="44" height="40" rx="6"/>
+</g>
+<rect x="260" y="226" width="44" height="40" rx="6" fill="#FFE08A"><animate attributeName="opacity" values="0;0;1;1;0" keyTimes="0;0.4;0.45;0.8;1" dur="4s" repeatCount="indefinite"/></rect>
+<rect x="168" y="250" width="64" height="96" rx="6" fill="#4F7CFF"/><rect x="198" y="250" width="4" height="96" fill="#3A62D6"/>
+</svg>

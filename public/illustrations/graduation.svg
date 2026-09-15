@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400">
+<ellipse cx="200" cy="344" rx="130" ry="13" fill="#2B2D42" opacity="0.08"/>
+<g>
+<animateTransform attributeName="transform" type="translate" values="0 0;0 -24;0 0" dur="2.4s" repeatCount="indefinite" calcMode="spline" keySplines="0.45 0 0.55 1;0.45 0 0.55 1"/>
+<path d="M120 190 V260 C120 290 280 290 280 260 V190" fill="#2B2D42"/>
+<path d="M200 90 L370 160 L200 230 L30 160 Z" fill="#3B3F5C"/>
+<path d="M200 100 L350 160 L200 220 L50 160 Z" fill="#4B5073"/>
+<g>
+<animateTransform attributeName="transform" type="rotate" values="-10 200 160;14 200 160;-10 200 160" dur="2.4s" repeatCount="indefinite" calcMode="spline" keySplines="0.45 0 0.55 1;0.45 0 0.55 1"/>
+<path d="M200 160 L310 200 V260" stroke="#FFC857" stroke-width="8" fill="none" stroke-linecap="round"/>
+<path d="M298 256 H322 L330 300 H290 Z" fill="#FFC857"/>
+</g>
+<circle cx="200" cy="160" r="12" fill="#FFC857"/>
+</g>
+</svg>

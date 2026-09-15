@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400">
+<ellipse cx="200" cy="356" rx="80" ry="12" fill="#2B2D42" opacity="0.08"><animate attributeName="rx" values="80;66;80" dur="2.4s" repeatCount="indefinite" calcMode="spline" keySplines="0.45 0 0.55 1;0.45 0 0.55 1"/></ellipse>
+<g>
+<animateTransform attributeName="transform" type="translate" values="0 0;0 -14;0 0" dur="2.4s" repeatCount="indefinite" calcMode="spline" keySplines="0.45 0 0.55 1;0.45 0 0.55 1"/>
+<path d="M130 110 C160 88 185 104 200 112 C215 104 240 88 270 110 C306 134 300 192 285 226 C272 256 268 300 255 318 C245 332 230 325 226 305 C220 276 213 252 200 252 C187 252 180 276 174 305 C170 325 155 332 145 318 C132 300 128 256 115 226 C100 192 94 134 130 110 Z" fill="#FFFFFF" stroke="#D5DDEA" stroke-width="7" stroke-linejoin="round"/>
+<path d="M142 144 C150 128 168 122 182 126" stroke="#DCE7F7" stroke-width="12" stroke-linecap="round" fill="none"/>
+<ellipse cx="170" cy="182" rx="10" ry="12" fill="#2B2D42"><animate attributeName="ry" values="12;12;1.5;12" keyTimes="0;0.9;0.95;1" dur="3.2s" repeatCount="indefinite"/></ellipse>
+<ellipse cx="230" cy="182" rx="10" ry="12" fill="#2B2D42"><animate attributeName="ry" values="12;12;1.5;12" keyTimes="0;0.9;0.95;1" dur="3.2s" repeatCount="indefinite"/></ellipse>
+<circle cx="174" cy="177" r="3.5" fill="#FFFFFF"/><circle cx="234" cy="177" r="3.5" fill="#FFFFFF"/>
+<ellipse cx="148" cy="210" rx="14" ry="8" fill="#FF9AAE" opacity="0.7"/>
+<ellipse cx="252" cy="210" rx="14" ry="8" fill="#FF9AAE" opacity="0.7"/>
+<path d="M178 212 Q200 234 222 212" stroke="#2B2D42" stroke-width="7" stroke-linecap="round" fill="none"/>
+</g>
+<g transform="translate(300 90) scale(1)"><path d="M0 -20 C3 -4 4 -3 20 0 C4 3 3 4 0 20 C-3 4 -4 3 -20 0 C-4 -3 -3 -4 0 -20Z" fill="#FFD166"><animateTransform attributeName="transform" type="scale" values="0.2;1;0.2" dur="1.8s" begin="0s" repeatCount="indefinite" calcMode="spline" keySplines="0.45 0 0.55 1;0.45 0 0.55 1"/></path></g>
+<g transform="translate(96 120) scale(0.7)"><path d="M0 -20 C3 -4 4 -3 20 0 C4 3 3 4 0 20 C-3 4 -4 3 -20 0 C-4 -3 -3 -4 0 -20Z" fill="#7BDFF2"><animateTransform attributeName="transform" type="scale" values="0.2;1;0.2" dur="1.8s" begin="0.7s" repeatCount="indefinite" calcMode="spline" keySplines="0.45 0 0.55 1;0.45 0 0.55 1"/></path></g>
+<g transform="translate(318 250) scale(0.55)"><path d="M0 -20 C3 -4 4 -3 20 0 C4 3 3 4 0 20 C-3 4 -4 3 -20 0 C-4 -3 -3 -4 0 -20Z" fill="#FFD166"><animateTransform attributeName="transform" type="scale" values="0.2;1;0.2" dur="1.8s" begin="1.2s" repeatCount="indefinite" calcMode="spline" keySplines="0.45 0 0.55 1;0.45 0 0.55 1"/></path></g>
+</svg>

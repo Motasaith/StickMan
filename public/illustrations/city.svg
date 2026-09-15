@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400">
+<circle cx="320" cy="90" r="40" fill="#FFC857"/>
+<rect x="30" y="200" width="70" height="150" fill="#7BB8FF"/><rect x="100" y="130" width="80" height="220" fill="#4F7CFF"/>
+<rect x="180" y="170" width="60" height="180" fill="#7B61FF"/><rect x="240" y="100" width="80" height="250" fill="#3A62D6"/><rect x="320" y="220" width="56" height="130" fill="#7BB8FF"/>
+<g fill="#FFE08A">
+<rect x="116" y="150" width="16" height="16"><animate attributeName="opacity" values="1;0.2;1" dur="2s" repeatCount="indefinite"/></rect><rect x="148" y="190" width="16" height="16"/><rect x="116" y="230" width="16" height="16"><animate attributeName="opacity" values="0.2;1;0.2" dur="2.6s" repeatCount="indefinite"/></rect>
+<rect x="256" y="120" width="16" height="16"/><rect x="288" y="160" width="16" height="16"><animate attributeName="opacity" values="1;0.2;1" dur="3s" repeatCount="indefinite"/></rect><rect x="256" y="200" width="16" height="16"/><rect x="288" y="250" width="16" height="16"/>
+<rect x="196" y="190" width="12" height="12"/><rect x="216" y="230" width="12" height="12"><animate attributeName="opacity" values="0.2;1;0.2" dur="1.8s" repeatCount="indefinite"/></rect>
+<rect x="46" y="220" width="14" height="14"/><rect x="70" y="260" width="14" height="14"/>
+</g>
+<rect x="0" y="346" width="400" height="20" fill="#2B2D42"/>
+</svg>

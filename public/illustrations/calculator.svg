@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400">
+<ellipse cx="200" cy="360" rx="110" ry="13" fill="#2B2D42" opacity="0.08"/>
+<rect x="100" y="40" width="200" height="300" rx="26" fill="#2B2D42"/>
+<rect x="122" y="64" width="156" height="66" rx="10" fill="#BFE9F5"/>
+<text x="266" y="112" font-family="monospace" font-size="38" font-weight="bold" fill="#2B2D42" text-anchor="end">42<animate attributeName="opacity" values="1;0;1" keyTimes="0;0.5;1" dur="1.2s" repeatCount="indefinite" calcMode="discrete"/></text>
+<g fill="#4B5563">
+<rect x="122" y="150" width="40" height="36" rx="8"/><rect x="180" y="150" width="40" height="36" rx="8"/><rect x="238" y="150" width="40" height="36" rx="8" fill="#FF9F43"/>
+<rect x="122" y="200" width="40" height="36" rx="8"/><rect x="180" y="200" width="40" height="36" rx="8"/><rect x="238" y="200" width="40" height="36" rx="8" fill="#FF9F43"/>
+<rect x="122" y="250" width="40" height="36" rx="8"/><rect x="180" y="250" width="40" height="36" rx="8"/><rect x="238" y="250" width="40" height="66" rx="8" fill="#5BB85D"/>
+<rect x="122" y="300" width="98" height="16" rx="8"/>
+</g>
+<rect x="180" y="200" width="40" height="36" rx="8" fill="#7B61FF"><animate attributeName="opacity" values="0;1;0" dur="0.9s" repeatCount="indefinite"/></rect>
+</svg>

@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400">
+<ellipse cx="200" cy="360" rx="70" ry="13" fill="#2B2D42" opacity="0.08"/>
+<rect x="164" y="50" width="72" height="250" rx="36" fill="#FFFFFF" stroke="#D9E1EC" stroke-width="6"/>
+<circle cx="200" cy="300" r="52" fill="#FFFFFF" stroke="#D9E1EC" stroke-width="6"/>
+<rect x="176" y="62" width="48" height="236" rx="24" fill="#FFFFFF"/>
+<rect x="186" y="200" width="28" height="100" rx="14" fill="#FF5A6E">
+<animate attributeName="y" values="230;96;230" dur="4s" repeatCount="indefinite" calcMode="spline" keySplines="0.45 0 0.55 1;0.45 0 0.55 1"/>
+<animate attributeName="height" values="70;204;70" dur="4s" repeatCount="indefinite" calcMode="spline" keySplines="0.45 0 0.55 1;0.45 0 0.55 1"/>
+</rect>
+<circle cx="200" cy="300" r="38" fill="#FF5A6E"/>
+<circle cx="186" cy="288" r="9" fill="#FFB3BC"/>
+<g stroke="#8D99AE" stroke-width="5" stroke-linecap="round">
+<line x1="250" y1="90" x2="276" y2="90"/><line x1="250" y1="130" x2="268" y2="130"/><line x1="250" y1="170" x2="276" y2="170"/><line x1="250" y1="210" x2="268" y2="210"/>
+</g>
+<g fill="#FF9F43">
+<path d="M110 120 C104 104 120 96 116 80 C132 92 138 110 128 124 C124 130 114 130 110 120Z"><animate attributeName="opacity" values="0.3;1;0.3" dur="1.2s" repeatCount="indefinite"/></path>
+</g>
+</svg>

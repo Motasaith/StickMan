@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400">
+<circle cx="200" cy="200" r="150" fill="#FF5A6E"/>
+<g stroke="#FFFFFF" stroke-width="34" stroke-linecap="round" transform-origin="200 200">
+<animateTransform attributeName="transform" type="rotate" values="0;0;-8;8;0" keyTimes="0;0.6;0.7;0.8;0.9" dur="2.4s" repeatCount="indefinite"/>
+<line x1="140" y1="140" x2="260" y2="260"/><line x1="260" y1="140" x2="140" y2="260"/>
+</g>
+</svg>

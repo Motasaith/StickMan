@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400">
+<ellipse cx="200" cy="346" rx="140" ry="13" fill="#2B2D42" opacity="0.08"/>
+<g transform="rotate(-8 200 200)">
+<rect x="70" y="100" width="260" height="170" rx="20" fill="#7B61FF"/>
+<rect x="70" y="140" width="260" height="32" fill="#2B2D42"/>
+<rect x="96" y="196" width="50" height="36" rx="6" fill="#FFC857"/>
+<g fill="#FFFFFF" opacity="0.7"><rect x="170" y="214" width="40" height="10" rx="5"/><rect x="220" y="214" width="40" height="10" rx="5"/><rect x="270" y="214" width="34" height="10" rx="5"/></g>
+</g>
+<g>
+<animate attributeName="opacity" values="0;0;1;1;0" keyTimes="0;0.4;0.5;0.9;1" dur="3s" repeatCount="indefinite"/>
+<circle cx="306" cy="272" r="44" fill="#5BB85D"/>
+<path d="M286 272 L300 286 L328 256" stroke="#FFFFFF" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+</g>
+</svg>

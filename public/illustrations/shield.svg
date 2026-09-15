@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400">
+<ellipse cx="200" cy="360" rx="110" ry="13" fill="#2B2D42" opacity="0.08"/>
+<path d="M200 50 L320 96 V190 C320 270 264 322 200 346 C136 322 80 270 80 190 V96 Z" fill="#4F7CFF"/>
+<path d="M200 50 L320 96 V190 C320 270 264 322 200 346 Z" fill="#3A62D6"/>
+<path d="M146 198 L186 238 L260 162" stroke="#FFFFFF" stroke-width="24" stroke-linecap="round" stroke-linejoin="round" fill="none" pathLength="1" stroke-dasharray="1" stroke-dashoffset="1">
+<animate attributeName="stroke-dashoffset" values="1;0;0;1" keyTimes="0;0.3;0.85;1" dur="3s" repeatCount="indefinite"/>
+</path>
+<g transform="translate(320 60) scale(0.8)"><path d="M0 -20 C3 -4 4 -3 20 0 C4 3 3 4 0 20 C-3 4 -4 3 -20 0 C-4 -3 -3 -4 0 -20Z" fill="#FFD166"><animateTransform attributeName="transform" type="scale" values="0.2;1;0.2" dur="1.8s" begin="0.3s" repeatCount="indefinite" calcMode="spline" keySplines="0.45 0 0.55 1;0.45 0 0.55 1"/></path></g>
+<g transform="translate(70 300) scale(0.6)"><path d="M0 -20 C3 -4 4 -3 20 0 C4 3 3 4 0 20 C-3 4 -4 3 -20 0 C-4 -3 -3 -4 0 -20Z" fill="#FFD166"><animateTransform attributeName="transform" type="scale" values="0.2;1;0.2" dur="1.8s" begin="1s" repeatCount="indefinite" calcMode="spline" keySplines="0.45 0 0.55 1;0.45 0 0.55 1"/></path></g>
+</svg>

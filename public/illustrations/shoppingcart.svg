@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400">
+<ellipse cx="210" cy="352" rx="140" ry="13" fill="#2B2D42" opacity="0.08"/>
+<g>
+<animateTransform attributeName="transform" type="translate" values="-10 0;10 0;-10 0" dur="1.6s" repeatCount="indefinite" calcMode="spline" keySplines="0.45 0 0.55 1;0.45 0 0.55 1"/>
+<path d="M40 90 H90 L130 260 H300 L330 140 H110" stroke="#2B2D42" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+<path d="M118 150 H318 L296 244 H138 Z" fill="#4F7CFF" opacity="0.2"/>
+<g>
+<animateTransform attributeName="transform" type="translate" values="0 -60;0 0;0 0" keyTimes="0;0.4;1" dur="3.2s" repeatCount="indefinite" calcMode="spline" keySplines="0.5 0 1 1;0 0 1 1"/>
+<rect x="150" y="110" width="56" height="56" rx="8" fill="#FF6B6B"/><rect x="220" y="96" width="60" height="70" rx="8" fill="#FFC857"/>
+</g>
+<g>
+<circle cx="150" cy="306" r="22" fill="#2B2D42"/><circle cx="280" cy="306" r="22" fill="#2B2D42"/>
+<circle cx="150" cy="306" r="8" fill="#FFFFFF"/><circle cx="280" cy="306" r="8" fill="#FFFFFF"/>
+</g>
+</g>
+</svg>

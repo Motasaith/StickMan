@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400">
+<ellipse cx="200" cy="360" rx="140" ry="13" fill="#2B2D42" opacity="0.08"/>
+<defs>
+<g id="cog">
+<g fill="currentColor">
+<rect x="-14" y="-100" width="28" height="36" rx="6"/><rect x="-14" y="64" width="28" height="36" rx="6"/>
+<rect x="-100" y="-14" width="36" height="28" rx="6"/><rect x="64" y="-14" width="36" height="28" rx="6"/>
+<rect x="-14" y="-100" width="28" height="36" rx="6" transform="rotate(45)"/><rect x="-14" y="64" width="28" height="36" rx="6" transform="rotate(45)"/>
+<rect x="-100" y="-14" width="36" height="28" rx="6" transform="rotate(45)"/><rect x="64" y="-14" width="36" height="28" rx="6" transform="rotate(45)"/>
+<circle r="72"/>
+</g>
+<circle r="28" fill="#FFFFFF"/>
+</g>
+</defs>
+<g transform="translate(150 160)" color="#4F7CFF"><g><use href="#cog"/><animateTransform attributeName="transform" type="rotate" values="0;360" dur="6s" repeatCount="indefinite"/></g></g>
+<g transform="translate(274 262) scale(0.66)" color="#FF6B6B"><g><use href="#cog"/><animateTransform attributeName="transform" type="rotate" values="22;-338" dur="4s" repeatCount="indefinite"/></g></g>
+<g transform="translate(96 290) scale(0.46)" color="#2EC4B6"><g><use href="#cog"/><animateTransform attributeName="transform" type="rotate" values="0;-360" dur="3s" repeatCount="indefinite"/></g></g>
+</svg>

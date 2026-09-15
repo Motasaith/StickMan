@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400">
+<g>
+<animateTransform attributeName="transform" type="translate" values="0 0;0 -16;0 0" dur="2s" repeatCount="indefinite" calcMode="spline" keySplines="0.45 0 0.55 1;0.45 0 0.55 1"/>
+<path d="M150 90 L320 50 V250" stroke="#7B61FF" stroke-width="20" stroke-linejoin="round" fill="none"/>
+<path d="M150 90 V290" stroke="#7B61FF" stroke-width="20"/>
+<path d="M150 90 L320 50 V100 L150 140 Z" fill="#7B61FF"/>
+<ellipse cx="116" cy="296" rx="44" ry="34" fill="#7B61FF" transform="rotate(-20 116 296)"/>
+<ellipse cx="286" cy="256" rx="44" ry="34" fill="#7B61FF" transform="rotate(-20 286 256)"/>
+</g>
+<g fill="#FF8FA3">
+<path d="M60 140 C60 120 90 120 90 140 V60 H104 V150 C104 170 60 170 60 140 Z"><animateTransform attributeName="transform" type="translate" values="0 40;-10 -30" dur="2.4s" repeatCount="indefinite"/><animate attributeName="opacity" values="0;1;0" dur="2.4s" repeatCount="indefinite"/></path>
+<path d="M330 170 C330 150 360 150 360 170 V100 H374 V180 C374 200 330 200 330 170 Z"><animateTransform attributeName="transform" type="translate" values="0 40;10 -30" dur="2.4s" begin="1.2s" repeatCount="indefinite"/><animate attributeName="opacity" values="0;1;0" dur="2.4s" begin="1.2s" repeatCount="indefinite"/></path>
+</g>
+</svg>

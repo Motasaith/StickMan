@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400">
+<ellipse cx="200" cy="352" rx="100" ry="13" fill="#2B2D42" opacity="0.08"/>
+<g>
+<animateTransform attributeName="transform" type="rotate" values="0 200 70;16 200 70;-14 200 70;10 200 70;-6 200 70;0 200 70;0 200 70" keyTimes="0;0.1;0.2;0.3;0.4;0.5;1" dur="2s" repeatCount="indefinite"/>
+<circle cx="200" cy="66" r="18" fill="#E0A526"/>
+<path d="M200 76 C140 76 112 124 112 180 V240 L84 280 H316 L288 240 V180 C288 124 260 76 200 76 Z" fill="#FFC857"/>
+<path d="M150 140 C156 116 172 102 192 98" stroke="#FFF3C4" stroke-width="14" stroke-linecap="round" fill="none"/>
+<path d="M164 290 C164 312 180 326 200 326 C220 326 236 312 236 290 Z" fill="#E0A526"/>
+</g>
+<circle cx="284" cy="100" r="30" fill="#FF5A6E"><animate attributeName="r" values="26;32;26" dur="1s" repeatCount="indefinite" calcMode="spline" keySplines="0.45 0 0.55 1;0.45 0 0.55 1"/></circle>
+</svg>

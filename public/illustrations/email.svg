@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400">
+<ellipse cx="200" cy="346" rx="150" ry="13" fill="#2B2D42" opacity="0.08"/>
+<g>
+<animateTransform attributeName="transform" type="translate" values="0 0;0 -10;0 0" dur="2.8s" begin="0s" repeatCount="indefinite" calcMode="spline" keySplines="0.45 0 0.55 1;0.45 0 0.55 1"/>
+<rect x="60" y="120" width="280" height="190" rx="18" fill="#FFC857"/>
+<g>
+<animateTransform attributeName="transform" type="translate" values="0 60;0 -30;0 -30;0 60" keyTimes="0;0.3;0.8;1" dur="3.4s" repeatCount="indefinite" calcMode="spline" keySplines="0.45 0 0.55 1;0.45 0 0.55 1;0.45 0 0.55 1"/>
+<rect x="96" y="100" width="208" height="150" rx="10" fill="#FFFFFF"/>
+<rect x="120" y="126" width="110" height="14" rx="7" fill="#4F7CFF"/><rect x="120" y="152" width="160" height="10" rx="5" fill="#D9E1EC"/><rect x="120" y="172" width="140" height="10" rx="5" fill="#D9E1EC"/>
+</g>
+<path d="M60 170 L200 250 L340 170 V292 C340 302 332 310 322 310 H78 C68 310 60 302 60 292 Z" fill="#FFB627"/>
+<path d="M60 310 L170 230 M340 310 L230 230" stroke="#E0A526" stroke-width="6"/>
+</g>
+<circle cx="330" cy="116" r="26" fill="#FF5A6E"><animate attributeName="r" values="22;28;22" dur="1.2s" repeatCount="indefinite" calcMode="spline" keySplines="0.45 0 0.55 1;0.45 0 0.55 1"/></circle>
+</svg>

@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400">
+<ellipse cx="200" cy="352" rx="120" ry="13" fill="#2B2D42" opacity="0.08"/>
+<g transform-origin="200 200">
+<animateTransform attributeName="transform" type="scale" values="1;1.03;1" dur="3s" repeatCount="indefinite" calcMode="spline" keySplines="0.45 0 0.55 1;0.45 0 0.55 1"/>
+<g fill="#F7A8C4">
+<circle cx="140" cy="150" r="58"/><circle cx="200" cy="120" r="56"/><circle cx="262" cy="148" r="58"/>
+<circle cx="118" cy="214" r="56"/><circle cx="286" cy="212" r="56"/><circle cx="170" cy="244" r="50"/><circle cx="236" cy="246" r="50"/>
+<rect x="186" y="270" width="36" height="60" rx="18" fill="#EE8FB0"/>
+</g>
+<g stroke="#E0789E" stroke-width="7" stroke-linecap="round" fill="none">
+<path d="M200 76 V300"/>
+<path d="M120 150 C140 140 150 160 170 150"/><path d="M96 214 C120 200 134 226 158 214"/><path d="M150 256 C166 244 180 262 192 250"/>
+<path d="M232 150 C252 140 262 160 282 150"/><path d="M244 214 C268 200 282 226 306 214"/><path d="M210 256 C224 244 238 262 252 250"/>
+<path d="M160 108 C176 100 184 116 196 110"/><path d="M206 108 C220 98 232 114 246 106"/>
+</g>
+</g>
+<g fill="#FFD166">
+<circle cx="150" cy="170" r="9"><animate attributeName="opacity" values="0;1;0" dur="1.5s" repeatCount="indefinite"/></circle>
+<circle cx="258" cy="120" r="9"><animate attributeName="opacity" values="0;1;0" dur="1.5s" begin="0.5s" repeatCount="indefinite"/></circle>
+<circle cx="268" cy="232" r="9"><animate attributeName="opacity" values="0;1;0" dur="1.5s" begin="1s" repeatCount="indefinite"/></circle>
+</g>
+<g transform="translate(334 76) scale(0.9)"><path d="M0 -20 C3 -4 4 -3 20 0 C4 3 3 4 0 20 C-3 4 -4 3 -20 0 C-4 -3 -3 -4 0 -20Z" fill="#FFD166"><animateTransform attributeName="transform" type="scale" values="0.2;1;0.2" dur="1.8s" begin="0.3s" repeatCount="indefinite" calcMode="spline" keySplines="0.45 0 0.55 1;0.45 0 0.55 1"/></path></g>
+<g transform="translate(66 92) scale(0.6)"><path d="M0 -20 C3 -4 4 -3 20 0 C4 3 3 4 0 20 C-3 4 -4 3 -20 0 C-4 -3 -3 -4 0 -20Z" fill="#7BDFF2"><animateTransform attributeName="transform" type="scale" values="0.2;1;0.2" dur="1.8s" begin="0.9s" repeatCount="indefinite" calcMode="spline" keySplines="0.45 0 0.55 1;0.45 0 0.55 1"/></path></g>
+</svg>

@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400">
+<ellipse cx="200" cy="352" rx="140" ry="13" fill="#2B2D42" opacity="0.08"/>
+<path d="M70 110 H150 C150 86 186 86 186 110 H200 V180 C224 180 224 216 200 216 V290 H70 Z" fill="#4F7CFF"/>
+<g>
+<animateTransform attributeName="transform" type="translate" values="80 -30;80 -30;0 0;0 0;80 -30" keyTimes="0;0.2;0.5;0.8;1" dur="4s" repeatCount="indefinite" calcMode="spline" keySplines="0.45 0 0.55 1;0.45 0 0.55 1;0.45 0 0.55 1;0.45 0 0.55 1"/>
+<path d="M200 110 H330 V290 H200 V216 C224 216 224 180 200 180 Z" fill="#FF6B6B"/>
+</g>
+<g transform="translate(206 90) scale(0.7)"><path d="M0 -20 C3 -4 4 -3 20 0 C4 3 3 4 0 20 C-3 4 -4 3 -20 0 C-4 -3 -3 -4 0 -20Z" fill="#FFD166"><animateTransform attributeName="transform" type="scale" values="0.2;1;0.2" dur="1.8s" begin="1.9s" repeatCount="indefinite" calcMode="spline" keySplines="0.45 0 0.55 1;0.45 0 0.55 1"/></path></g>
+</svg>

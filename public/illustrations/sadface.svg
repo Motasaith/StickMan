@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400">
+<ellipse cx="200" cy="360" rx="100" ry="13" fill="#2B2D42" opacity="0.08"/>
+<circle cx="200" cy="190" r="140" fill="#7BB8FF"/>
+<ellipse cx="150" cy="170" rx="14" ry="18" fill="#2B2D42"/><ellipse cx="250" cy="170" rx="14" ry="18" fill="#2B2D42"/>
+<path d="M140 270 C160 234 240 234 260 270" stroke="#2B2D42" stroke-width="14" stroke-linecap="round" fill="none"/>
+<path d="M150 196 C144 212 144 222 150 230 C156 222 156 212 150 196 Z" fill="#FFFFFF">
+<animateTransform attributeName="transform" type="translate" values="0 0;0 90" dur="1.8s" repeatCount="indefinite"/>
+<animate attributeName="opacity" values="1;1;0" keyTimes="0;0.7;1" dur="1.8s" repeatCount="indefinite"/>
+</path>
+</svg>

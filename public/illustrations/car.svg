@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400">
+<rect x="0" y="316" width="400" height="12" fill="#8D99AE"/>
+<g fill="#FFFFFF"><rect x="20" y="320" width="50" height="4" rx="2"><animate attributeName="x" values="400;-60" dur="1s" repeatCount="indefinite"/></rect><rect x="220" y="320" width="50" height="4" rx="2"><animate attributeName="x" values="600;140" dur="1s" repeatCount="indefinite"/></rect></g>
+<g>
+<animateTransform attributeName="transform" type="translate" values="0 0;0 -4;0 0" dur="0.5s" repeatCount="indefinite"/>
+<path d="M50 280 C50 250 60 232 90 228 L130 170 C140 156 150 150 170 150 H250 C270 150 282 158 294 172 L330 228 C360 234 360 256 360 280 V290 H50 Z" fill="#FF5A6E"/>
+<path d="M140 222 L172 176 H212 V222 Z M226 222 V176 H250 C258 176 264 180 270 188 L294 222 Z" fill="#BFE3FF"/>
+<rect x="330" y="250" width="30" height="16" rx="6" fill="#FFC857"/><rect x="50" y="250" width="24" height="14" rx="6" fill="#FF9F43"/>
+</g>
+<g>
+<circle cx="120" cy="296" r="32" fill="#2B2D42"/><circle cx="290" cy="296" r="32" fill="#2B2D42"/>
+<circle cx="120" cy="296" r="14" fill="#D9E1EC"/><circle cx="290" cy="296" r="14" fill="#D9E1EC"/>
+<line x1="120" y1="282" x2="120" y2="310" stroke="#8D99AE" stroke-width="5"><animateTransform attributeName="transform" type="rotate" values="0 120 296;360 120 296" dur="0.5s" repeatCount="indefinite"/></line>
+<line x1="290" y1="282" x2="290" y2="310" stroke="#8D99AE" stroke-width="5"><animateTransform attributeName="transform" type="rotate" values="0 290 296;360 290 296" dur="0.5s" repeatCount="indefinite"/></line>
+</g>
+</svg>

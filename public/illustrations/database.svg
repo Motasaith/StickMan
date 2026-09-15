@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400">
+<ellipse cx="200" cy="356" rx="120" ry="13" fill="#2B2D42" opacity="0.08"/>
+<g>
+<path d="M90 260 V300 C90 330 310 330 310 300 V260" fill="#3A62D6"/><ellipse cx="200" cy="260" rx="110" ry="30" fill="#4F7CFF"/>
+<path d="M90 180 V220 C90 250 310 250 310 220 V180" fill="#3A62D6"/><ellipse cx="200" cy="180" rx="110" ry="30" fill="#4F7CFF"/>
+<path d="M90 100 V140 C90 170 310 170 310 140 V100" fill="#3A62D6"/><ellipse cx="200" cy="100" rx="110" ry="30" fill="#7BB8FF"/>
+</g>
+<g fill="#7BDFF2">
+<circle cx="270" cy="154" r="8"><animate attributeName="opacity" values="0.2;1;0.2" dur="1.2s" repeatCount="indefinite"/></circle>
+<circle cx="270" cy="234" r="8"><animate attributeName="opacity" values="0.2;1;0.2" dur="1.2s" begin="0.4s" repeatCount="indefinite"/></circle>
+<circle cx="270" cy="314" r="8"><animate attributeName="opacity" values="0.2;1;0.2" dur="1.2s" begin="0.8s" repeatCount="indefinite"/></circle>
+</g>
+</svg>

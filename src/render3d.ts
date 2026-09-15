@@ -10,7 +10,7 @@ import { DEFAULT_LOOK, EXPRESSIONS } from "./engine/scene";
 import { jointsAt, solveRig, type Pt, type RigPoints } from "./engine/rig";
 import { EYES, rigOf, solveCreature } from "./engine/creatures";
 import { camera3dAt, cameraAt, valueAt } from "./engine/tracks";
-import { FONT_STACKS, arrangeBubbles, drawBubbleAt, localBounds, mouthAt, objState, worldState, type Ctx, type RenderOptions } from "./engine/render";
+import { FLAT_TYPES, FONT_STACKS, arrangeBubbles, drawBubbleAt, drawFlatObjects, localBounds, mouthAt, objState, worldState, type Ctx, type RenderOptions } from "./engine/render";
 import { drawEffect } from "./engine/effects";
 import { drawLook } from "./engine/looks";
 
@@ -926,7 +926,7 @@ class Stage3D {
     const seen = new Set<string>();
     this.lightCount = 0;
     for (const obj of scene.objects) {
-      if (obj.type === "bubble" || obj.type === "effect" || obj.type === "sound") continue;
+      if (obj.type === "bubble" || obj.type === "effect" || obj.type === "sound" || FLAT_TYPES.has(obj.type)) continue;
       if (obj.type === "light" && this.lightCount++ > 12) continue;
       seen.add(obj.id);
       const sig = structureSig(obj, images);
@@ -948,7 +948,7 @@ class Stage3D {
                   ? buildText(obj, obj.id)
                   : obj.type === "light"
                     ? buildLight(obj, obj.id)
-                    : buildImage(obj, obj.id, images);
+                    : buildImage(obj as ImageObj, obj.id, images);
         entry.sig = sig;
         this.world.add(entry.root);
         this.entries.set(obj.id, entry);
@@ -1030,6 +1030,7 @@ class Stage3D {
     // Effects and speech bubbles go on top of the 3D picture; bubbles never cover each other.
     const anchorOf = (b: BubbleObj) => (b.target ? this.project(this.entries.get(b.target)?.headTop?.() ?? null, w, h) : null);
     const layouts = arrangeBubbles(ctx, scene, t, anchorOf);
+    drawFlatObjects(ctx, scene, t, opts);
     for (const obj of scene.objects) {
       if (obj.type === "effect") drawEffectOverlay(ctx, obj as EffectObj, t);
       if (obj.type === "bubble" && layouts.has(obj.id)) drawBubbleAt(ctx, scene, obj as BubbleObj, t, anchorOf(obj), layouts.get(obj.id));

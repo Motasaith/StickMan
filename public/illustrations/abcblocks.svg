@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400">
+<ellipse cx="200" cy="356" rx="150" ry="13" fill="#2B2D42" opacity="0.08"/>
+<g><rect x="70" y="236" width="110" height="110" rx="12" fill="#FF6B6B"/><text x="125" y="318" font-family="sans-serif" font-size="80" font-weight="bold" fill="#FFFFFF" text-anchor="middle">A</text></g>
+<g><rect x="200" y="236" width="110" height="110" rx="12" fill="#4F7CFF"/><text x="255" y="318" font-family="sans-serif" font-size="80" font-weight="bold" fill="#FFFFFF" text-anchor="middle">B</text></g>
+<g>
+<animateTransform attributeName="transform" type="translate" values="0 -120;0 0;0 -8;0 0;0 0" keyTimes="0;0.35;0.45;0.55;1" dur="3s" repeatCount="indefinite" calcMode="spline" keySplines="0.5 0 1 1;0 0 0.5 1;0.5 0 1 1;0 0 1 1"/>
+<rect x="135" y="116" width="110" height="110" rx="12" fill="#FFC857"/><text x="190" y="198" font-family="sans-serif" font-size="80" font-weight="bold" fill="#FFFFFF" text-anchor="middle">C</text>
+</g>
+</svg>

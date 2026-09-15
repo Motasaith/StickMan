@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400">
+<ellipse cx="200" cy="356" rx="140" ry="13" fill="#2B2D42" opacity="0.08"/>
+<rect x="90" y="316" width="220" height="30" rx="12" fill="#2B2D42"/>
+<path d="M240 316 C300 300 310 220 250 180" stroke="#4B5563" stroke-width="22" stroke-linecap="round" fill="none"/>
+<rect x="130" y="250" width="140" height="18" rx="6" fill="#8D99AE"/>
+<rect x="150" y="238" width="60" height="12" rx="4" fill="#BFE9F5"/>
+<g transform="rotate(-30 200 150)">
+<rect x="176" y="60" width="48" height="170" rx="14" fill="#4F7CFF"/>
+<rect x="166" y="40" width="68" height="34" rx="10" fill="#3A62D6"/>
+<rect x="186" y="226" width="28" height="30" rx="6" fill="#8D99AE"/>
+</g>
+<g fill="#5BB85D">
+<circle cx="176" cy="220" r="6"><animate attributeName="opacity" values="0;1;0" dur="1.8s" repeatCount="indefinite"/></circle>
+<circle cx="190" cy="226" r="4"><animate attributeName="opacity" values="0;1;0" dur="1.8s" begin="0.6s" repeatCount="indefinite"/></circle>
+</g>
+<g transform="translate(320 90) scale(0.8)"><path d="M0 -20 C3 -4 4 -3 20 0 C4 3 3 4 0 20 C-3 4 -4 3 -20 0 C-4 -3 -3 -4 0 -20Z" fill="#7BDFF2"><animateTransform attributeName="transform" type="scale" values="0.2;1;0.2" dur="1.8s" begin="0.2s" repeatCount="indefinite" calcMode="spline" keySplines="0.45 0 0.55 1;0.45 0 0.55 1"/></path></g>
+</svg>

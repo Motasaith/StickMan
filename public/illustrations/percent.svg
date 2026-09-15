@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400">
+<g transform-origin="200 200">
+<animateTransform attributeName="transform" type="rotate" values="0;360" dur="12s" repeatCount="indefinite"/>
+<path d="M200 30 L236 64 L284 56 L298 102 L344 118 L336 166 L370 200 L336 234 L344 282 L298 298 L284 344 L236 336 L200 370 L164 336 L116 344 L102 298 L56 282 L64 234 L30 200 L64 166 L56 118 L102 102 L116 56 L164 64 Z" fill="#FF5A6E"/>
+</g>
+<circle cx="150" cy="150" r="30" fill="none" stroke="#FFFFFF" stroke-width="18"/><circle cx="250" cy="250" r="30" fill="none" stroke="#FFFFFF" stroke-width="18"/>
+<line x1="260" y1="130" x2="140" y2="270" stroke="#FFFFFF" stroke-width="20" stroke-linecap="round"/>
+</svg>

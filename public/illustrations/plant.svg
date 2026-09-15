@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400">
+<ellipse cx="200" cy="360" rx="110" ry="13" fill="#2B2D42" opacity="0.08"/>
+<path d="M200 300 V180" stroke="#5BB85D" stroke-width="12" stroke-linecap="round">
+<animate attributeName="d" values="M200 300 V300;M200 300 V160;M200 300 V160" keyTimes="0;0.5;1" dur="4s" repeatCount="indefinite" calcMode="spline" keySplines="0.45 0 0.55 1;0.45 0 0.55 1"/>
+</path>
+<g transform-origin="200 220">
+<animateTransform attributeName="transform" type="scale" values="0;0;1;1" keyTimes="0;0.25;0.55;1" dur="4s" repeatCount="indefinite" calcMode="spline" keySplines="0.45 0 0.55 1;0.45 0 0.55 1;0.45 0 0.55 1"/>
+<path d="M200 220 C170 210 130 220 110 180 C150 160 190 180 200 220 Z" fill="#7ED957"/>
+<path d="M200 200 C230 190 270 196 290 150 C250 134 210 156 200 200 Z" fill="#5BB85D"/>
+</g>
+<g transform-origin="200 160">
+<animateTransform attributeName="transform" type="scale" values="0;0;1;1" keyTimes="0;0.45;0.7;1" dur="4s" repeatCount="indefinite" calcMode="spline" keySplines="0.45 0 0.55 1;0.45 0 0.55 1;0.45 0 0.55 1"/>
+<path d="M200 160 C180 130 190 100 200 84 C210 100 220 130 200 160 Z" fill="#7ED957"/>
+</g>
+<path d="M120 290 H280 L262 350 H138 Z" fill="#E07A5F"/><rect x="108" y="276" width="184" height="30" rx="8" fill="#F09473"/>
+</svg>

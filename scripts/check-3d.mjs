@@ -3,6 +3,7 @@
 import puppeteer from "puppeteer-core";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
+import { openEditor } from "./_editor.mjs";
 
 const out = resolve(process.argv[2] ?? "check-3d");
 const which = process.argv[3] ?? "chrome";
@@ -16,10 +17,7 @@ const page = await browser.newPage();
 const errors = [];
 page.on("pageerror", (e) => errors.push(String(e)));
 page.on("console", (m) => m.type() === "error" && errors.push(m.text()));
-await page.goto("http://localhost:5178", { waitUntil: "load" });
-await page.evaluate(() => localStorage.clear());
-await page.reload({ waitUntil: "load" });
-await page.waitForFunction(() => window.__stickman, { timeout: 20000 });
+await openEditor(page, { kind: "3d" });
 
 const results = await page.evaluate(() => {
   const { useStore } = window.__stickman;
@@ -62,7 +60,7 @@ async function shot(name, t, camera) {
     s.setTime(t);
   }, { t, camera });
   await new Promise((r) => setTimeout(r, 900));
-  const data = await page.$eval(".stage canvas", (c) => c.toDataURL("image/png"));
+  const data = await page.$eval("main canvas", (c) => c.toDataURL("image/png"));
   writeFileSync(join(out, name), Buffer.from(data.split(",")[1], "base64"));
 }
 await shot("front-1.5s.png", 1.5);

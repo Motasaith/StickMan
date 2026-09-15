@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400">
+<ellipse cx="200" cy="358" rx="100" ry="13" fill="#2B2D42" opacity="0.08"/>
+<g>
+<animateTransform attributeName="transform" type="rotate" values="0 200 200;0 200 200;180 200 200" keyTimes="0;0.85;1" dur="4s" repeatCount="indefinite" calcMode="spline" keySplines="0 0 1 1;0.6 0 0.4 1"/>
+<rect x="110" y="50" width="180" height="26" rx="10" fill="#8D5A3B"/><rect x="110" y="324" width="180" height="26" rx="10" fill="#8D5A3B"/>
+<path d="M136 76 H264 C264 150 212 170 212 200 C212 230 264 250 264 324 H136 C136 250 188 230 188 200 C188 170 136 150 136 76 Z" fill="#EAF6FF" stroke="#BFD9EE" stroke-width="5"/>
+<path d="M150 100 H250 C244 150 206 168 200 196 C194 168 156 150 150 100 Z" fill="#FFC857">
+<animate attributeName="d" values="M150 100 H250 C244 150 206 168 200 196 C194 168 156 150 150 100 Z;M186 176 H214 C212 186 204 190 200 196 C196 190 188 186 186 176 Z;M186 176 H214 C212 186 204 190 200 196 C196 190 188 186 186 176 Z" keyTimes="0;0.85;1" dur="4s" repeatCount="indefinite"/>
+</path>
+<path d="M196 300 H204 C204 300 204 300 204 300 C204 300 196 300 196 300 Z" fill="#FFC857">
+<animate attributeName="d" values="M196 300 H204 C204 300 204 300 204 300 C204 300 196 300 196 300 Z;M150 300 H250 C246 256 214 236 200 222 C186 236 154 256 150 300 Z;M150 300 H250 C246 256 214 236 200 222 C186 236 154 256 150 300 Z" keyTimes="0;0.85;1" dur="4s" repeatCount="indefinite"/>
+</path>
+<line x1="200" y1="196" x2="200" y2="300" stroke="#FFC857" stroke-width="5" stroke-dasharray="8 8"><animate attributeName="stroke-dashoffset" values="0;-32" dur="0.5s" repeatCount="indefinite"/><animate attributeName="opacity" values="1;1;0;0" keyTimes="0;0.84;0.86;1" dur="4s" repeatCount="indefinite"/></line>
+</g>
+</svg>

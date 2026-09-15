@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400">
+<ellipse cx="200" cy="358" rx="110" ry="13" fill="#2B2D42" opacity="0.08"/>
+<circle cx="200" cy="200" r="140" fill="#4F7CFF"/><circle cx="200" cy="200" r="118" fill="#FFFFFF"/>
+<g fill="#2B2D42"><rect x="196" y="94" width="8" height="20" rx="4"/><rect x="196" y="286" width="8" height="20" rx="4"/><rect x="94" y="196" width="20" height="8" rx="4"/><rect x="286" y="196" width="20" height="8" rx="4"/></g>
+<line x1="200" y1="200" x2="200" y2="140" stroke="#2B2D42" stroke-width="12" stroke-linecap="round"><animateTransform attributeName="transform" type="rotate" values="0 200 200;360 200 200" dur="24s" repeatCount="indefinite"/></line>
+<line x1="200" y1="200" x2="200" y2="110" stroke="#FF6B6B" stroke-width="7" stroke-linecap="round"><animateTransform attributeName="transform" type="rotate" values="0 200 200;360 200 200" dur="2s" repeatCount="indefinite"/></line>
+<circle cx="200" cy="200" r="12" fill="#2B2D42"/>
+</svg>

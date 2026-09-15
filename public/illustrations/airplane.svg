@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400">
+<g fill="#FFFFFF" stroke="#D9E1EC" stroke-width="4">
+<path d="M60 300 C40 300 36 276 54 270 C58 254 80 250 90 262 C104 256 120 266 118 280 C130 284 128 300 116 300 Z"><animateTransform attributeName="transform" type="translate" values="60 0;-80 0" dur="4s" repeatCount="indefinite"/></path>
+<path d="M300 110 C282 110 278 90 294 86 C298 72 316 68 326 78 C338 74 352 82 350 94 C360 98 358 110 348 110 Z"><animateTransform attributeName="transform" type="translate" values="80 0;-300 0" dur="6s" repeatCount="indefinite"/></path>
+</g>
+<g>
+<animateTransform attributeName="transform" type="translate" values="0 10;0 -10;0 10" dur="3s" repeatCount="indefinite" calcMode="spline" keySplines="0.45 0 0.55 1;0.45 0 0.55 1"/>
+<path d="M60 210 C60 190 90 180 120 180 H300 C340 180 370 196 370 210 C370 224 340 240 300 240 H120 C90 240 60 230 60 210 Z" fill="#EDF2FB"/>
+<path d="M300 180 C340 180 370 196 370 210 H310 C300 210 294 196 300 180 Z" fill="#7BB8FF"/>
+<path d="M170 196 L250 196 L160 110 H130 Z" fill="#4F7CFF"/><path d="M170 224 L250 224 L160 310 H130 Z" fill="#3A62D6"/>
+<path d="M70 200 L60 150 H90 L110 196 Z" fill="#FF6B6B"/>
+<g fill="#7BB8FF"><circle cx="150" cy="210" r="7"/><circle cx="180" cy="210" r="7"/><circle cx="210" cy="210" r="7"/><circle cx="240" cy="210" r="7"/><circle cx="270" cy="210" r="7"/></g>
+</g>
+</svg>

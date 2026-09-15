@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400">
+<ellipse cx="200" cy="360" rx="120" ry="13" fill="#2B2D42" opacity="0.08"/>
+<g transform="rotate(-40 200 200)">
+<rect x="140" y="170" width="170" height="60" rx="10" fill="#FFFFFF" stroke="#D9E1EC" stroke-width="5"/>
+<rect x="146" y="176" width="100" height="48" rx="6" fill="#7BDFF2">
+<animate attributeName="width" values="140;60;140" dur="3s" repeatCount="indefinite" calcMode="spline" keySplines="0.45 0 0.55 1;0.45 0 0.55 1"/>
+</rect>
+<g stroke="#8D99AE" stroke-width="4"><line x1="180" y1="170" x2="180" y2="190"/><line x1="215" y1="170" x2="215" y2="190"/><line x1="250" y1="170" x2="250" y2="190"/><line x1="285" y1="170" x2="285" y2="190"/></g>
+<g>
+<animateTransform attributeName="transform" type="translate" values="0 0;-80 0;0 0" dur="3s" repeatCount="indefinite" calcMode="spline" keySplines="0.45 0 0.55 1;0.45 0 0.55 1"/>
+<rect x="306" y="190" width="70" height="20" rx="6" fill="#8D99AE"/><rect x="370" y="160" width="16" height="80" rx="6" fill="#4F7CFF"/>
+</g>
+<rect x="306" y="160" width="12" height="80" rx="4" fill="#4F7CFF"/>
+<rect x="100" y="190" width="42" height="20" rx="4" fill="#8D99AE"/>
+<line x1="40" y1="200" x2="102" y2="200" stroke="#B8C0CC" stroke-width="6" stroke-linecap="round"/>
+</g>
+<path d="M76 258 C70 272 70 280 76 286 C82 280 82 272 76 258Z" fill="#7BDFF2">
+<animate attributeName="opacity" values="0;1;0" dur="3s" repeatCount="indefinite"/>
+<animateTransform attributeName="transform" type="translate" values="0 0;0 50" dur="3s" repeatCount="indefinite"/>
+</path>
+</svg>

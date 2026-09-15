@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400">
+<ellipse cx="200" cy="344" rx="130" ry="13" fill="#2B2D42" opacity="0.08"/>
+<g>
+<animateTransform attributeName="transform" type="translate" values="0 0;0 -10;0 0" dur="3s" begin="0s" repeatCount="indefinite" calcMode="spline" keySplines="0.45 0 0.55 1;0.45 0 0.55 1"/>
+<path d="M110 290 C60 290 40 250 50 216 C58 186 88 170 116 176 C124 124 168 96 214 104 C256 110 282 144 286 180 C330 176 360 206 358 240 C356 270 334 290 300 290 Z" fill="#7BB8FF"/>
+<path d="M110 290 C60 290 40 250 50 216 C58 186 88 170 116 176 C122 150 136 132 154 120 C120 150 110 200 150 240 C190 280 260 270 300 290 Z" fill="#6AA6F0"/>
+</g>
+<g>
+<animateTransform attributeName="transform" type="translate" values="0 30;0 -30" dur="1.5s" repeatCount="indefinite"/>
+<animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.2;0.7;1" dur="1.5s" repeatCount="indefinite"/>
+<path d="M200 280 V190 M164 222 L200 186 L236 222" stroke="#FFFFFF" stroke-width="18" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+</g>
+</svg>

@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400">
+<path d="M130 40 H190 L230 170 H170 Z" fill="#4F7CFF"/><path d="M270 40 H210 L170 170 H230 Z" fill="#FF5A6E"/>
+<g>
+<animateTransform attributeName="transform" type="rotate" values="-8 200 150;8 200 150;-8 200 150" dur="2.4s" repeatCount="indefinite" calcMode="spline" keySplines="0.45 0 0.55 1;0.45 0 0.55 1"/>
+<circle cx="200" cy="250" r="100" fill="#FFC857"/><circle cx="200" cy="250" r="76" fill="#FFB627"/>
+<text x="200" y="290" font-family="sans-serif" font-size="110" font-weight="bold" fill="#FFFFFF" text-anchor="middle">1</text>
+</g>
+<g transform="translate(320 180) scale(0.8)"><path d="M0 -20 C3 -4 4 -3 20 0 C4 3 3 4 0 20 C-3 4 -4 3 -20 0 C-4 -3 -3 -4 0 -20Z" fill="#FFD166"><animateTransform attributeName="transform" type="scale" values="0.2;1;0.2" dur="1.8s" begin="0.2s" repeatCount="indefinite" calcMode="spline" keySplines="0.45 0 0.55 1;0.45 0 0.55 1"/></path></g><g transform="translate(80 300) scale(0.7)"><path d="M0 -20 C3 -4 4 -3 20 0 C4 3 3 4 0 20 C-3 4 -4 3 -20 0 C-4 -3 -3 -4 0 -20Z" fill="#FFD166"><animateTransform attributeName="transform" type="scale" values="0.2;1;0.2" dur="1.8s" begin="0.9s" repeatCount="indefinite" calcMode="spline" keySplines="0.45 0 0.55 1;0.45 0 0.55 1"/></path></g>
+</svg>

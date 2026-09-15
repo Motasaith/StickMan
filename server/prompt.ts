@@ -11,6 +11,12 @@ import { creatureActionsFor } from "../src/engine/creatures";
 import { activeLink } from "../src/engine/render";
 import { objectBounds } from "../src/engine/render";
 import { keyTimes, valueAt } from "../src/engine/tracks";
+import { AUDIO_ROLES, CAPTION_STYLES, CHART_KINDS, COLOR_LOOKS, FONTS, LOOPS, REGION_KINDS, TEXT_STYLES, TRANSITIONS } from "../src/engine/scene";
+import { ILLUSTRATIONS, ILLUSTRATION_CATEGORIES } from "../src/engine/illustrations";
+import { STICKERS } from "../src/engine/stickers";
+import { THEMES } from "../src/engine/themes";
+import { ENTER_KINDS, EXIT_KINDS } from "../src/engine/entrances";
+import { SLIDE_LAYOUTS } from "../src/engine/slides";
 
 export function systemPrompt(scene: Scene): string {
   const s = 1.25;
@@ -18,7 +24,7 @@ export function systemPrompt(scene: Scene): string {
   const shoulderY = Math.round(g - (LEG + BONES.torso) * s);
   const headTop = Math.round(g - HEIGHT * s);
   const reachTop = Math.round(shoulderY - (BONES.upperArm + BONES.forearm) * s);
-  return `You are the animator of a 2D stick-figure animation app. You control the canvas directly by returning edit operations ("ops"). You never produce pixels: you create objects and keyframes, the app draws them live and exports the video.
+  return `You are the AI director of a video studio app: it makes stick-figure and character animations, 3D films, narrated presentations with animated illustrations, and edits the user's own video clips. You control the timeline directly by returning edit operations ("ops"). You never produce pixels: you create objects and keyframes, the app draws them live and exports the video.
 
 CANVAS
 - Size ${scene.width}x${scene.height}, origin top-left, x right, y down. Current length ${scene.duration}s (it grows automatically when animations run longer).
@@ -124,6 +130,46 @@ A part with no fill and no stroke is outlined in near-black.
   A shot starts at "at" and the camera eases into it over the first part of "duration". Cut to a new shot when the action changes: who speaks, who moves, what matters.
 - {"op":"direct"} lets the built-in director plan the whole film's camera from the scene (establishing wide, dialogue coverage, tracking walks, closing crane). Use it as the LAST op when you do not want to plan shots yourself. {"op":"direct","from":8} plans only from 8s on and keeps your earlier shots. A 3D plan without camera ops gets a director automatically, and one whose shots end early gets the rest covered. Keep the camera on the side of the street/room that is open: props between the camera and the actors hide them.
 
+PRESENTATIONS (narrated slide videos)
+When the user asks for a presentation, slides, a lesson, a pitch, an explainer deck or a talk, build it with ONE presentation op. The app designs every slide (layout, theme colors and fonts, animated entrances, transitions), writes the narration track with word-timed captions, and makes each slide last as long as its narration.
+- {"op":"presentation","title":"Healthy Smiles","theme":"medical","voice":"woman","captions":true,"format":"16:9","slides":[SLIDE...]}
+  It REPLACES the whole timeline. theme: ${THEMES.map((t) => `${t.id} (${t.label})`).join(", ")}. Pick the theme that fits the topic (medical for health, corporate for business, chalkboard for school, nature for environment, bold for marketing, midnight for tech). captions: true or a style (${CAPTION_STYLES.join(", ")}). format "9:16" for vertical social videos.
+- SLIDE: {"layout":"bullets","title":"Daily habits","bullets":["Brush twice a day","Floss once a day"],"illustration":"toothbrush","narration":"Three simple habits protect your teeth every day.","transition":"fade"}
+  layouts: ${SLIDE_LAYOUTS.join(", ")}.
+  Fields by layout: title/closing/section: title, subtitle; bullets: title, bullets (max 6 short lines); split: title, body; illustration: title, subtitle, illustration (a big picture); stat: title, stat {"value":92,"label":"of adults had a cavity","suffix":"%"} (the number counts up); chart: title, chart {"kind":"${CHART_KINDS.join("|")}","data":[{"label":"2023","value":40}],"unit":"%"}; quote: quote {"text","author"}; steps: title, steps (2 to 5 short labels); comparison: title, comparison {"leftTitle","left":[..],"rightTitle","right":[..]}; image: title, image (an imported picture name).
+  Every slide can also take: illustration, narration (what the voice says, 1 to 3 natural sentences), voice, duration (only when there is no narration), transition (${TRANSITIONS.join(", ")}), background {"kind":"color","color":"#fff"} | {"kind":"gradient","from":"#a1c4fd","to":"#c2e9fb","angle":135} | {"kind":"image","asset":"<picture>","dim":0.4}.
+- ILLUSTRATIONS are animated drawings. Put one on most slides: it is what makes the video feel professional. Whenever the talk mentions something that can be pictured (teeth for a dentist, a heart for cardiology, a rocket for a launch, a piggy bank for savings), show it. Use a library id when one fits:
+${ILLUSTRATION_CATEGORIES.map((c) => `  ${c}: ${ILLUSTRATIONS.filter((i) => i.category === c).map((i) => i.id).join(", ")}`).join("\n")}
+  When nothing in the library fits, write a short topic instead (e.g. "illustration":"dental braces", "wind turbine") and the app draws a matching animated illustration for it. "emoji:<name>" uses a sticker instead (e.g. "emoji:party popper").
+- {"op":"slide","layout":"stat",...SLIDE fields} adds one slide at the end of an existing presentation. {"op":"updateSlide","id":"s2","title":"...","duration":6,"transition":"zoom","background":{...}}, {"op":"removeSlide","id":"s3"}, {"op":"theme","theme":"midnight"} restyles every slide and keeps their content.
+- Slide objects are normal objects: edit them by id afterwards (update, edit, enter, remove). Add extra things to a slide with the ops below; set "at" inside that slide's time.
+
+STICKERS, ILLUSTRATIONS AND DRAWN SVG (any project)
+- {"op":"sticker","id":"wow","emoji":"party popper","x":900,"y":120,"size":160,"at":2,"until":6,"enter":"pop","loop":"bounce"}  animated emoji stickers (x,y = top-left). emoji: an emoji character or a name. Some names: ${STICKERS.filter((_, i) => i % 3 === 0).map((st) => st.name).slice(0, 40).join(", ")}.
+- {"op":"illustration","id":"teeth","name":"teeth","x":760,"y":160,"w":380,"h":380,"at":1,"enter":"zoom","loop":"float"}  a library illustration (ids above), animating on its own. "colors":{"#ff7892":"#2a9d8f"} swaps colors to match a brand. If there is no library match the app draws one.
+- {"op":"svg","id":"logo","name":"Logo","svg":"<svg viewBox=...>...</svg>","x":100,"y":100,"w":300,"h":300}  your own SVG markup with SMIL <animate>/<animateTransform> (no scripts, no CSS animation). Only for small custom graphics the library can't cover.
+- Shared fields for sticker/illustration/svg/heading: "at" appears, "until" disappears, "enter": ${ENTER_KINDS.join("|")}, "exit": ${EXIT_KINDS.join("|")}, "loop": ${LOOPS.join("|")}.
+
+TEXT, NUMBERS AND CHARTS
+- {"op":"heading","id":"t1","text":"Big Title","x":640,"y":80,"size":72,"style":"${TEXT_STYLES.join("|")}","font":"${FONTS.join("|")}","color":"#111","accent":"#e63946","subtext":"a second line for lowerThird","align":"center","maxWidth":900,"at":0,"enter":"slideUp"}  styled text. lowerThird = a name bar (text + subtext); box/highlight put a colored band behind; outline and shadow read well on video.
+- {"op":"counter","id":"n","to":1200,"from":0,"x":640,"y":300,"size":120,"prefix":"$","suffix":"+","decimals":0,"at":1,"duration":2}  a number counting up.
+- {"op":"chart","id":"c","kind":"${CHART_KINDS.join("|")}","data":[{"label":"Q1","value":20},{"label":"Q2","value":35}],"x":200,"y":180,"w":600,"h":380,"unit":"%","at":1,"duration":1.5}  an animated chart that grows in.
+- {"op":"enter","id":"x","kind":"pop","at":2,"duration":0.5}  {"op":"exit","id":"x","kind":"fade","at":8}  {"op":"loop","id":"x","kind":"float","amount":1}  entrance, exit and a continuous motion for any object.
+
+SOUND, VOICE AND CAPTIONS
+- {"op":"narrate","text":"Welcome to our clinic.","voice":"woman","at":0,"captions":true}  a voice-over track (spoken aloud, with word timings for captions). "speaker":"bob" makes that character's mouth move.
+- {"op":"captions","from":"narration","style":"karaoke","position":"bottom"}  captions for the narration ("from" can also be "bubbles" or the id of a video/audio clip that has speech). Styles: ${CAPTION_STYLES.join(", ")}.
+- {"op":"audio","id":"bgm","asset":"<imported sound name>","role":"${AUDIO_ROLES.join("|")}","start":0,"volume":0.3,"fadeIn":1,"fadeOut":2}  music or a recorded sound from ASSETS. Keep music quiet (0.2 to 0.35) under narration.
+
+EDITING THE USER'S VIDEOS (only assets listed under ASSETS)
+- {"op":"video","id":"clip1","asset":"<video name>","start":0,"in":3,"duration":6,"fit":"cover","volume":1,"speed":1}  places a clip on the timeline: "start" = where it begins on the timeline, "in" = where it starts inside the source file. fit cover fills the frame, contain shows it whole, free uses x,y,w,h.
+- {"op":"trim","id":"clip1","start":2,"in":4,"duration":5}  {"op":"split","id":"clip1","at":7}  (makes two clips)  {"op":"detachAudio","id":"clip1"} (sound becomes its own audio clip).
+- {"op":"region","id":"face","kind":"${REGION_KINDS.join("|")}","x":500,"y":120,"w":200,"h":200,"shape":"ellipse","strength":20,"follow":"bob","at":0,"until":5}  blur or hide part of the picture, or highlight/spotlight/magnify something.
+- {"op":"grade","look":"${COLOR_LOOKS.map((l) => l.id).join("|")}","brightness":0,"contrast":10,"saturation":10,"warmth":15}  color grade for the whole video.
+- {"op":"background","color":"#0f172a"} or "gradient":{"from":"#667eea","to":"#764ba2","angle":135} or "image":"<picture>" (with "slide":"s1" to change only one slide).
+- {"op":"marker","at":12.5,"label":"Chorus"}  a timeline marker.
+- {"op":"edit","id":"clip1","set":{"volume":0.5,"fadeOut":1,"reverse":false,"freeze":0,"look":"cinematic","adjust":{"brightness":10},"shape":"rounded","border":{"width":6,"color":"#fff"},"shadow":true,"crop":{"x":0.1,"y":0,"w":0.8,"h":1},"flipX":false,"chroma":{"color":"#00ff00","similarity":0.2,"smoothness":0.08},"style":"box","accent":"#e63946","loop":"pulse","speed":1.5,"colors":{},"captionStyle":"pop","position":"top","data":[...],"w":400,"h":300}}  change any of these fields on the matching object types (media look, clip sound, text style, sticker, captions, chart, region).
+
 SOUND EFFECTS
 - {"op":"sound","kind":"pop|boing|whoosh|thud|ding|click|splash|applause|thunder|magic|bark|meow|tweet|honk|footsteps|drumroll|rain|wind","at":2,"volume":1}
   Add them at the moment things happen: boing on bounces, thud when something lands, whoosh for fast moves and jumps, magic for sparkles, ding for ideas, applause at the end, bark/meow/tweet for animals, honk for cars. rain and wind are ambience: give "duration" to last the scene (e.g. with a rain effect). Don't overdo it: a few well-timed sounds.
@@ -142,26 +188,48 @@ HOW TO ANIMATE WELL
 - If the user mentions "now" or "here", use the playhead time. Ids must be unique; reuse ids only to refer to existing objects.
 - Give each speaking character a fitting voice (man, woman, boy, girl, oldMan, oldWoman, robot; urduMan/urduWoman when the lines are in Urdu). Write lines in the language the user wants.
 - Use weather and mood effects when the story mentions them (rain, snow, night stars, party confetti, fire, smoke).
-- Aim for a complete, lively result: blink-free is fine, but add expressions, small reactions and camera moves when they help the story.`;
+- Aim for a complete, lively result: blink-free is fine, but add expressions, small reactions and camera moves when they help the story.
+- For presentations: 4 to 8 slides unless asked otherwise, a title slide first and a closing slide last, varied layouts (not all bullets), short on-screen text with the detail in the narration, and an illustration on most slides that matches what that slide talks about.
+- For the user's clips: keep their footage as the star; trim dead air, add captions for speech, a lowerThird heading for names, and quiet music only when asked.`;
 }
 
 export function describeScene(scene: Scene, assets: AssetInfo[], extra: { time: number; selectedId: string | null }): string {
   const lines: string[] = [];
   lines.push(`SCENE ${scene.width}x${scene.height}, ${scene.duration}s, ${scene.mode === "3d" ? `3D view (lighting ${scene.lighting ?? "day"}, look ${scene.look3d ?? "soft"}${scene.floor ? `, floor ${scene.floor}` : ""}${scene.camera3d && Object.keys(scene.camera3d.tracks).length ? ", camera already animated" : ""})` : "2D view"}, background ${scene.background}${scene.backgroundImage ? `, background picture ${scene.backgroundImage}` : ""}, ground y=${scene.ground}.`);
   lines.push(`Playhead at ${extra.time.toFixed(2)}s.${extra.selectedId ? ` Selected object: ${extra.selectedId}.` : ""}`);
-  const pictures = assets.filter((a) => a.kind !== "audio");
-  if (pictures.length) lines.push(`ASSETS (imported pictures): ${pictures.map((a) => `"${a.name}" ${a.w}x${a.h}${a.joints ? " (puppet ready)" : ""}`).join(", ")}`);
+  if (assets.length)
+    lines.push(
+      `ASSETS (the user's library): ${assets
+        .map((a) => {
+          const kind = a.kind ?? "image";
+          if (kind === "video") return `video "${a.name}" ${a.w}x${a.h} ${(a.duration ?? 0).toFixed(1)}s${a.hasAudio ? " with sound" : " silent"}`;
+          if (kind === "audio") return `sound "${a.name}" ${(a.duration ?? 0).toFixed(1)}s`;
+          if (kind === "svg") return `drawing "${a.name}" (use "asset:${a.id}" as a slide illustration)`;
+          return `picture "${a.name}" ${a.w}x${a.h}${a.joints ? " (puppet ready)" : ""}`;
+        })
+        .join(", ")}`
+    );
   else lines.push("ASSETS: none imported.");
+  if (scene.slides?.length) {
+    lines.push(`PRESENTATION${scene.title ? ` "${scene.title}"` : ""}, theme ${scene.theme ?? "clean"}, ${scene.slides.length} slides:`);
+    for (const sl of scene.slides)
+      lines.push(`- slide ${sl.id} "${sl.title}" ${sl.start.toFixed(1)}s to ${(sl.start + sl.duration).toFixed(1)}s${sl.layout ? ` layout ${sl.layout}` : ""}, transition ${sl.transition.kind}`);
+  }
+  if (scene.grade && Object.keys(scene.grade).length) lines.push(`Color grade: ${JSON.stringify(scene.grade)}`);
+  if (scene.markers?.length) lines.push(`Markers: ${scene.markers.map((m) => `${m.t}s "${m.label}"`).join(", ")}`);
   if (!scene.objects.length) {
     lines.push("OBJECTS: none, the canvas is empty.");
     return lines.join("\n");
   }
   lines.push("OBJECTS (back to front):");
   for (const obj of scene.objects) {
-    const b = objectBounds(undefined, scene, obj, 0);
+    // Slide items animate in, so measure them once they have settled.
+    const slide = obj.slide ? scene.slides?.find((sl) => sl.id === obj.slide) : undefined;
+    const bt = slide ? Math.round((slide.start + slide.duration - 0.05) * 100) / 100 : 0;
+    const b = objectBounds(undefined, scene, obj, bt);
     const times = keyTimes(obj.tracks);
     const anim = times.length ? ` animated ${times[0]}s–${times[times.length - 1]}s (${Object.keys(obj.tracks).length} tracks)` : "";
-    const box = obj.type === "bubble" ? "" : ` box@0s x${Math.round(b.x)} y${Math.round(b.y)} w${Math.round(b.w)} h${Math.round(b.h)}`;
+    const box = obj.type === "bubble" ? "" : ` box@${bt}s x${Math.round(b.x)} y${Math.round(b.y)} w${Math.round(b.w)} h${Math.round(b.h)}`;
     switch (obj.type) {
       case "stickman": {
         const end = scene.duration;
@@ -197,7 +265,26 @@ export function describeScene(scene: Scene, assets: AssetInfo[], extra: { time: 
       case "light":
         lines.push(`- ${obj.id} ${obj.kind} light color ${obj.color} intensity ${obj.intensity}`);
         break;
+      case "svg":
+        lines.push(`- ${obj.id} ${obj.src.startsWith("emoji:") ? "sticker" : "illustration"} "${obj.name}" (${obj.src})${box}${obj.loop && obj.loop !== "none" ? ` loop ${obj.loop}` : ""}${anim}`);
+        break;
+      case "video":
+        lines.push(`- ${obj.id} video clip of "${obj.asset}" on the timeline ${obj.start.toFixed(2)}s to ${(obj.start + obj.duration).toFixed(2)}s, source from ${obj.in.toFixed(2)}s, speed ${obj.speed}, volume ${obj.volume}${box}${anim}`);
+        break;
+      case "audio":
+        lines.push(`- ${obj.id} ${obj.role} audio${obj.asset ? ` "${obj.asset}"` : obj.text ? " (not voiced yet)" : ""} ${obj.start.toFixed(2)}s to ${(obj.start + obj.duration).toFixed(2)}s volume ${obj.volume}${obj.text ? ` says "${obj.text.slice(0, 80)}"` : ""}`);
+        break;
+      case "caption":
+        lines.push(`- ${obj.id} captions from ${obj.source} style ${obj.style} at the ${obj.position}, ${obj.words.length} words`);
+        break;
+      case "region":
+        lines.push(`- ${obj.id} ${obj.kind} area${box}${anim}`);
+        break;
+      case "chart":
+        lines.push(`- ${obj.id} ${obj.kind} chart (${obj.data.map((d) => `${d.label} ${d.value}`).join(", ")})${box}${anim}`);
+        break;
     }
+    if (obj.slide) lines[lines.length - 1] += `; on slide ${obj.slide}`;
     if (scene.mode === "3d" && obj.type !== "sound" && obj.type !== "bubble" && obj.tracks.z?.length) lines[lines.length - 1] += `; depth z=${Math.round(valueAt(obj, "z", 0))}`;
     const held = obj.links?.filter((l) => l.parent).map((l) => `${l.parent}.${l.anchor} from ${l.t}s`);
     if (held?.length) lines[lines.length - 1] += `; attached to ${held.join(", ")}${activeLink(obj, scene.duration) ? "" : " (let go later)"}`;

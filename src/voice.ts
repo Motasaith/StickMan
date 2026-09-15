@@ -1,10 +1,13 @@
-// Gives speech bubbles a real voice: text-to-speech on the server, then the bubble is
-// timed to the audio and the speaker's mouth follows its loudness.
+// Real voices for speech bubbles and narration: text-to-speech on the server (with the time
+// each word is spoken), then bubbles and narration are timed to the audio, captions follow the
+// words, slides grow to fit, and speakers' mouths follow the loudness.
 
-import { cloneScene, findObj, type BubbleObj, type Scene, type VoiceId } from "./engine/scene";
+import { cloneScene, findObj, type AudioObj, type BubbleObj, type Scene, type VoiceId } from "./engine/scene";
 import { decodeAsset, envelopeOf } from "./audio";
 import { useStore } from "./store";
 import { directScene } from "./engine/director";
+import { fitSlidesToNarration, syncCaptions } from "./engine/slides";
+import { api } from "./lib/api";
 
 export function voiceFor(scene: Scene, bubble: BubbleObj): VoiceId | null {
   if (bubble.thought || bubble.voice === "none") return null;
@@ -15,7 +18,6 @@ export function voiceFor(scene: Scene, bubble: BubbleObj): VoiceId | null {
   return "narrator";
 }
 
-/** When the bubble first shows. */
 function bubbleStart(b: BubbleObj): number {
   const keys = b.tracks.opacity;
   if (!keys?.length) return 0;
@@ -28,57 +30,99 @@ export function needsVoice(scene: Scene, b: BubbleObj): boolean {
   return !b.audio || b.audio.text !== b.text || b.audio.voice !== voice;
 }
 
+export function narrationNeedsVoice(o: AudioObj): boolean {
+  return o.role === "narration" && !o.asset && !!o.text?.trim();
+}
+
 export interface VoiceReport {
   made: number;
   failed: string[];
   overlaps: string[];
 }
 
-/** Record every line that has no (up-to-date) voice yet. Only these bubbles are changed. */
+/** Voice every line and narration that has no (up-to-date) recording yet. */
 export async function generateVoices(onlyId?: string, onProgress?: (done: number, total: number) => void): Promise<VoiceReport> {
   const start = useStore.getState().scene;
-  const todo = start.objects.filter((o): o is BubbleObj => o.type === "bubble" && (!onlyId || o.id === onlyId) && needsVoice(start, o));
+  const bubbles = start.objects.filter((o): o is BubbleObj => o.type === "bubble" && (!onlyId || o.id === onlyId) && needsVoice(start, o));
+  const narrations = start.objects.filter((o): o is AudioObj => o.type === "audio" && (!onlyId || o.id === onlyId) && narrationNeedsVoice(o));
+  const total = bubbles.length + narrations.length;
   const report: VoiceReport = { made: 0, failed: [], overlaps: [] };
   let done = 0;
-  const queue = [...todo];
+  const jobs: Array<() => Promise<void>> = [
+    ...bubbles.map((b) => async () => {
+      const voice = voiceFor(start, b)!;
+      const rec = await api.voice(b.text, voice);
+      const asset = { id: rec.id, name: `voice: ${b.text.slice(0, 24)}`, src: rec.src, w: 0, h: 0, kind: "audio" as const, duration: rec.duration, origin: "tts", waveform: rec.waveform };
+      useStore.getState().addAsset(asset);
+      const buf = await decodeAsset(asset);
+      const envelope = envelopeOf(buf);
+      useStore.getState().amend((scene) => {
+        const next = cloneScene(scene);
+        const bubble = findObj(next, b.id);
+        if (!bubble || bubble.type !== "bubble") return scene;
+        const at = bubbleStart(bubble);
+        const duration = buf.duration;
+        bubble.audio = { asset: asset.id, at, duration, envelope, rate: 30, text: bubble.text, voice };
+        const hide = at + duration + 0.35;
+        bubble.tracks.opacity = at > 0 ? [{ t: 0, v: 0 }, { t: at, v: 1, e: "step" }, { t: hide, v: 0, e: "step" }] : [{ t: 0, v: 1 }, { t: hide, v: 0, e: "step" }];
+        bubble.tracks.reveal = [
+          { t: at, v: 0 },
+          { t: at + Math.min(duration * 0.8, Math.max(0.3, bubble.text.length * 0.05)), v: 1 },
+        ];
+        if (hide + 0.3 > next.duration) next.duration = Math.ceil((hide + 0.3) * 10) / 10;
+        return next;
+      });
+    }),
+    ...narrations.map((n) => async () => {
+      const voice = n.voice ?? "narrator";
+      const rec = await api.voice(n.text!, voice);
+      const asset = { id: rec.id, name: `narration: ${n.text!.slice(0, 24)}`, src: rec.src, w: 0, h: 0, kind: "audio" as const, duration: rec.duration, origin: "tts", waveform: rec.waveform };
+      useStore.getState().addAsset(asset);
+      let envelope: number[] | undefined;
+      if (n.speaker) envelope = envelopeOf(await decodeAsset(asset));
+      useStore.getState().amend((scene) => {
+        const next = cloneScene(scene);
+        const o = findObj(next, n.id);
+        if (!o || o.type !== "audio" || o.text !== n.text) return scene;
+        o.asset = asset.id;
+        o.duration = Math.round(rec.duration * 1000) / 1000;
+        o.in = 0;
+        o.voice = voice;
+        o.words = rec.words.length ? rec.words.map((w) => ({ text: w.text, start: o.start + w.start, end: o.start + w.end })) : o.words;
+        if (envelope) {
+          o.envelope = envelope;
+          o.rate = 30;
+        }
+        return next;
+      });
+    }),
+  ];
+  const queue = [...jobs];
   const worker = async () => {
     while (queue.length) {
-      const b = queue.shift()!;
-      const voice = voiceFor(start, b)!;
+      const job = queue.shift()!;
       try {
-        const res = await fetch("/api/tts", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text: b.text, voice }) });
-        const data = (await res.json()) as { audio?: string; error?: string };
-        if (!res.ok || !data.audio) throw new Error(data.error ?? `error ${res.status}`);
-        const assetId = `voice_${Math.random().toString(36).slice(2, 10)}`;
-        const buf = await decodeAsset({ id: assetId, src: data.audio });
-        useStore.getState().addAsset({ id: assetId, name: `voice: ${b.text.slice(0, 24)}`, src: data.audio, w: 0, h: 0, kind: "audio", duration: buf.duration });
-        const envelope = envelopeOf(buf);
-        useStore.getState().amend((scene) => {
-          const next = cloneScene(scene);
-          const bubble = findObj(next, b.id);
-          if (!bubble || bubble.type !== "bubble") return scene;
-          const at = bubbleStart(bubble);
-          const duration = buf.duration;
-          bubble.audio = { asset: assetId, at, duration, envelope, rate: 30, text: bubble.text, voice };
-          const hide = at + duration + 0.35;
-          bubble.tracks.opacity = at > 0 ? [{ t: 0, v: 0 }, { t: at, v: 1, e: "step" }, { t: hide, v: 0, e: "step" }] : [{ t: 0, v: 1 }, { t: hide, v: 0, e: "step" }];
-          bubble.tracks.reveal = [
-            { t: at, v: 0 },
-            { t: at + Math.min(duration * 0.8, Math.max(0.3, bubble.text.length * 0.05)), v: 1 },
-          ];
-          if (hide + 0.3 > next.duration) next.duration = Math.ceil((hide + 0.3) * 10) / 10;
-          return next;
-        });
+        await job();
         report.made++;
       } catch (err) {
-        report.failed.push(`"${b.text.slice(0, 30)}": ${(err as Error).message}`);
+        report.failed.push((err as Error).message);
       }
-      onProgress?.(++done, todo.length);
+      onProgress?.(++done, total);
     }
   };
   await Promise.all([worker(), worker(), worker()]);
 
-  // Voices can make the film longer than the 3D camera plan: let the director cover the new ending.
+  // Slides grow to fit their narration; captions follow the recorded words.
+  if (narrations.length) {
+    useStore.getState().amend((scene) => {
+      const next = cloneScene(scene);
+      fitSlidesToNarration(next);
+      syncCaptions(next);
+      return next;
+    });
+  }
+
+  // Voices can make a 3D film longer than its camera plan: the director covers the new ending.
   const after = useStore.getState().scene;
   const camKeys = Object.values(after.camera3d?.tracks ?? {}).flatMap((k) => k ?? []);
   if (after.mode === "3d" && after.duration > start.duration + 0.5 && camKeys.length) {
@@ -92,7 +136,6 @@ export async function generateVoices(onlyId?: string, onProgress?: (done: number
     }
   }
 
-  // Lines of the same speaker that now run into each other.
   const scene = useStore.getState().scene;
   const bySpeaker = new Map<string, BubbleObj[]>();
   for (const o of scene.objects) if (o.type === "bubble" && o.audio) bySpeaker.set(o.target ?? "narrator", [...(bySpeaker.get(o.target ?? "narrator") ?? []), o]);
@@ -105,4 +148,9 @@ export async function generateVoices(onlyId?: string, onProgress?: (done: number
     }
   }
   return report;
+}
+
+/** How many lines and narrations still need a voice. */
+export function pendingVoices(scene: Scene): number {
+  return scene.objects.filter((o) => (o.type === "bubble" && needsVoice(scene, o)) || (o.type === "audio" && narrationNeedsVoice(o))).length;
 }

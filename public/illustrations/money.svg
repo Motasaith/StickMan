@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400">
+<ellipse cx="200" cy="354" rx="150" ry="13" fill="#2B2D42" opacity="0.08"/>
+<g>
+<animateTransform attributeName="transform" type="translate" values="0 0;0 -8;0 0" dur="3s" begin="0s" repeatCount="indefinite" calcMode="spline" keySplines="0.45 0 0.55 1;0.45 0 0.55 1"/>
+<g transform="rotate(-10 170 170)">
+<rect x="60" y="110" width="220" height="120" rx="14" fill="#5BB85D"/>
+<rect x="76" y="126" width="188" height="88" rx="10" fill="none" stroke="#8FD98F" stroke-width="5"/>
+<circle cx="170" cy="170" r="32" fill="#8FD98F"/>
+<text x="170" y="186" font-family="sans-serif" font-size="44" font-weight="bold" fill="#2F7D32" text-anchor="middle">$</text>
+</g>
+</g>
+<g fill="#FFC857" stroke="#E0A526" stroke-width="5">
+<ellipse cx="270" cy="320" rx="56" ry="18"/><rect x="214" y="298" width="112" height="22" fill="#FFC857" stroke="none"/><ellipse cx="270" cy="298" rx="56" ry="18"/>
+<ellipse cx="270" cy="276" rx="56" ry="18"/><rect x="214" y="254" width="112" height="22" fill="#FFC857" stroke="none"/><ellipse cx="270" cy="254" rx="56" ry="18"/>
+</g>
+<g>
+<animateTransform attributeName="transform" type="translate" values="0 -160;0 -160;0 0;0 0" keyTimes="0;0.2;0.5;1" dur="2.8s" repeatCount="indefinite" calcMode="spline" keySplines="0 0 1 1;0.5 0 1 1;0 0 1 1"/>
+<animate attributeName="opacity" values="0;1;1;1" keyTimes="0;0.2;0.5;1" dur="2.8s" repeatCount="indefinite"/>
+<ellipse cx="270" cy="232" rx="56" ry="18" fill="#FFD875" stroke="#E0A526" stroke-width="5"/>
+</g>
+<g transform="translate(92 300) scale(0.8)"><path d="M0 -20 C3 -4 4 -3 20 0 C4 3 3 4 0 20 C-3 4 -4 3 -20 0 C-4 -3 -3 -4 0 -20Z" fill="#FFD166"><animateTransform attributeName="transform" type="scale" values="0.2;1;0.2" dur="1.8s" begin="0.3s" repeatCount="indefinite" calcMode="spline" keySplines="0.45 0 0.55 1;0.45 0 0.55 1"/></path></g>
+</svg>

@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400">
+<ellipse cx="210" cy="356" rx="120" ry="13" fill="#2B2D42" opacity="0.08"/>
+<path d="M120 70 V150 C120 214 160 244 200 244 C240 244 280 214 280 150 V70" stroke="#2B2D42" stroke-width="14" stroke-linecap="round" fill="none"/>
+<circle cx="120" cy="66" r="14" fill="#8D99AE"/><circle cx="280" cy="66" r="14" fill="#8D99AE"/>
+<g>
+<animateTransform attributeName="transform" type="rotate" values="-6 200 244;6 200 244;-6 200 244" dur="2.6s" repeatCount="indefinite" calcMode="spline" keySplines="0.45 0 0.55 1;0.45 0 0.55 1"/>
+<path d="M200 244 V270 C200 312 240 320 262 300" stroke="#2B2D42" stroke-width="14" stroke-linecap="round" fill="none"/>
+<circle cx="286" cy="286" r="42" fill="#8D99AE"/><circle cx="286" cy="286" r="30" fill="#EDF2FB"/><circle cx="286" cy="286" r="14" fill="#4F7CFF"/>
+</g>
+<path d="M300 120 C318 100 346 104 346 128 C346 152 316 168 300 180 C284 168 254 152 254 128 C254 104 282 100 300 120 Z" fill="#FF5A6E" transform-origin="300 140">
+<animateTransform attributeName="transform" type="scale" values="0.9;1.05;0.9" dur="1s" repeatCount="indefinite" calcMode="spline" keySplines="0.45 0 0.55 1;0.45 0 0.55 1"/>
+</path>
+</svg>

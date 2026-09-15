@@ -12,7 +12,11 @@ export interface Key {
 
 export type Tracks = Record<string, Key[]>;
 
-export const FONTS = ["sans", "serif", "hand", "chalk", "mono"] as const;
+/** The first five are system fonts; the rest are bundled font files (public/fonts, OFL licensed). */
+export const FONTS = [
+  "sans", "serif", "hand", "chalk", "mono",
+  "roboto", "poppins", "archivo", "anton", "bebas", "righteous", "abril", "dmserif", "pacifico", "lobster", "indie", "marker", "naskh", "nastaliq",
+] as const;
 export type FontName = (typeof FONTS)[number];
 export type Align = "left" | "center" | "right";
 
@@ -88,6 +92,49 @@ export interface Link {
   follow: "position" | "full";
 }
 
+/** Idle motion that repeats while an object is on screen (computed from time, so export matches). */
+export const LOOPS = ["none", "float", "pulse", "wiggle", "spin", "bounce", "shake", "heartbeat", "swing", "breathe", "blink"] as const;
+export type LoopKind = (typeof LOOPS)[number];
+
+/** Brightness, contrast, saturation, warmth: -100..100, 0 is unchanged. Blur in pixels. */
+export interface ColorAdjust {
+  brightness: number;
+  contrast: number;
+  saturation: number;
+  warmth: number;
+  blur?: number;
+}
+
+export const COLOR_LOOKS: { id: string; label: string; adjust: ColorAdjust }[] = [
+  { id: "natural", label: "Natural", adjust: { brightness: 0, contrast: 0, saturation: 0, warmth: 0 } },
+  { id: "vivid", label: "Vivid", adjust: { brightness: 4, contrast: 12, saturation: 35, warmth: 0 } },
+  { id: "cinematic", label: "Cinematic", adjust: { brightness: -4, contrast: 18, saturation: -12, warmth: 12 } },
+  { id: "moody", label: "Moody", adjust: { brightness: -12, contrast: 22, saturation: -25, warmth: -15 } },
+  { id: "bright", label: "Bright and airy", adjust: { brightness: 14, contrast: -8, saturation: 6, warmth: 4 } },
+  { id: "vintage", label: "Vintage", adjust: { brightness: 2, contrast: -14, saturation: -30, warmth: 30 } },
+  { id: "cold", label: "Cold", adjust: { brightness: 0, contrast: 8, saturation: -10, warmth: -35 } },
+  { id: "noir", label: "Black and white", adjust: { brightness: 0, contrast: 25, saturation: -100, warmth: 0 } },
+];
+
+/** Green screen: pixels near `color` become see-through. */
+export interface ChromaKey {
+  color: string;
+  similarity: number;
+  smoothness: number;
+}
+
+/** Shared by pictures and videos: how the media sits in its box. */
+export interface MediaLook {
+  adjust?: ColorAdjust;
+  chroma?: ChromaKey | null;
+  shape?: "rect" | "rounded" | "circle";
+  /** Part of the source shown, as fractions 0..1 of its width and height. */
+  crop?: { x: number; y: number; w: number; h: number } | null;
+  flipX?: boolean;
+  border?: { width: number; color: string } | null;
+  shadow?: boolean;
+}
+
 interface BaseObj {
   id: string;
   name: string;
@@ -98,6 +145,17 @@ interface BaseObj {
   opacity: number;
   tracks: Tracks;
   links?: Link[];
+  /** The slide this object belongs to (only visible during it). None: on top of every slide. */
+  slide?: string;
+  loop?: LoopKind;
+  /** How strong the loop is (1 = normal). */
+  loopAmount?: number;
+  /** Locked objects can't be dragged on the canvas. */
+  locked?: boolean;
+  /** Hidden in the editor and export (an eye toggle on the layer). */
+  hidden?: boolean;
+  /** "center": rotate and scale around the middle of the content instead of x,y. */
+  pivot?: "center";
 }
 
 export const LOOK_STYLES = ["stick", "cartoon", "robot", "cutout"] as const;
@@ -256,6 +314,9 @@ export interface SoundObj extends BaseObj {
   volume: number;
 }
 
+export const TEXT_STYLES = ["plain", "outline", "shadow", "box", "highlight", "lowerThird", "gradient"] as const;
+export type TextStyle = (typeof TEXT_STYLES)[number];
+
 /** x,y is the top of the text at its alignment point. */
 export interface TextObj extends BaseObj {
   type: "text";
@@ -265,6 +326,37 @@ export interface TextObj extends BaseObj {
   font: FontName;
   align: Align;
   bold: boolean;
+  italic?: boolean;
+  style?: TextStyle;
+  /** Box, highlight and lower-third color; the gradient's second color. */
+  accent?: string;
+  /** A lower-third's second, smaller line. */
+  subtext?: string;
+  /** Wrap lines to this width (scene pixels). */
+  maxWidth?: number;
+  lineHeight?: number;
+  letterSpacing?: number;
+  /** A number that counts from `from` to `to`; the text is shown as prefix + number + suffix. */
+  counter?: { from: number; to: number; start: number; duration: number; decimals: number; prefix: string; suffix: string } | null;
+}
+
+export const CHART_KINDS = ["bar", "hbar", "line", "pie", "donut"] as const;
+export type ChartKind = (typeof CHART_KINDS)[number];
+
+/** A chart that grows in from `start` over `duration`. x,y is the top-left of its box. */
+export interface ChartObj extends BaseObj {
+  type: "chart";
+  kind: ChartKind;
+  data: { label: string; value: number; color?: string }[];
+  w: number;
+  h: number;
+  start: number;
+  duration: number;
+  colors: string[];
+  textColor: string;
+  font: FontName;
+  unit: string;
+  showValues: boolean;
 }
 
 /** With a target, x,y offsets the bubble from its default spot above the head. */
@@ -280,11 +372,116 @@ export interface BubbleObj extends BaseObj {
 }
 
 /** x,y is the top-left corner. */
-export interface ImageObj extends BaseObj {
+export interface ImageObj extends BaseObj, MediaLook {
   type: "image";
   asset: string;
   w: number;
   h: number;
+}
+
+/**
+ * An animated SVG: a sticker ("emoji:1f600"), a library illustration ("lib:teeth")
+ * or an imported or AI-drawn SVG kept as an asset ("asset:<id>"). x,y is the top-left.
+ */
+export interface SvgObj extends BaseObj {
+  type: "svg";
+  src: string;
+  w: number;
+  h: number;
+  /** Scene time at which the SVG's own animation starts. */
+  clock: number;
+  /** Animation speed (1 = as drawn; 0 freezes it). */
+  speed: number;
+  /** Exact color swaps to match a theme. */
+  colors?: Record<string, string>;
+  flipX?: boolean;
+}
+
+/** A video clip on the timeline. x,y is the top-left of its box. */
+export interface VideoObj extends BaseObj, MediaLook {
+  type: "video";
+  asset: string;
+  w: number;
+  h: number;
+  /** Timeline second it starts, and how long it plays (after speed). */
+  start: number;
+  duration: number;
+  /** Second of the source file where it starts. */
+  in: number;
+  speed: number;
+  volume: number;
+  fadeIn: number;
+  fadeOut: number;
+  reverse?: boolean;
+  /** Hold the last frame this many extra seconds. */
+  freeze?: number;
+}
+
+export const AUDIO_ROLES = ["voiceover", "narration", "music", "sound"] as const;
+export type AudioRole = (typeof AUDIO_ROLES)[number];
+
+/** Timed words, on the scene clock. */
+export interface Word {
+  start: number;
+  end: number;
+  text: string;
+}
+
+/** Sound on the timeline: a recording, an upload, a video's detached sound or a spoken narration. */
+export interface AudioObj extends BaseObj {
+  type: "audio";
+  asset: string | null;
+  role: AudioRole;
+  start: number;
+  duration: number;
+  in: number;
+  speed: number;
+  volume: number;
+  fadeIn: number;
+  fadeOut: number;
+  /** Narration: the words to speak and the voice; the asset is made from them. */
+  text?: string;
+  voice?: VoiceId;
+  /** Loudness envelope (for waveforms and lip sync), `rate` samples a second. */
+  envelope?: number[];
+  rate?: number;
+  /** When each word is spoken, on the scene clock (for captions). */
+  words?: Word[];
+  /** A speaker whose mouth moves with it. */
+  speaker?: string | null;
+}
+
+export const CAPTION_STYLES = ["standard", "outline", "box", "highlight", "karaoke", "pop"] as const;
+export type CaptionStyle = (typeof CAPTION_STYLES)[number];
+
+/** Captions: timed words shown a line at a time. */
+export interface CaptionObj extends BaseObj {
+  type: "caption";
+  words: Word[];
+  /** The audio or video object the words came from, if any. */
+  source: string | null;
+  style: CaptionStyle;
+  position: "top" | "middle" | "bottom";
+  font: FontName;
+  size: number;
+  color: string;
+  accent: string;
+  /** Characters per line before breaking. */
+  maxChars: number;
+}
+
+export const REGION_KINDS = ["blur", "pixelate", "redact", "highlight", "spotlight", "magnify"] as const;
+export type RegionKind = (typeof REGION_KINDS)[number];
+
+/** An effect on part of the picture (blur a face, point at a button). x,y is the top-left. */
+export interface RegionObj extends BaseObj {
+  type: "region";
+  kind: RegionKind;
+  w: number;
+  h: number;
+  shape: "rect" | "ellipse";
+  strength: number;
+  color: string;
 }
 
 /** A light in the 3D view (invisible in 2D). x, y, z is where it shines from. */
@@ -299,7 +496,53 @@ export interface LightObj extends BaseObj {
 export const LIGHTING_PRESETS = ["day", "golden", "night", "overcast", "studio", "indoor"] as const;
 export type LightingPreset = (typeof LIGHTING_PRESETS)[number];
 
-export type SceneObj = StickmanObj | DrawingObj | TextObj | BubbleObj | ImageObj | CreatureObj | EffectObj | SoundObj | LightObj;
+export type SceneObj =
+  | StickmanObj
+  | DrawingObj
+  | TextObj
+  | BubbleObj
+  | ImageObj
+  | CreatureObj
+  | EffectObj
+  | SoundObj
+  | LightObj
+  | SvgObj
+  | VideoObj
+  | AudioObj
+  | CaptionObj
+  | RegionObj
+  | ChartObj;
+
+export const TRANSITIONS = ["cut", "fade", "slideLeft", "slideRight", "slideUp", "slideDown", "push", "zoom", "wipe", "circle", "blur", "flip"] as const;
+export type TransitionKind = (typeof TRANSITIONS)[number];
+
+export type Background =
+  | { kind: "color"; color: string }
+  | { kind: "gradient"; from: string; to: string; angle: number; radial?: boolean }
+  | { kind: "image"; asset: string; dim?: number };
+
+/** A slide of a presentation: a stretch of the timeline with its own background and objects. */
+export interface Slide {
+  id: string;
+  title: string;
+  start: number;
+  duration: number;
+  background: Background;
+  /** How this slide arrives from the previous one. */
+  transition: { kind: TransitionKind; duration: number };
+  /** Speaker notes (the narration script). */
+  notes?: string;
+  /** Layout the slide was built with (for the AI and the slide panel). */
+  layout?: string;
+  /** The content the slide was built from, so a theme change can rebuild it. */
+  spec?: unknown;
+}
+
+export interface Marker {
+  t: number;
+  label: string;
+  color?: string;
+}
 export type ObjType = SceneObj["type"];
 
 export interface Scene {
@@ -324,6 +567,16 @@ export interface Scene {
   look3d?: "soft" | "toon";
   /** 3D camera: yaw, pitch, dist, tx, ty, tz, fov tracks. */
   camera3d?: { tracks: Tracks };
+  /** A presentation's slides, in time order. */
+  slides?: Slide[];
+  /** The presentation theme the slides were styled with. */
+  theme?: string;
+  /** Scene background when it is more than a color. */
+  backgroundFill?: Background | null;
+  /** Color grade of the whole video. */
+  grade?: ColorAdjust | null;
+  markers?: Marker[];
+  title?: string;
 }
 
 /** Imported pictures and generated voice audio. Kept outside the scene so undo history stays small. */
@@ -333,9 +586,20 @@ export interface Asset {
   src: string;
   w: number;
   h: number;
-  kind?: "image" | "audio";
-  /** Seconds, for audio. */
+  kind?: "image" | "audio" | "video" | "svg";
+  /** Seconds, for audio and video. */
   duration?: number;
+  /** An SVG asset's markup (src is empty for these). */
+  svg?: string;
+  /** Whether a video has a sound track. */
+  hasAudio?: boolean;
+  /** Where it came from (upload, recording, stock, ai, tts), for credits and the media panel. */
+  origin?: string;
+  credit?: string;
+  /** Timeline previews: a strip of video frames and loudness peaks. */
+  filmstrip?: string;
+  frames?: number;
+  waveform?: number[];
   /** Puppet joints for a character picture, in its pixels. */
   joints?: Record<CutoutJoint, { x: number; y: number }>;
 }

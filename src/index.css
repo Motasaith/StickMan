@@ -1,0 +1,264 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+ * Two palettes with one set of variable names, as in PromptCut:
+ *
+ *  - Paper (default): warm paper, ink and red, for the projects page.
+ *  - Studio (`.theme-editor` on <html>): dark olive with cream actions, for the editor.
+ *    Set on <html> so dialogs and menus (rendered in portals) follow it too.
+ *
+ * Timeline colors let tracks be read at a glance.
+ */
+@layer base {
+  :root {
+    --background: 44 31% 93%;
+    --foreground: 70 9% 13%;
+
+    --panel-sunken: 44 27% 92%;
+    --panel: 43 41% 97%;
+    --panel-raised: 45 23% 90%;
+    --line: 42 10% 80%;
+
+    --card: 43 41% 97%;
+    --card-foreground: 70 9% 13%;
+    --popover: 43 41% 97%;
+    --popover-foreground: 70 9% 13%;
+
+    --primary: 10 68% 51%;
+    --primary-foreground: 40 100% 96%;
+    --secondary: 60 13% 89%;
+    --secondary-foreground: 70 9% 13%;
+    --muted: 45 20% 89%;
+    --muted-foreground: 66 5% 38%;
+    --accent: 45 20% 89%;
+    --accent-foreground: 70 9% 13%;
+    --destructive: 3 71% 41%;
+    --destructive-foreground: 0 0% 100%;
+    --warn: 35 100% 30%;
+    --good: 145 45% 32%;
+
+    --border: 42 10% 80%;
+    --input: 42 10% 76%;
+    --ring: 10 68% 51%;
+    --radius: 3px;
+
+    --clip-image: 205 55% 40%;
+    --clip-video: 28 70% 42%;
+    --clip-title: 262 35% 48%;
+    --clip-voice: 150 40% 32%;
+    --clip-music: 330 45% 45%;
+    --clip-character: 12 60% 48%;
+    --clip-shape: 190 45% 36%;
+    --clip-sticker: 45 80% 40%;
+    --clip-effect: 280 40% 50%;
+    --clip-slide: 220 30% 45%;
+
+    color-scheme: light;
+  }
+
+  :root.theme-editor {
+    --background: 105 8% 10%;
+    --foreground: 53 20% 92%;
+
+    --panel-sunken: 96 12% 8%;
+    --panel: 96 7% 14%;
+    --panel-raised: 94 8% 18%;
+    --line: 100 4% 22%;
+
+    --card: 96 7% 14%;
+    --card-foreground: 53 20% 92%;
+    --popover: 96 7% 14%;
+    --popover-foreground: 53 20% 92%;
+
+    --primary: 69 33% 85%;
+    --primary-foreground: 84 14% 15%;
+    --secondary: 94 8% 18%;
+    --secondary-foreground: 53 20% 92%;
+    --muted: 94 8% 18%;
+    --muted-foreground: 82 10% 62%;
+    --accent: 90 8% 20%;
+    --accent-foreground: 53 20% 94%;
+    --destructive: 12 73% 61%;
+    --destructive-foreground: 0 0% 100%;
+    --warn: 30 57% 73%;
+    --good: 113 30% 69%;
+
+    --border: 100 4% 22%;
+    --input: 100 4% 26%;
+    --ring: 69 33% 85%;
+    --radius: 0.55rem;
+
+    --clip-image: 204 33% 67%;
+    --clip-video: 32 45% 61%;
+    --clip-title: 22 60% 71%;
+    --clip-voice: 102 30% 75%;
+    --clip-music: 330 38% 74%;
+    --clip-character: 14 55% 68%;
+    --clip-shape: 186 30% 62%;
+    --clip-sticker: 46 60% 66%;
+    --clip-effect: 280 30% 72%;
+    --clip-slide: 220 25% 62%;
+
+    color-scheme: dark;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    font-feature-settings: "cv11", "ss01";
+  }
+
+  ::selection {
+    background: hsl(var(--primary) / 0.35);
+  }
+
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--line)) transparent;
+  }
+  *::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  *::-webkit-scrollbar-thumb {
+    background: hsl(var(--line));
+    border-radius: 999px;
+    border: 3px solid transparent;
+    background-clip: content-box;
+  }
+
+  :focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
+  }
+
+  input[type="color"] {
+    -webkit-appearance: none;
+    appearance: none;
+    padding: 0;
+    border: 1px solid hsl(var(--input));
+    border-radius: calc(var(--radius) - 2px);
+    background: transparent;
+    cursor: pointer;
+  }
+  input[type="color"]::-webkit-color-swatch-wrapper {
+    padding: 2px;
+  }
+  input[type="color"]::-webkit-color-swatch {
+    border: none;
+    border-radius: 3px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+@layer components {
+  .font-display {
+    letter-spacing: -0.035em;
+  }
+
+  /* Accent words in headlines: serif italic in the accent color. */
+  .serif-accent {
+    font-family: Georgia, "Times New Roman", serif;
+    font-style: italic;
+    font-weight: 400;
+    letter-spacing: -0.02em;
+    color: hsl(var(--primary));
+  }
+
+  /* Small mono labels ("01 / THE PROCESS"). */
+  .eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    font: 500 10px/1.5 "JetBrains Mono", ui-monospace, monospace;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: hsl(var(--muted-foreground));
+  }
+  .eyebrow-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: hsl(var(--primary));
+    flex-shrink: 0;
+  }
+
+  .ai-glow {
+    box-shadow:
+      0 0 0 1px hsl(var(--primary) / 0.35),
+      0 0 24px -4px hsl(var(--primary) / 0.35);
+  }
+
+  .shimmer-text {
+    background: linear-gradient(90deg, hsl(var(--muted-foreground)) 0%, hsl(var(--foreground)) 45%, hsl(var(--primary)) 50%, hsl(var(--foreground)) 55%, hsl(var(--muted-foreground)) 100%);
+    background-size: 200% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    @apply animate-shimmer;
+  }
+
+  .grid-bg {
+    background-image:
+      linear-gradient(hsl(var(--line) / 0.5) 1px, transparent 1px),
+      linear-gradient(90deg, hsl(var(--line) / 0.5) 1px, transparent 1px);
+    background-size: 32px 32px;
+  }
+
+  .checker {
+    background-color: #111;
+    background-image:
+      linear-gradient(45deg, #222 25%, transparent 25%),
+      linear-gradient(-45deg, #222 25%, transparent 25%),
+      linear-gradient(45deg, transparent 75%, #222 75%),
+      linear-gradient(-45deg, transparent 75%, #222 75%);
+    background-size: 12px 12px;
+    background-position:
+      0 0,
+      0 6px,
+      6px -6px,
+      -6px 0;
+  }
+
+  /* Editor field rows: label on the left, control on the right. */
+  .prop-row {
+    @apply flex min-h-8 items-center justify-between gap-3 text-[13px];
+  }
+  .prop-row > span:first-child {
+    @apply shrink-0 text-muted-foreground;
+  }
+  .num-input {
+    @apply h-7 w-[72px] rounded-md border border-input bg-panel-sunken px-2 text-right font-mono text-xs text-foreground outline-none focus:border-ring;
+  }
+  .text-input {
+    @apply h-8 w-full rounded-md border border-input bg-panel-sunken px-2 text-[13px] text-foreground outline-none focus:border-ring;
+  }
+  .select-native {
+    @apply h-8 min-w-0 rounded-md border border-input bg-panel-sunken px-2 text-[13px] text-foreground outline-none focus:border-ring;
+  }
+  .chip {
+    @apply inline-flex h-7 items-center gap-1.5 rounded-full border border-line bg-panel-raised px-3 text-xs text-foreground transition hover:border-primary/60 hover:bg-accent disabled:opacity-40;
+  }
+  .tile {
+    @apply flex flex-col items-center justify-center gap-1 rounded-lg border border-line bg-panel-sunken p-2 text-center text-[11px] text-muted-foreground transition hover:border-primary/60 hover:text-foreground;
+  }
+}

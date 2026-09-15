@@ -3,8 +3,8 @@
 
 import { ArrayBufferTarget, Muxer } from "mp4-muxer";
 import type { Asset, Scene } from "./engine/scene";
-import { renderScene } from "./engine/render";
-import { preloadImages } from "./images";
+import { renderScene, type RenderOptions } from "./engine/render";
+import { canvasPool, exportVideoLookup, preloadImages, preloadSvgs, seekVideos, videoLookup } from "./runtime/media";
 import { buildAvcC, naluType, splitNalus, toLengthPrefixed } from "./avc";
 import { audioContext, mixSceneAudio } from "./audio";
 import { render3D } from "./render3d";
@@ -68,7 +68,17 @@ export async function exportVideo(
   /** For testing the encoder paths: force the H.264 output format. */
   options: { avcFormat?: "avc" | "annexb" } = {}
 ): Promise<ExportResult> {
-  const images = await preloadImages(assets);
+  const pool = canvasPool();
+  const opts: FrameOptions = {
+    images: await preloadImages(assets),
+    svgs: await preloadSvgs(scene, assets),
+    videoFrame: exportVideoLookup(assets),
+    makeCanvas: pool,
+    threeD: render3D,
+    prepare: scene.objects.some((o) => o.type === "video") ? (t) => seekVideos(scene, t, assets) : undefined,
+    reset: () => pool.reset(),
+    assets,
+  };
   const w = scene.width - (scene.width % 2);
   const h = scene.height - (scene.height % 2);
   const fps = scene.fps;
@@ -83,18 +93,31 @@ export async function exportVideo(
   const audio = soundtrack ? await pickAudio(soundtrack.sampleRate, soundtrack.numberOfChannels) : null;
   const config = await pickCodec(w, h, fps, bitrate);
   // No H.264, or a soundtrack this browser can't encode for MP4: record WebM (with sound) instead.
-  if (!config || (soundtrack && !audio)) return recordWebm(scene, canvas, ctx, images, onProgress, signal, soundtrack);
+  if (!config || (soundtrack && !audio)) return recordWebm(scene, canvas, ctx, opts, onProgress, signal, soundtrack);
   // Annex B keeps the SPS/PPS inside every keyframe, so the MP4 header is built from the
   // stream itself. Firefox's own `description` doesn't always match its stream.
   config.avc = { format: options.avcFormat ?? "annexb" };
 
   try {
-    return await encodeMp4(scene, canvas, ctx, images, config, frames, onProgress, signal, soundtrack && audio ? { buffer: soundtrack, choice: audio } : null);
+    return await encodeMp4(scene, canvas, ctx, opts, config, frames, onProgress, signal, soundtrack && audio ? { buffer: soundtrack, choice: audio } : null);
   } catch (err) {
     // The encoder gave us nothing an MP4 can be built from: record WebM instead of failing.
-    if ([NO_DECODER_CONFIG, REORDERED].includes((err as Error).message)) return recordWebm(scene, canvas, ctx, images, onProgress, signal, soundtrack);
+    if ([NO_DECODER_CONFIG, REORDERED].includes((err as Error).message)) return recordWebm(scene, canvas, ctx, opts, onProgress, signal, soundtrack);
     throw err;
   }
+}
+
+/** Everything a frame needs: media lookups, and a hook to get videos to the right frame first. */
+interface FrameOptions extends RenderOptions {
+  prepare?: (t: number) => Promise<void>;
+  reset: () => void;
+  assets: Asset[];
+}
+
+async function drawFrame(ctx: CanvasRenderingContext2D, scene: Scene, t: number, opts: FrameOptions) {
+  if (opts.prepare) await opts.prepare(t);
+  opts.reset();
+  renderScene(ctx, scene, t, opts);
 }
 
 const NO_DECODER_CONFIG = "The video encoder did not provide H.264 stream settings";
@@ -104,7 +127,7 @@ async function encodeMp4(
   scene: Scene,
   canvas: HTMLCanvasElement,
   ctx: CanvasRenderingContext2D,
-  images: Awaited<ReturnType<typeof preloadImages>>,
+  opts: FrameOptions,
   config: VideoEncoderConfig,
   frames: number,
   onProgress: (fraction: number) => void,
@@ -172,7 +195,7 @@ async function encodeMp4(
       stop();
       throw failure;
     }
-    renderScene(ctx, scene, i / fps, { images, threeD: render3D });
+    await drawFrame(ctx, scene, i / fps, opts);
     const frame = new VideoFrame(canvas, { timestamp: Math.round(i * frameDur), duration: Math.round(frameDur) });
     encoder.encode(frame, { keyFrame: i % (fps * 2) === 0 });
     frame.close();
@@ -222,7 +245,7 @@ async function recordWebm(
   scene: Scene,
   canvas: HTMLCanvasElement,
   ctx: CanvasRenderingContext2D,
-  images: Awaited<ReturnType<typeof preloadImages>>,
+  opts: FrameOptions,
   onProgress: (f: number) => void,
   signal: AbortSignal,
   soundtrack: AudioBuffer | null = null
@@ -249,7 +272,8 @@ async function recordWebm(
   await new Promise<void>((resolve) => {
     const tick = () => {
       const t = (performance.now() - start) / 1000;
-      renderScene(ctx, scene, Math.min(t, scene.duration), { images, threeD: render3D });
+      opts.reset();
+      renderScene(ctx, scene, Math.min(t, scene.duration), { ...opts, videoFrame: videoLookup(opts.assets, true) });
       onProgress(Math.min(1, t / scene.duration));
       if (t >= scene.duration || signal.aborted) resolve();
       else requestAnimationFrame(tick);

@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400">
+<ellipse cx="200" cy="356" rx="90" ry="13" fill="#2B2D42" opacity="0.08"/>
+<g transform-origin="200 330">
+<animateTransform attributeName="transform" type="rotate" values="-8;8;-8" dur="2s" repeatCount="indefinite" calcMode="spline" keySplines="0.45 0 0.55 1;0.45 0 0.55 1"/>
+<path d="M130 130 C130 80 164 50 204 50 C250 50 280 82 280 124 C280 168 244 180 224 200 C212 212 212 222 212 240" stroke="#7B61FF" stroke-width="44" stroke-linecap="round" fill="none"/>
+<circle cx="212" cy="310" r="28" fill="#7B61FF"/>
+</g>
+</svg>

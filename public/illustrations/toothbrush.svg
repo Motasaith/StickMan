@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400">
+<ellipse cx="200" cy="358" rx="130" ry="13" fill="#2B2D42" opacity="0.08"/>
+<g>
+<animateTransform attributeName="transform" type="translate" values="-18 6;18 -6;-18 6" dur="0.9s" repeatCount="indefinite" calcMode="spline" keySplines="0.45 0 0.55 1;0.45 0 0.55 1"/>
+<g transform="rotate(-28 200 200)">
+<rect x="70" y="208" width="230" height="30" rx="15" fill="#4F7CFF"/>
+<rect x="70" y="208" width="120" height="30" rx="15" fill="#6C93FF"/>
+<rect x="276" y="200" width="64" height="44" rx="10" fill="#4F7CFF"/>
+<g fill="#FFFFFF" stroke="#D9E1EC" stroke-width="2">
+<rect x="282" y="160" width="10" height="42" rx="4"/><rect x="296" y="156" width="10" height="46" rx="4"/>
+<rect x="310" y="156" width="10" height="46" rx="4"/><rect x="324" y="160" width="10" height="42" rx="4"/>
+</g>
+<path d="M280 158 C284 130 300 140 306 126 C312 140 330 130 336 158 Z" fill="#7BDFF2"/>
+<path d="M292 146 C300 138 314 140 322 146" stroke="#FFFFFF" stroke-width="5" stroke-linecap="round" fill="none"/>
+</g>
+</g>
+<g fill="#FFFFFF" stroke="#BFE9F5" stroke-width="3">
+<circle cx="300" cy="120" r="12"><animate attributeName="cy" values="130;60" dur="2s" repeatCount="indefinite"/><animate attributeName="opacity" values="0;1;0" dur="2s" repeatCount="indefinite"/></circle>
+<circle cx="330" cy="130" r="8"><animate attributeName="cy" values="140;80" dur="1.6s" begin="0.5s" repeatCount="indefinite"/><animate attributeName="opacity" values="0;1;0" dur="1.6s" begin="0.5s" repeatCount="indefinite"/></circle>
+<circle cx="270" cy="110" r="7"><animate attributeName="cy" values="120;50" dur="1.8s" begin="1s" repeatCount="indefinite"/><animate attributeName="opacity" values="0;1;0" dur="1.8s" begin="1s" repeatCount="indefinite"/></circle>
+</g>
+<g transform="translate(92 292) rotate(-8)">
+<rect x="0" y="0" width="150" height="46" rx="12" fill="#FFFFFF" stroke="#D9E1EC" stroke-width="3"/>
+<rect x="0" y="0" width="54" height="46" rx="12" fill="#FF6B6B"/>
+<rect x="146" y="12" width="22" height="22" rx="5" fill="#2B2D42"/>
+<rect x="68" y="16" width="60" height="6" rx="3" fill="#4F7CFF"/><rect x="68" y="27" width="40" height="5" rx="2.5" fill="#BFD0FF"/>
+</g>
+</svg>

@@ -12,7 +12,9 @@
     "esModuleInterop": true,
     "resolveJsonModule": true,
     "noUnusedLocals": true,
-    "types": ["node", "vite/client"]
+    "types": ["node", "vite/client"],
+    "baseUrl": ".",
+    "paths": { "@/*": ["./src/*"] }
   },
   "include": ["src", "server", "scripts", "vite.config.ts"]
 }

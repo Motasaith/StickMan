@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400">
+<ellipse cx="200" cy="360" rx="110" ry="13" fill="#2B2D42" opacity="0.08"/>
+<g>
+<animateTransform attributeName="transform" type="translate" values="0 0;0 -10;0 0" dur="3s" begin="0s" repeatCount="indefinite" calcMode="spline" keySplines="0.45 0 0.55 1;0.45 0 0.55 1"/>
+<circle cx="200" cy="190" r="120" fill="#4FA3FF"/>
+<path d="M110 120 C140 96 180 110 180 140 C180 170 140 170 130 200 C120 226 90 220 86 190 C82 160 90 136 110 120 Z" fill="#7ED957"/>
+<path d="M220 200 C250 180 290 190 300 220 C310 256 270 290 240 280 C210 270 196 220 220 200 Z" fill="#7ED957"/>
+<path d="M230 90 C250 80 280 90 290 110 C272 120 248 116 230 90 Z" fill="#7ED957"/>
+<circle cx="170" cy="200" r="10" fill="#2B2D42"/><circle cx="230" cy="170" r="10" fill="#2B2D42"/>
+<path d="M176 236 Q210 256 240 222" stroke="#2B2D42" stroke-width="8" stroke-linecap="round" fill="none"/>
+</g>
+<path d="M200 340 C160 300 60 290 60 220 C60 180 100 170 120 200" stroke="#5BB85D" stroke-width="12" fill="none" stroke-linecap="round" opacity="0.7"/>
+<path d="M200 340 C240 300 340 290 340 220 C340 180 300 170 280 200" stroke="#5BB85D" stroke-width="12" fill="none" stroke-linecap="round" opacity="0.7"/>
+</svg>

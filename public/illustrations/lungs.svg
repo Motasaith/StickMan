@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400">
+<ellipse cx="200" cy="360" rx="120" ry="13" fill="#2B2D42" opacity="0.08"/>
+<path d="M200 60 V160 M200 150 L170 180 M200 150 L230 180" stroke="#E0789E" stroke-width="16" stroke-linecap="round" fill="none"/>
+<g transform-origin="200 200">
+<animateTransform attributeName="transform" type="scale" values="1 1;1.07 1.05;1 1" dur="3.4s" repeatCount="indefinite" calcMode="spline" keySplines="0.45 0 0.55 1;0.45 0 0.55 1"/>
+<path d="M176 170 C150 150 112 150 90 190 C66 234 66 300 92 326 C114 346 160 336 176 312 Z" fill="#FF8FA3"/>
+<path d="M224 170 C250 150 288 150 310 190 C334 234 334 300 308 326 C286 346 240 336 224 312 Z" fill="#FF8FA3"/>
+<g stroke="#E86A84" stroke-width="6" stroke-linecap="round" fill="none">
+<path d="M170 184 C150 210 140 240 120 262 M150 222 C136 226 124 236 112 244 M156 258 C150 280 140 296 124 306"/>
+<path d="M230 184 C250 210 260 240 280 262 M250 222 C264 226 276 236 288 244 M244 258 C250 280 260 296 276 306"/>
+</g>
+</g>
+<g fill="#7BDFF2" opacity="0.9">
+<circle cx="120" cy="120" r="7"><animate attributeName="cy" values="130;60" dur="3.4s" repeatCount="indefinite"/><animate attributeName="opacity" values="0;1;0" dur="3.4s" repeatCount="indefinite"/></circle>
+<circle cx="290" cy="116" r="6"><animate attributeName="cy" values="126;56" dur="3.4s" begin="1.2s" repeatCount="indefinite"/><animate attributeName="opacity" values="0;1;0" dur="3.4s" begin="1.2s" repeatCount="indefinite"/></circle>
+</g>
+</svg>

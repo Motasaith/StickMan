@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400">
+<ellipse cx="200" cy="356" rx="100" ry="13" fill="#2B2D42" opacity="0.08"/>
+<g>
+<animateTransform attributeName="transform" type="rotate" values="0 200 196;360 200 196" dur="14s" repeatCount="indefinite"/>
+<g stroke="#5BB85D" stroke-width="12" stroke-linecap="round">
+<line x1="200" y1="196" x2="200" y2="62"/><line x1="200" y1="196" x2="200" y2="330"/><line x1="200" y1="196" x2="66" y2="196"/><line x1="200" y1="196" x2="334" y2="196"/>
+<line x1="200" y1="196" x2="105" y2="101"/><line x1="200" y1="196" x2="295" y2="291"/><line x1="200" y1="196" x2="295" y2="101"/><line x1="200" y1="196" x2="105" y2="291"/>
+</g>
+<g fill="#7ED957">
+<circle cx="200" cy="60" r="16"/><circle cx="200" cy="332" r="16"/><circle cx="64" cy="196" r="16"/><circle cx="336" cy="196" r="16"/>
+<circle cx="103" cy="99" r="16"/><circle cx="297" cy="293" r="16"/><circle cx="297" cy="99" r="16"/><circle cx="103" cy="293" r="16"/>
+</g>
+</g>
+<g transform-origin="200 196">
+<animateTransform attributeName="transform" type="scale" values="1 1;1.05 0.95;0.95 1.05;1 1" dur="2s" repeatCount="indefinite" calcMode="spline" keySplines="0.45 0 0.55 1;0.45 0 0.55 1;0.45 0 0.55 1"/>
+<circle cx="200" cy="196" r="96" fill="#7ED957"/>
+<circle cx="160" cy="160" r="16" fill="#5BB85D"/><circle cx="248" cy="238" r="20" fill="#5BB85D"/><circle cx="238" cy="148" r="10" fill="#5BB85D"/>
+<ellipse cx="172" cy="200" rx="10" ry="13" fill="#2B2D42"/><ellipse cx="228" cy="200" rx="10" ry="13" fill="#2B2D42"/>
+<path d="M152 176 L186 188 M248 176 L214 188" stroke="#2B2D42" stroke-width="7" stroke-linecap="round"/>
+<path d="M180 242 Q200 228 220 242" stroke="#2B2D42" stroke-width="7" stroke-linecap="round" fill="none"/>
+</g>
+</svg>

@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400">
+<g>
+<animateTransform attributeName="transform" type="translate" values="0 20;0 -20;0 20" dur="1.6s" repeatCount="indefinite" calcMode="spline" keySplines="0.45 0 0.55 1;0.45 0 0.55 1"/>
+<path d="M200 50 L330 190 H250 V350 H150 V190 H70 Z" fill="#5BB85D" stroke="#5BB85D" stroke-width="16" stroke-linejoin="round"/>
+</g>
+</svg>

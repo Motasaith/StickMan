@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400">
+<g>
+<animateTransform attributeName="transform" type="rotate" values="0 200 200;360 200 200" dur="16s" repeatCount="indefinite"/>
+<g fill="#FFC857">
+<rect x="188" y="24" width="24" height="56" rx="12"/><rect x="188" y="320" width="24" height="56" rx="12"/>
+<rect x="24" y="188" width="56" height="24" rx="12"/><rect x="320" y="188" width="56" height="24" rx="12"/>
+<rect x="188" y="24" width="24" height="56" rx="12" transform="rotate(45 200 200)"/><rect x="188" y="320" width="24" height="56" rx="12" transform="rotate(45 200 200)"/>
+<rect x="24" y="188" width="56" height="24" rx="12" transform="rotate(45 200 200)"/><rect x="320" y="188" width="56" height="24" rx="12" transform="rotate(45 200 200)"/>
+</g>
+</g>
+<circle cx="200" cy="200" r="96" fill="#FFB627"><animate attributeName="r" values="94;102;94" dur="2s" repeatCount="indefinite" calcMode="spline" keySplines="0.45 0 0.55 1;0.45 0 0.55 1"/></circle>
+<circle cx="200" cy="200" r="76" fill="#FFC857"/>
+<circle cx="172" cy="190" r="9" fill="#8D5A3B"/><circle cx="228" cy="190" r="9" fill="#8D5A3B"/>
+<path d="M170 226 Q200 250 230 226" stroke="#8D5A3B" stroke-width="8" stroke-linecap="round" fill="none"/>
+</svg>

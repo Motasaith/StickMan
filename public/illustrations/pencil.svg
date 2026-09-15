@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400">
+<ellipse cx="200" cy="352" rx="150" ry="13" fill="#2B2D42" opacity="0.08"/>
+<path d="M60 300 C100 260 130 330 170 290 C210 250 240 320 290 280" stroke="#4F7CFF" stroke-width="10" stroke-linecap="round" fill="none" pathLength="1" stroke-dasharray="1" stroke-dashoffset="1">
+<animate attributeName="stroke-dashoffset" values="1;0;0" keyTimes="0;0.8;1" dur="3s" repeatCount="indefinite"/>
+</path>
+<g>
+<animateMotion dur="3s" repeatCount="indefinite" keyPoints="0;1;1" keyTimes="0;0.8;1" path="M60 300 C100 260 130 330 170 290 C210 250 240 320 290 280"/>
+<g transform="rotate(-45)">
+<path d="M0 0 L-18 -40 H18 Z" fill="#F4C7A1"/><path d="M0 0 L-6 -14 H6 Z" fill="#2B2D42"/>
+<rect x="-18" y="-220" width="36" height="180" fill="#FFC857"/><rect x="-18" y="-220" width="12" height="180" fill="#FFD875"/>
+<rect x="-18" y="-240" width="36" height="22" fill="#B8C0CC"/><path d="M-18 -240 H18 V-256 C18 -270 -18 -270 -18 -256 Z" fill="#FF8FA3"/>
+</g>
+</g>
+</svg>

@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400">
+<g>
+<animateTransform attributeName="transform" type="translate" values="0 0;0 -8;0 0" dur="3s" begin="0s" repeatCount="indefinite" calcMode="spline" keySplines="0.45 0 0.55 1;0.45 0 0.55 1"/>
+<path d="M60 80 H250 C266 80 280 94 280 110 V200 C280 216 266 230 250 230 H130 L84 270 V230 H60 C44 230 30 216 30 200 V110 C30 94 44 80 60 80 Z" fill="#4F7CFF"/>
+<g fill="#FFFFFF">
+<circle cx="100" cy="155" r="14"><animate attributeName="cy" values="155;140;155;155" keyTimes="0;0.2;0.4;1" dur="1.2s" repeatCount="indefinite"/></circle>
+<circle cx="155" cy="155" r="14"><animate attributeName="cy" values="155;155;140;155;155" keyTimes="0;0.2;0.4;0.6;1" dur="1.2s" repeatCount="indefinite"/></circle>
+<circle cx="210" cy="155" r="14"><animate attributeName="cy" values="155;155;140;155" keyTimes="0;0.4;0.6;0.8" dur="1.2s" repeatCount="indefinite"/></circle>
+</g>
+</g>
+<g>
+<animateTransform attributeName="transform" type="translate" values="0 0;0 -8;0 0" dur="3s" begin="1s" repeatCount="indefinite" calcMode="spline" keySplines="0.45 0 0.55 1;0.45 0 0.55 1"/>
+<path d="M340 190 H190 C174 190 160 204 160 220 V290 C160 306 174 320 190 320 H290 L330 354 V320 H340 C356 320 370 306 370 290 V220 C370 204 356 190 340 190 Z" fill="#2EC4B6"/>
+<g fill="#FFFFFF"><rect x="192" y="226" width="140" height="16" rx="8"/><rect x="192" y="258" width="100" height="16" rx="8"/></g>
+</g>
+</svg>

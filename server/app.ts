@@ -8,8 +8,11 @@ import { speak } from "./tts";
 import { finalizeVideo } from "./finalize";
 import { chat, llmConfig, parseJsonObject, type ChatMessage } from "./llm";
 import { describeScene, drawingDetails, systemPrompt } from "./prompt";
+import { pro } from "./routes";
+import { fillMissingArt, newArtCache } from "./artfill";
 
 export const app = new Hono();
+app.route("/", pro);
 
 const point = z.object({ x: z.number(), y: z.number() });
 const assetInfo = z.object({
@@ -17,7 +20,9 @@ const assetInfo = z.object({
   name: z.string(),
   w: z.number(),
   h: z.number(),
-  kind: z.enum(["image", "audio"]).optional(),
+  kind: z.enum(["image", "audio", "video", "svg"]).optional(),
+  duration: z.number().optional(),
+  hasAudio: z.boolean().optional(),
   joints: z.record(z.enum(CUTOUT_JOINTS), point).optional(),
 });
 const sceneShape = z
@@ -170,7 +175,11 @@ app.post("/api/ai/review", async (c) => {
       { time: 0, selectedId: null, history: [] }
     );
     // A reviewer's guess must never wipe out or duplicate work: only adjustments to existing objects pass.
-    const ops = (fix.ops as { op: string; id?: string }[]).filter((op) => FIX_OPS.includes(op.op) && (op.op === "camera" || scene.objects.some((o) => o.id === op.id)));
+    const ops = (fix.ops as { op: string; id?: string }[]).filter(
+      (op) =>
+        FIX_OPS.includes(op.op) &&
+        (op.op === "camera" || op.op === "grade" || scene.objects.some((o) => o.id === op.id) || (op.op === "updateSlide" && (scene.slides ?? []).some((sl) => sl.id === op.id)))
+    );
     const reply = ops.length ? fix.reply : "";
     return c.json({ problems, ops, reply, skipped: fix.skipped });
   } catch (err) {
@@ -178,7 +187,7 @@ app.post("/api/ai/review", async (c) => {
   }
 });
 
-const FIX_OPS = ["move", "animate", "update", "pose", "joints", "face", "expression", "show", "hide", "camera", "order"];
+const FIX_OPS = ["move", "animate", "update", "pose", "joints", "face", "expression", "show", "hide", "camera", "order", "edit", "enter", "exit", "trim", "updateSlide", "grade"];
 
 type Hist = { role: "user" | "assistant"; text: string };
 
@@ -200,11 +209,16 @@ async function planOps(
 
   // Problems that were there before this request aren't the AI's to fix now.
   const before = new Set(lintScene(scene));
+  const art = newArtCache();
+  const drawn = new Set<string>();
   let best: { reply: string; ops: unknown[]; results: OpResult[]; score: number; warnings: string[] } | null = null;
   for (let attempt = 0; attempt < 2; attempt++) {
     const text = await chat(messages, { jsonMode: true, reasoning: "medium", temperature: 0.5 });
     const obj = parseJsonObject(text);
-    const rawOps = Array.isArray(obj?.ops) ? (obj!.ops as unknown[]) : [];
+    // Illustrations the library lacks are drawn now, so slides get a picture that really fits.
+    const filled = await fillMissingArt(Array.isArray(obj?.ops) ? (obj!.ops as unknown[]) : [], art);
+    filled.drawn.forEach((d) => drawn.add(d));
+    const rawOps = filled.ops;
     const reply = typeof obj?.reply === "string" ? obj.reply : "";
     const dry = applyOps(scene, rawOps, assets);
     const failures = dry.results.filter((r) => !r.ok);
@@ -225,7 +239,7 @@ async function planOps(
   }
   const skipped = best!.results.filter((r) => !r.ok).map((r) => r.message);
   const ops = withCamerawork(scene, best!.ops, assets);
-  return { reply: best!.reply, ops, skipped, warnings: best!.warnings };
+  return { reply: best!.reply, ops, skipped, warnings: best!.warnings, drawn: [...drawn] };
 }
 
 const CAMERA_OPS = new Set(["camera3d", "orbit", "shot", "direct"]);
@@ -270,6 +284,18 @@ function describeForReviewer(o: Scene["objects"][number]): string {
       return `${o.id} = ${o.kind} sound (not visible)`;
     case "light":
       return `${o.id} = a light (not visible itself)`;
+    case "svg":
+      return `${o.id} = ${o.src.startsWith("emoji:") ? "sticker" : "illustration"} "${o.name}"`;
+    case "video":
+      return `${o.id} = video clip "${o.name}" (${o.start}s to ${(o.start + o.duration).toFixed(1)}s)`;
+    case "audio":
+      return `${o.id} = ${o.role} audio (not visible)`;
+    case "caption":
+      return `${o.id} = captions`;
+    case "region":
+      return `${o.id} = ${o.kind} area`;
+    case "chart":
+      return `${o.id} = ${o.kind} chart of ${o.data.map((d) => d.label).join(", ")}`;
   }
 }
 
@@ -282,12 +308,12 @@ async function lookForProblems(scene: Scene, prompt: string, sheet: string, time
         content: [
           {
             type: "text",
-            text: `This image is a contact sheet of ${times.length} frames from a 2D stick-figure animation, read left to right, top to bottom, at times ${times.map((t) => `${t.toFixed(1)}s`).join(", ")} (labelled in red; the red labels and grey borders are not part of the video).
+            text: `This image is a contact sheet of ${times.length} frames from a video made in an animation and presentation editor, read left to right, top to bottom, at times ${times.map((t) => `${t.toFixed(1)}s`).join(", ")} (labelled in red; the red labels and grey borders are not part of the video).
 The user asked for: "${prompt}"
 Scene objects (these facts are certain): ${scene.objects.map(describeForReviewer).join("; ")}
 
 Look for clear, concrete visual problems only, for example: something important is missing that the user asked for; objects overlap wrongly (a character inside a table or wall, text spilling outside its board); something is cut off at the canvas edge; a character is far away from the thing it is interacting with (writing on a board it is not next to); text is unreadable; a character floats above or sinks below the floor.
-Text and speech bubbles type out letter by letter and drawings can appear part by part, so half-written text or a half-drawn prop in one frame is normal, not a problem. A character writing on a board stands against it; that is not an overlap problem. Only report something as missing if it is missing in every frame where it should be. Do not comment on the simple drawing style, and do not invent problems. Describe each problem with the time and the object id.
+Text and speech bubbles type out letter by letter and drawings can appear part by part, so half-written text or a half-drawn prop in one frame is normal, not a problem. Presentation slides animate their text and illustrations in and cross-fade between slides, so a partly faded or sliding item is normal too. Captions at the bottom show the narration. A character writing on a board stands against it; that is not an overlap problem. Only report something as missing if it is missing in every frame where it should be. Do not comment on the simple drawing style, and do not invent problems. Describe each problem with the time and the object id.
 Return ONLY JSON: {"problems": ["...", "..."]}, with an empty list if it looks right.`,
           },
           { type: "image_url", image_url: { url: sheet } },

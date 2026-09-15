@@ -6,6 +6,7 @@ import type { Asset, CreatureObj, Ease, EffectObj, Key, LightObj, Part, Scene, S
 import { LIGHTING_PRESETS, SOUND_KINDS } from "./scene";
 import { PROP_KINDS, PROP_LIGHTS, buildProp } from "./props";
 import { SHOT_KINDS, directScene, planShot } from "./director";
+import { applyProOp, proEnd, proOpSchemas, type ProContext, type ProOp } from "./proOps";
 import { DEFAULT_LOOK, EFFECT_KINDS, EXPRESSIONS, FONTS, HAIRS, HATS, LOOK_STYLES, VOICE_IDS, cloneScene, findObj, uniqueId } from "./scene";
 import { STICKMAN_ANCHORS, activeLink, anchorAt, objectBounds, stickmanPoints, stickmanTransform, worldState } from "./render";
 import { FULL_BODY_POSES, LEG, POSES, POSE_NAMES, STAND, type PoseName } from "./rig";
@@ -25,7 +26,7 @@ import {
   type CreaturePose,
 } from "./creatures";
 
-export type AssetInfo = Pick<Asset, "id" | "name" | "w" | "h" | "joints" | "kind">;
+export type AssetInfo = Pick<Asset, "id" | "name" | "w" | "h" | "joints" | "kind" | "duration" | "hasAudio">;
 
 const num = z.number().finite();
 const time = z.number().finite().min(0).max(600);
@@ -421,6 +422,7 @@ export const opSchema = z.discriminatedUnion("op", [
   z.object({ op: z.literal("remove"), id }),
   z.object({ op: z.literal("clearMotion"), id }),
   z.object({ op: z.literal("order"), id, to: z.enum(["front", "back", "forward", "backward"]) }),
+  ...proOpSchemas,
 ]);
 
 export type Op = z.infer<typeof opSchema>;
@@ -437,6 +439,8 @@ export interface ApplyOutcome {
   results: OpResult[];
   /** Ops that parsed and applied, in order. */
   applied: Op[];
+  /** Assets the ops created (AI-drawn SVGs). */
+  newAssets: Asset[];
 }
 
 /** Apply ops to a copy of the scene. Invalid ops are skipped with a reason. */
@@ -444,6 +448,7 @@ export function applyOps(scene: Scene, rawOps: unknown[], assets: AssetInfo[] = 
   const next = cloneScene(scene);
   const results: OpResult[] = [];
   const applied: Op[] = [];
+  const pro: ProContext = { assets, newAssets: [] };
   for (const raw of rawOps) {
     const parsed = opSchema.safeParse(raw);
     if (!parsed.success) {
@@ -452,7 +457,7 @@ export function applyOps(scene: Scene, rawOps: unknown[], assets: AssetInfo[] = 
       continue;
     }
     try {
-      const message = applyOne(next, parsed.data, assets);
+      const message = applyOne(next, parsed.data, assets, pro);
       const extra = raw as { z?: unknown; depth?: unknown; id?: unknown };
       if (CREATE_OPS.includes(parsed.data.op) && typeof extra.id === "string") {
         const created = findObj(next, extra.id);
@@ -466,7 +471,7 @@ export function applyOps(scene: Scene, rawOps: unknown[], assets: AssetInfo[] = 
     }
   }
   extendDuration(next);
-  return { scene: next, results, applied };
+  return { scene: next, results, applied, newAssets: pro.newAssets };
 }
 
 function formatZodError(error: z.ZodError): string {
@@ -478,7 +483,7 @@ function formatZodError(error: z.ZodError): string {
 
 /** Make sure the video is long enough to show every animation. */
 function extendDuration(scene: Scene) {
-  let end = lastKeyTime(scene.camera.tracks);
+  let end = Math.max(lastKeyTime(scene.camera.tracks), proEnd(scene) - 0.5);
   for (const o of scene.objects) end = Math.max(end, lastKeyTime(o.tracks));
   if (end + 0.5 > scene.duration) scene.duration = Math.ceil((end + 0.5) * 10) / 10;
 }
@@ -542,7 +547,7 @@ const baseObj = (objId: string, name: string, x: number, y: number) => ({
   tracks: {},
 });
 
-function applyOne(scene: Scene, op: Op, assets: AssetInfo[]): string {
+function applyOne(scene: Scene, op: Op, assets: AssetInfo[], pro: ProContext): string {
   switch (op.op) {
     case "scene": {
       if (op.background !== undefined) scene.background = op.background;
@@ -1113,6 +1118,8 @@ function applyOne(scene: Scene, op: Op, assets: AssetInfo[]): string {
       scene.objects.splice(j, 0, obj);
       return `moved ${op.id} to the ${op.to}`;
     }
+    default:
+      return applyProOp(scene, op as ProOp, pro);
   }
 }
 

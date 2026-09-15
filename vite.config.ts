@@ -1,6 +1,7 @@
 import { defineConfig, type Plugin } from "vite";
 import react from "@vitejs/plugin-react";
 import { getRequestListener } from "@hono/node-server";
+import { fileURLToPath } from "node:url";
 
 /** Serve the AI endpoints from the dev server, reloading server code on each request. */
 function apiPlugin(): Plugin {
@@ -22,5 +23,6 @@ function apiPlugin(): Plugin {
 
 export default defineConfig({
   plugins: [react(), apiPlugin()],
+  resolve: { alias: { "@": fileURLToPath(new URL("./src", import.meta.url)) } },
   server: { port: 5178 },
 });

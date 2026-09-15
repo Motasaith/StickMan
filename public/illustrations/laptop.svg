@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400">
+<ellipse cx="200" cy="346" rx="170" ry="13" fill="#2B2D42" opacity="0.08"/>
+<rect x="80" y="70" width="240" height="170" rx="14" fill="#2B2D42"/>
+<rect x="94" y="84" width="212" height="142" rx="6" fill="#1E2033"/>
+<rect x="110" y="104" width="0" height="12" rx="6" fill="#FF6B6B"><animate attributeName="width" values="0;0;80;80;0" keyTimes="0;0;0.15;0.92;1" dur="4s" repeatCount="indefinite"/></rect>
+<rect x="126" y="126" width="0" height="12" rx="6" fill="#7BDFF2"><animate attributeName="width" values="0;0;120;120;0" keyTimes="0;0.15;0.3;0.92;1" dur="4s" repeatCount="indefinite"/></rect>
+<rect x="126" y="148" width="0" height="12" rx="6" fill="#FFD166"><animate attributeName="width" values="0;0;70;70;0" keyTimes="0;0.3;0.44999999999999996;0.92;1" dur="4s" repeatCount="indefinite"/></rect>
+<rect x="142" y="170" width="0" height="12" rx="6" fill="#8FD98F"><animate attributeName="width" values="0;0;110;110;0" keyTimes="0;0.45;0.6;0.92;1" dur="4s" repeatCount="indefinite"/></rect>
+<rect x="110" y="192" width="0" height="12" rx="6" fill="#FF6B6B"><animate attributeName="width" values="0;0;50;50;0" keyTimes="0;0.6;0.75;0.92;1" dur="4s" repeatCount="indefinite"/></rect>
+<rect x="110" y="190" width="8" height="18" fill="#FFFFFF"><animate attributeName="opacity" values="1;0;1" dur="0.8s" repeatCount="indefinite" calcMode="discrete"/></rect>
+<path d="M50 250 H350 L372 300 C374 310 368 318 356 318 H44 C32 318 26 310 28 300 Z" fill="#D9E1EC"/>
+<rect x="170" y="258" width="60" height="10" rx="5" fill="#B8C0CC"/>
+</svg>

@@ -1,21 +1,35 @@
-import type { BubbleObj, DrawingObj, FontName, ImageObj, LightObj, Link, Part, Scene, SceneObj, SoundObj, StickmanObj, TextObj } from "./scene";
+import type { AudioObj, BubbleObj, CaptionObj, ChartObj, DrawingObj, FontName, ImageObj, LightObj, Link, Part, RegionObj, Scene, SceneObj, Slide, SoundObj, StickmanObj, SvgObj, TextObj, VideoObj } from "./scene";
 import { EXPRESSIONS, findObj } from "./scene";
 import { HEIGHT, jointsAt, solveRig, type Pt, type RigPoints } from "./rig";
 import { cameraAt, valueAt } from "./tracks";
 import { drawLook, drawFaceFeatures } from "./looks";
 import { apply, creatureLocalBounds, drawCreature, solveCreature } from "./creatures";
 import { drawEffect } from "./effects";
+import { FONT_LIST, fontStack } from "./fonts";
+import { counterText, drawChart } from "./chart";
+import {
+  adjustFilter,
+  applyLoop,
+  captionBox,
+  captionLineAt,
+  composeTransition,
+  drawBackground,
+  drawCaption,
+  drawMedia,
+  drawRegion,
+  drawSvgObj,
+  drawTextObj,
+  layoutText,
+  slidesAt,
+  tintWarmth,
+  videoSourceTime,
+  type CanvasFactory,
+} from "./media";
 
 export type Ctx = CanvasRenderingContext2D;
 export type ImageLookup = (assetId: string) => CanvasImageSource | undefined;
 
-export const FONT_STACKS: Record<FontName, string> = {
-  sans: "'Segoe UI', Arial, sans-serif",
-  serif: "Georgia, 'Times New Roman', serif",
-  hand: "'Comic Sans MS', 'Segoe Print', 'Chalkboard SE', cursive",
-  chalk: "'Segoe Print', 'Comic Sans MS', 'Chalkboard SE', cursive",
-  mono: "Consolas, 'Courier New', monospace",
-};
+export const FONT_STACKS = Object.fromEntries(FONT_LIST.map((f) => [f.id, fontStack(f.id)])) as Record<FontName, string>;
 
 export interface Rect {
   x: number;
@@ -30,26 +44,105 @@ export interface RenderOptions {
   noCamera?: boolean;
   /** Draws a 3D-mode scene (browser only). Returns false when 3D isn't available. */
   threeD?: (ctx: Ctx, scene: Scene, t: number, opts: RenderOptions) => boolean;
+  /** SVG markup for "emoji:", "lib:" and "asset:" sources. */
+  svgs?: (src: string) => string | undefined;
+  /** A video object's frame at a second of its source. */
+  videoFrame?: (obj: VideoObj, sourceTime: number) => CanvasImageSource | undefined;
+  /** Scratch canvases (slide transitions, green screen, blur regions, grading). */
+  makeCanvas?: CanvasFactory;
 }
 
 export function renderScene(ctx: Ctx, scene: Scene, t: number, opts: RenderOptions = {}): void {
-  if (scene.mode === "3d" && opts.threeD && opts.threeD(ctx, scene, t, opts)) return;
+  if (scene.mode === "3d" && opts.threeD && opts.threeD(ctx, scene, t, opts)) {
+    drawScreenLayer(ctx, scene, t, opts, null);
+    return;
+  }
   ctx.save();
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.globalAlpha = 1;
   ctx.fillStyle = scene.background || "#ffffff";
   ctx.fillRect(0, 0, scene.width, scene.height);
-  applyCamera(ctx, scene, t, opts.noCamera);
-
-  if (scene.backgroundImage) {
-    const img = opts.images?.(scene.backgroundImage);
-    if (img) drawCover(ctx, img, scene.width, scene.height);
-  }
-
+  drawBackground(ctx, scene.backgroundFill, scene.width, scene.height, opts.images);
   frameBubbles = arrangeBubbles(ctx, scene, t, () => undefined);
-  for (const obj of scene.objects) drawObject(ctx, scene, obj, t, opts);
+
+  const slides = slidesAt(scene, t);
+  if (!slides) {
+    applyCamera(ctx, scene, t, opts.noCamera);
+    if (scene.backgroundImage) {
+      const img = opts.images?.(scene.backgroundImage);
+      if (img) drawCover(ctx, img, scene.width, scene.height);
+    }
+    for (const obj of scene.objects) drawObject(ctx, scene, obj, t, opts);
+  } else {
+    const A = slides.prev && opts.makeCanvas ? opts.makeCanvas(scene.width, scene.height) : null;
+    const B = A && opts.makeCanvas ? opts.makeCanvas(scene.width, scene.height) : null;
+    if (slides.prev && A && B) {
+      drawSlideLayer(A.ctx, scene, slides.prev, t, opts);
+      drawSlideLayer(B.ctx, scene, slides.cur, t, opts);
+      composeTransition(ctx, slides.cur.transition.kind, slides.p, A.canvas, B.canvas, scene.width, scene.height);
+    } else drawSlideLayer(ctx, scene, slides.cur, t, opts);
+    // Objects that belong to no slide sit on top of all of them.
+    ctx.save();
+    applyCamera(ctx, scene, t, opts.noCamera);
+    for (const obj of scene.objects) if (!obj.slide) drawObject(ctx, scene, obj, t, opts);
+    ctx.restore();
+  }
   frameBubbles = null;
   ctx.restore();
+  drawScreenLayer(ctx, scene, t, opts, slides);
+}
+
+/** Object types the 3D view doesn't model: they are drawn flat over its picture. */
+export const FLAT_TYPES = new Set(["svg", "video", "region", "audio", "caption"]);
+
+/** Draw only the flat editor objects (stickers, video, regions) with the scene camera. */
+export function drawFlatObjects(ctx: Ctx, scene: Scene, t: number, opts: RenderOptions) {
+  ctx.save();
+  applyCamera(ctx, scene, t, opts.noCamera);
+  for (const obj of scene.objects) if (FLAT_TYPES.has(obj.type)) drawObject(ctx, scene, obj, t, opts);
+  ctx.restore();
+}
+
+function drawSlideLayer(c: Ctx, scene: Scene, slide: Slide, t: number, opts: RenderOptions) {
+  c.save();
+  c.setTransform(1, 0, 0, 1, 0, 0);
+  c.globalAlpha = 1;
+  c.fillStyle = scene.background || "#ffffff";
+  c.fillRect(0, 0, scene.width, scene.height);
+  drawBackground(c, slide.background, scene.width, scene.height, opts.images);
+  applyCamera(c, scene, t, opts.noCamera);
+  for (const obj of scene.objects) if (obj.slide === slide.id) drawObject(c, scene, obj, t, opts);
+  c.restore();
+}
+
+/** Captions and the color grade: in screen space, over everything. */
+function drawScreenLayer(ctx: Ctx, scene: Scene, t: number, opts: RenderOptions, slides: ReturnType<typeof slidesAt>) {
+  ctx.save();
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  for (const obj of scene.objects) {
+    if (obj.type !== "caption" || obj.hidden) continue;
+    if (obj.slide && slides && obj.slide !== slides.cur.id && obj.slide !== slides.prev?.id) continue;
+    const st = objState(obj, t);
+    if (st.opacity <= 0.001) continue;
+    ctx.globalAlpha = st.opacity;
+    drawCaption(ctx, scene, obj, t, st.scale, st.x, st.y);
+  }
+  ctx.restore();
+  const canvas = (ctx as Ctx & { canvas?: CanvasImageSource & { width: number; height: number } }).canvas;
+  if (scene.grade && opts.makeCanvas && canvas) {
+    const filter = adjustFilter(scene.grade);
+    const copy = filter !== "none" ? opts.makeCanvas(canvas.width, canvas.height) : null;
+    ctx.save();
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    if (copy) {
+      copy.ctx.drawImage(canvas, 0, 0);
+      ctx.filter = filter;
+      ctx.drawImage(copy.canvas, 0, 0);
+      ctx.filter = "none";
+    }
+    tintWarmth(ctx, scene.grade.warmth, 0, 0, canvas.width, canvas.height);
+    ctx.restore();
+  }
 }
 
 export function applyCamera(ctx: Ctx, scene: Scene, t: number, skip?: boolean) {
@@ -178,6 +271,14 @@ export function worldState(scene: Scene | undefined, obj: SceneObj, t: number, d
 /** How open a speaker's mouth is (0..1) from the loudness of its voiced lines. */
 export function mouthAt(scene: Scene, speakerId: string, t: number): number {
   for (const o of scene.objects) {
+    if (o.type === "audio" && o.speaker === speakerId && o.envelope?.length && o.rate) {
+      if (t < o.start || t > o.start + o.duration) continue;
+      const i = (t - o.start) * o.speed * o.rate;
+      const i0 = Math.min(o.envelope.length - 1, Math.floor(i));
+      const i1 = Math.min(o.envelope.length - 1, i0 + 1);
+      const v = o.envelope[i0] + (o.envelope[i1] - o.envelope[i0]) * (i - i0);
+      return Math.max(0, Math.min(1, v * 1.3));
+    }
     if (o.type !== "bubble" || o.target !== speakerId || !o.audio) continue;
     const a = o.audio;
     if (t < a.at || t > a.at + a.duration || !a.envelope.length) continue;
@@ -190,8 +291,24 @@ export function mouthAt(scene: Scene, speakerId: string, t: number): number {
   return 0;
 }
 
+/** Whether an object draws anything at time t (not counting opacity). */
+export function onScreen(obj: SceneObj, t: number): boolean {
+  if (obj.hidden) return false;
+  switch (obj.type) {
+    case "sound":
+    case "light":
+    case "audio":
+      return false;
+    case "video":
+      return videoSourceTime(obj, t) !== null;
+    case "caption":
+      return captionLineAt(obj, t) !== null;
+  }
+  return true;
+}
+
 function drawObject(ctx: Ctx, scene: Scene, obj: SceneObj, t: number, opts: RenderOptions) {
-  if (obj.type === "sound" || obj.type === "light") return;
+  if (obj.type === "caption" || !onScreen(obj, t)) return;
   const st = worldState(scene, obj, t);
   if (st.opacity <= 0.001) return;
   ctx.save();
@@ -202,8 +319,16 @@ function drawObject(ctx: Ctx, scene: Scene, obj: SceneObj, t: number, opts: Rend
     return;
   }
   ctx.translate(st.x, st.y);
+  if (obj.pivot === "center" && obj.type !== "stickman" && obj.type !== "creature") {
+    const d = pivotShift(ctx, obj as BoxObj, st);
+    ctx.translate(d.x, d.y);
+  }
   if (st.rotation) ctx.rotate((st.rotation * Math.PI) / 180);
   applySquash(ctx, obj, t, st.scale);
+  if (obj.loop && obj.loop !== "none" && obj.type !== "stickman" && obj.type !== "creature" && obj.type !== "effect") {
+    const b = localBounds(ctx, obj as BoxObj);
+    ctx.globalAlpha *= applyLoop(ctx, obj.loop, obj.loopAmount, t, { x: b.x * st.scale, y: b.y * st.scale, w: b.w * st.scale, h: b.h * st.scale });
+  }
   switch (obj.type) {
     case "stickman":
       drawStickman(ctx, scene, obj, t, st, opts);
@@ -224,20 +349,30 @@ function drawObject(ctx: Ctx, scene: Scene, obj: SceneObj, t: number, opts: Rend
       break;
     case "text":
       ctx.scale(st.scale, st.scale);
-      drawText(ctx, obj, st.reveal);
+      drawTextObj(ctx, obj.counter ? { ...obj, text: counterText(obj.counter, t) } : obj, st.reveal);
       break;
-    case "image": {
+    case "chart":
       ctx.scale(st.scale, st.scale);
-      const img = opts.images?.(obj.asset);
-      if (img) ctx.drawImage(img, 0, 0, obj.w, obj.h);
-      else {
-        ctx.strokeStyle = "#999";
-        ctx.setLineDash([8, 6]);
-        ctx.lineWidth = 2;
-        ctx.strokeRect(0, 0, obj.w, obj.h);
-      }
+      drawChart(ctx, obj, t);
+      break;
+    case "image":
+      ctx.scale(st.scale, st.scale);
+      drawMedia(ctx, opts.images?.(obj.asset), obj, opts.makeCanvas, obj.asset);
+      break;
+    case "svg":
+      ctx.scale(st.scale, st.scale);
+      drawSvgObj(ctx, obj, t, opts.svgs);
+      break;
+    case "video": {
+      ctx.scale(st.scale, st.scale);
+      const at = videoSourceTime(obj, t);
+      drawMedia(ctx, at === null ? undefined : opts.videoFrame?.(obj, at), obj, opts.makeCanvas, null);
       break;
     }
+    case "region":
+      ctx.scale(st.scale, st.scale);
+      drawRegion(ctx, obj, opts.makeCanvas);
+      break;
   }
   ctx.restore();
 }
@@ -248,7 +383,7 @@ function applySquash(ctx: Ctx, obj: SceneObj, t: number, scale: number) {
   if (Math.abs(sq - 1) < 0.001 || sq <= 0) return;
   let px = 0;
   let py = 0;
-  if (obj.type === "drawing" || obj.type === "text" || obj.type === "image") {
+  if (obj.type === "drawing" || obj.type === "text" || obj.type === "image" || obj.type === "svg" || obj.type === "video" || obj.type === "chart") {
     const b = localBounds(ctx, obj);
     px = (b.x + b.w / 2) * scale;
     py = (b.y + b.h) * scale;
@@ -486,17 +621,6 @@ function roundRect(ctx: Ctx, x: number, y: number, w: number, h: number, r: numb
 }
 
 // ── Text and bubbles ─────────────────────────────────────────────────
-
-function drawText(ctx: Ctx, obj: TextObj, reveal: number) {
-  const total = obj.text.length;
-  const visible = reveal >= 1 ? obj.text : obj.text.slice(0, Math.floor(total * reveal));
-  ctx.font = `${obj.bold ? "bold " : ""}${obj.size}px ${FONT_STACKS[obj.font]}`;
-  ctx.textAlign = obj.align;
-  ctx.textBaseline = "top";
-  ctx.fillStyle = obj.color;
-  const lines = visible.split("\n");
-  lines.forEach((line, i) => ctx.fillText(line, 0, i * obj.size * 1.25));
-}
 
 function wrapText(ctx: Ctx, text: string, maxWidth: number): string[] {
   const out: string[] = [];
@@ -750,17 +874,39 @@ export function unionRects(rects: Rect[]): Rect {
   return { x, y, w: x2 - x, h: y2 - y };
 }
 
+export type BoxObj = DrawingObj | TextObj | ImageObj | SoundObj | LightObj | SvgObj | VideoObj | AudioObj | CaptionObj | RegionObj | ChartObj;
+
+/**
+ * For center-pivot objects: the shift that makes rotation and scale happen around the middle
+ * of the content. With c the local center, rotation R and scale s: c - R(s * c).
+ */
+function pivotShift(ctx: Ctx | undefined, obj: BoxObj, st: { rotation: number; scale: number }): Pt {
+  const b = localBounds(ctx, obj.type === "text" && obj.counter ? { ...obj, text: `${obj.counter.prefix}${obj.counter.to}${obj.counter.suffix}` } : obj);
+  const cx = b.x + b.w / 2;
+  const cy = b.y + b.h / 2;
+  const r = (st.rotation * Math.PI) / 180;
+  const sx = cx * st.scale;
+  const sy = cy * st.scale;
+  return { x: cx - (sx * Math.cos(r) - sy * Math.sin(r)), y: cy - (sx * Math.sin(r) + sy * Math.cos(r)) };
+}
+
 /** Local (unrotated, unscaled) bounds of an object's content. */
-export function localBounds(ctx: Ctx | undefined, obj: DrawingObj | TextObj | ImageObj | SoundObj | LightObj): Rect {
+export function localBounds(ctx: Ctx | undefined, obj: BoxObj): Rect {
   switch (obj.type) {
     case "drawing":
       return unionRects(obj.parts.map((p) => partBounds(p, ctx)));
     case "text":
-      return partBounds({ kind: "text", x: 0, y: 0, text: obj.text, size: obj.size, font: obj.font, align: obj.align, bold: obj.bold }, ctx);
+      return layoutText(ctx, obj).box;
     case "image":
+    case "svg":
+    case "video":
+    case "region":
+    case "chart":
       return { x: 0, y: 0, w: obj.w, h: obj.h };
     case "sound":
     case "light":
+    case "audio":
+    case "caption":
       return { x: 0, y: 0, w: 0, h: 0 };
   }
 }
@@ -770,6 +916,11 @@ export function objectBounds(ctx: Ctx | undefined, scene: Scene, obj: SceneObj, 
   if (obj.type === "bubble") {
     if (!ctx) return { x: 0, y: 0, w: 0, h: 0 };
     return bubbleLayout(ctx, scene, obj, t).box;
+  }
+  if (obj.type === "caption") {
+    if (!ctx) return { x: 0, y: 0, w: 0, h: 0 };
+    const st = objState(obj, t);
+    return captionBox(ctx, scene, obj, t, st.scale, st.x, st.y) ?? { x: 0, y: 0, w: 0, h: 0 };
   }
   if (obj.type === "stickman") {
     const tf = stickmanTransform(obj, t, scene);
@@ -788,6 +939,11 @@ export function objectBounds(ctx: Ctx | undefined, scene: Scene, obj: SceneObj, 
     b = flip < 0 ? { x: -(lb.x + lb.w), y: lb.y, w: lb.w, h: lb.h } : lb;
   } else if (obj.type === "effect") b = { x: 0, y: 0, w: obj.w, h: obj.h };
   else b = localBounds(ctx, obj);
+  if (obj.pivot === "center" && obj.type !== "creature" && obj.type !== "effect") {
+    const d = pivotShift(ctx, obj, st);
+    st.x += d.x;
+    st.y += d.y;
+  }
   const rad = (st.rotation * Math.PI) / 180;
   const cos = Math.cos(rad);
   const sin = Math.sin(rad);
@@ -809,8 +965,9 @@ export function hitTest(ctx: Ctx, scene: Scene, p: Pt, t: number): SceneObj | un
   for (const effects of [false, true]) {
     for (let i = scene.objects.length - 1; i >= 0; i--) {
       const obj = scene.objects[i];
-      if ((obj.type === "effect") !== effects || obj.type === "sound" || obj.type === "light") continue;
+      if ((obj.type === "effect") !== effects || !onScreen(obj, t)) continue;
       if (objState(obj, t).opacity < 0.05) continue;
+      if (obj.slide && scene.slides?.length && slidesAt(scene, t)?.cur.id !== obj.slide) continue;
       const b = grow(objectBounds(ctx, scene, obj, t), 6);
       if (p.x >= b.x && p.x <= b.x + b.w && p.y >= b.y && p.y <= b.y + b.h) return obj;
     }

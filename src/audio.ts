@@ -1,16 +1,23 @@
-// Voice clips: decoding, loudness envelopes for lip-sync, playback in step with the
-// canvas, and an offline mix of the whole soundtrack for export.
+// The soundtrack: voices, narration, recordings, uploads, video sound and sound effects.
+// Decoding, loudness envelopes, playback in step with the canvas, and the offline mix for export.
 
 import type { Asset, Scene, SoundKind } from "./engine/scene";
 import { soundBuffer, soundLength } from "./sfx";
 
-/** One piece of the soundtrack: a recorded voice asset or a generated sound effect. */
+/** One piece of the soundtrack. `in` is where in the source it starts; `rate` its speed. */
 export interface Clip {
   key: string;
   asset?: string;
   sound?: { kind: SoundKind; duration: number; volume: number };
   at: number;
   duration: number;
+  in: number;
+  rate: number;
+  volume: number;
+  fadeIn: number;
+  fadeOut: number;
+  /** Video sound: played by the video element live, mixed from the file for export. */
+  fromVideo?: boolean;
 }
 
 let ctx: AudioContext | null = null;
@@ -21,6 +28,7 @@ export function audioContext(): AudioContext {
 
 async function bytesOf(src: string): Promise<ArrayBuffer> {
   const res = await fetch(src);
+  if (!res.ok) throw new Error(`couldn't load sound (${res.status})`);
   return res.arrayBuffer();
 }
 
@@ -65,17 +73,24 @@ export function envelopeOf(buf: AudioBuffer, rate = 30): number[] {
 
 export function sceneClips(scene: Scene): Clip[] {
   const clips: Clip[] = [];
+  const base = { in: 0, rate: 1, volume: 1, fadeIn: 0, fadeOut: 0 };
   for (const o of scene.objects) {
-    if (o.type === "bubble" && o.audio) clips.push({ key: o.audio.asset, asset: o.audio.asset, at: o.audio.at, duration: o.audio.duration });
+    if (o.hidden) continue;
+    if (o.type === "bubble" && o.audio) clips.push({ ...base, key: o.audio.asset, asset: o.audio.asset, at: o.audio.at, duration: o.audio.duration });
     if (o.type === "sound") {
       const duration = soundLength(o.kind, o.duration);
-      clips.push({ key: `sfx:${o.kind}:${o.duration.toFixed(2)}`, sound: { kind: o.kind, duration: o.duration, volume: o.volume }, at: o.at, duration });
+      clips.push({ ...base, key: `sfx:${o.kind}:${o.duration.toFixed(2)}`, sound: { kind: o.kind, duration: o.duration, volume: o.volume }, at: o.at, duration, volume: o.volume });
+    }
+    if (o.type === "audio" && o.asset && o.volume > 0) {
+      clips.push({ key: o.asset, asset: o.asset, at: o.start, duration: o.duration, in: o.in, rate: o.speed, volume: o.volume, fadeIn: o.fadeIn, fadeOut: o.fadeOut });
+    }
+    if (o.type === "video" && o.volume > 0 && !o.reverse) {
+      clips.push({ key: o.asset, asset: o.asset, at: o.start, duration: o.duration, in: o.in, rate: o.speed, volume: o.volume, fadeIn: o.fadeIn, fadeOut: o.fadeOut, fromVideo: true });
     }
   }
   return clips;
 }
 
-/** Start decoding or synthesizing a clip's audio if it isn't ready yet. */
 function prepare(c: Clip, assets: Asset[]) {
   if (decoded.has(c.key) || decoding.has(c.key)) return;
   if (c.asset) {
@@ -89,6 +104,28 @@ function prepare(c: Clip, assets: Asset[]) {
     decoding.set(c.key, job);
     job.finally(() => decoding.delete(c.key)).catch(() => {});
   }
+}
+
+/** A gain node that fades the clip in and out, placed on `ac`'s clock where the clip starts. */
+function gainFor(ac: BaseAudioContext, c: Clip, startAt: number, offsetInClip: number): GainNode {
+  const g = ac.createGain();
+  const g0 = startAt;
+  const clipStart = g0 - offsetInClip;
+  const fadeInEnd = clipStart + c.fadeIn;
+  const fadeOutStart = clipStart + c.duration - c.fadeOut;
+  const valueAt = (t: number) => {
+    let v = c.volume;
+    if (c.fadeIn > 0 && t < fadeInEnd) v *= Math.max(0, (t - clipStart) / c.fadeIn);
+    if (c.fadeOut > 0 && t > fadeOutStart) v *= Math.max(0, (clipStart + c.duration - t) / c.fadeOut);
+    return v;
+  };
+  g.gain.setValueAtTime(valueAt(g0), g0);
+  if (c.fadeIn > 0 && fadeInEnd > g0) g.gain.linearRampToValueAtTime(c.volume, fadeInEnd);
+  if (c.fadeOut > 0) {
+    g.gain.setValueAtTime(valueAt(Math.max(g0, fadeOutStart)), Math.max(g0, fadeOutStart));
+    g.gain.linearRampToValueAtTime(0, clipStart + c.duration);
+  }
+  return g;
 }
 
 // ── Live playback ────────────────────────────────────────────────────
@@ -107,18 +144,18 @@ function stopAll() {
   active = null;
 }
 
-/** Called every frame by the player: keeps voices playing in step with the timeline. */
+/** Called every frame by the player: keeps sound playing in step with the timeline. */
 export function syncAudio(playing: boolean, time: number, scene: Scene, assets: Asset[]) {
   if (!playing) {
     stopAll();
     return;
   }
-  const clips = sceneClips(scene);
+  const clips = sceneClips(scene).filter((c) => !c.fromVideo);
   if (!clips.length && !active) return;
   const ac = audioContext();
   const ready = clips.filter((c) => decoded.has(c.key));
   for (const c of clips) prepare(c, assets);
-  const sig = ready.map((c) => `${c.key}@${c.at.toFixed(3)}`).join("|");
+  const sig = ready.map((c) => `${c.key}@${c.at.toFixed(3)}:${c.in.toFixed(3)}:${c.duration.toFixed(3)}:${c.rate}:${c.volume}`).join("|");
   const expected = active ? active.sceneStart + (ac.currentTime - active.ctxStart) : NaN;
   if (active && active.sig === sig && Math.abs(expected - time) < 0.25) return;
 
@@ -129,20 +166,17 @@ export function syncAudio(playing: boolean, time: number, scene: Scene, assets: 
     if (time >= c.at + c.duration) continue;
     const src = ac.createBufferSource();
     src.buffer = decoded.get(c.key)!;
-    if (c.sound && c.sound.volume !== 1) {
-      const g = ac.createGain();
-      g.gain.value = c.sound.volume;
-      src.connect(g).connect(ac.destination);
-    } else src.connect(ac.destination);
+    src.playbackRate.value = c.rate;
     const delay = Math.max(0, c.at - time);
-    const offset = Math.max(0, time - c.at);
-    src.start(ac.currentTime + delay, offset);
+    const into = Math.max(0, time - c.at);
+    const when = ac.currentTime + delay;
+    src.connect(gainFor(ac, c, when, into)).connect(ac.destination);
+    src.start(when, c.in + into * c.rate, Math.max(0.01, (c.duration - into) * c.rate));
     sources.push(src);
   }
   active = { sources, ctxStart: ac.currentTime, sceneStart: time, sig };
 }
 
-/** For diagnosing playback: what the audio engine is doing right now. */
 export function audioDebug() {
   return { context: ctx?.state ?? "none", playing: active?.sources.length ?? 0, decoded: decoded.size };
 }
@@ -165,21 +199,30 @@ export async function mixSceneAudio(scene: Scene, assets: Asset[], sampleRate = 
   if (!clips.length) return null;
   const length = Math.max(1, Math.ceil(scene.duration * sampleRate));
   const oac = new OfflineAudioContext(2, length, sampleRate);
+  const buffers = new Map<string, AudioBuffer | null>();
+  let any = false;
   for (const c of clips) {
-    let buf: AudioBuffer;
-    if (c.asset) {
-      const a = assets.find((x) => x.id === c.asset);
-      if (!a) continue;
-      buf = await oac.decodeAudioData(await bytesOf(a.src));
-    } else if (c.sound) {
-      buf = await soundBuffer(c.sound.kind, c.sound.duration);
-    } else continue;
+    let buf: AudioBuffer | null | undefined = buffers.get(c.key);
+    if (buf === undefined) {
+      try {
+        if (c.asset) {
+          const a = assets.find((x) => x.id === c.asset);
+          buf = a ? await oac.decodeAudioData(await bytesOf(a.src)) : null;
+        } else if (c.sound) buf = await soundBuffer(c.sound.kind, c.sound.duration);
+        else buf = null;
+      } catch {
+        // A video without a sound track can't be decoded: it is simply silent.
+        buf = null;
+      }
+      buffers.set(c.key, buf);
+    }
+    if (!buf) continue;
+    any = true;
     const src = oac.createBufferSource();
     src.buffer = buf;
-    const g = oac.createGain();
-    g.gain.value = c.sound?.volume ?? 1;
-    src.connect(g).connect(oac.destination);
-    src.start(c.at);
+    src.playbackRate.value = c.rate;
+    src.connect(gainFor(oac, c, c.at, 0)).connect(oac.destination);
+    src.start(c.at, c.in, Math.max(0.01, c.duration * c.rate));
   }
-  return oac.startRendering();
+  return any ? oac.startRendering() : null;
 }

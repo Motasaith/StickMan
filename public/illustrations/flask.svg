@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400">
+<ellipse cx="200" cy="356" rx="120" ry="13" fill="#2B2D42" opacity="0.08"/>
+<path d="M168 60 H232 V150 L320 300 C332 322 318 340 294 340 H106 C82 340 68 322 80 300 L168 150 Z" fill="#EAF6FF" stroke="#BFD9EE" stroke-width="8" stroke-linejoin="round"/>
+<path d="M126 230 H274 L312 300 C320 314 312 326 296 326 H104 C88 326 80 314 88 300 Z" fill="#7B61FF">
+<animate attributeName="d" values="M126 230 C170 220 230 240 274 230 L312 300 C320 314 312 326 296 326 H104 C88 326 80 314 88 300 Z;M126 230 C170 240 230 220 274 230 L312 300 C320 314 312 326 296 326 H104 C88 326 80 314 88 300 Z;M126 230 C170 220 230 240 274 230 L312 300 C320 314 312 326 296 326 H104 C88 326 80 314 88 300 Z" dur="2s" repeatCount="indefinite" calcMode="spline" keySplines="0.45 0 0.55 1;0.45 0 0.55 1"/>
+</path>
+<rect x="156" y="46" width="88" height="22" rx="10" fill="#8D99AE"/>
+<g fill="#C8BAFF">
+<circle cx="170" cy="290" r="12"><animate attributeName="cy" values="300;120" dur="2.4s" repeatCount="indefinite"/><animate attributeName="opacity" values="1;1;0" keyTimes="0;0.7;1" dur="2.4s" repeatCount="indefinite"/></circle>
+<circle cx="220" cy="290" r="9"><animate attributeName="cy" values="310;100" dur="2s" begin="0.7s" repeatCount="indefinite"/><animate attributeName="opacity" values="1;1;0" keyTimes="0;0.7;1" dur="2s" begin="0.7s" repeatCount="indefinite"/></circle>
+<circle cx="200" cy="290" r="7"><animate attributeName="cy" values="300;80" dur="2.8s" begin="1.3s" repeatCount="indefinite"/><animate attributeName="opacity" values="1;1;0" keyTimes="0;0.7;1" dur="2.8s" begin="1.3s" repeatCount="indefinite"/></circle>
+</g>
+</svg>

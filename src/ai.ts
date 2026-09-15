@@ -5,17 +5,21 @@ import { applyOps, type OpResult } from "./engine/ops";
 import { renderScene } from "./engine/render";
 import { render3D } from "./render3d";
 import type { Scene } from "./engine/scene";
-import { preloadImages } from "./images";
+import { canvasPool, preloadImages, preloadSvgs } from "./runtime/media";
 import { newId, useStore, type ChatMsg } from "./store";
-import { generateVoices, needsVoice } from "./voice";
+import { generateVoices, pendingVoices } from "./voice";
 
-const assetInfo = () => useStore.getState().assets.map(({ id, name, w, h, kind, joints }) => ({ id, name, w, h, kind, joints }));
+const assetInfo = () =>
+  useStore
+    .getState()
+    .assets.filter((a) => a.origin !== "tts")
+    .map(({ id, name, w, h, kind, joints, duration, hasAudio }) => ({ id, name, w, h, kind, joints, duration, hasAudio }));
 
 /** Record voices for any new or changed lines, reporting progress in a chat message. */
 async function recordVoices(msgId: string, baseText: string) {
   const s = useStore.getState();
   if (!s.voices) return;
-  const pending = s.scene.objects.filter((o) => o.type === "bubble" && needsVoice(s.scene, o)).length;
+  const pending = pendingVoices(s.scene);
   if (!pending) return;
   useStore.getState().updateChat(msgId, { text: `${baseText}\nRecording ${pending} voice line${pending > 1 ? "s" : ""}…` });
   const report = await generateVoices(undefined, (done, total) => useStore.getState().updateChat(msgId, { text: `${baseText}\nRecording voices ${done}/${total}…` }));
@@ -31,6 +35,7 @@ interface PlanResponse {
   reply?: string;
   ops?: unknown[];
   skipped?: string[];
+  drawn?: string[];
   problems?: string[];
   error?: string;
 }
@@ -52,10 +57,12 @@ async function buildUp(ops: unknown[]): Promise<{ results: OpResult[]; changed: 
   const delay = Math.max(25, Math.min(140, 2200 / Math.max(1, ops.length)));
   for (let i = 1; i < ops.length; i++) {
     const partial = applyOps(base, ops.slice(0, i), assets);
+    if (partial.newAssets.length) useStore.getState().addAssets(partial.newAssets);
     useStore.getState().preview(partial.scene);
     await sleep(delay);
   }
   const final = applyOps(base, ops, assets);
+  if (final.newAssets.length) useStore.getState().addAssets(final.newAssets);
   if (final.applied.length) useStore.getState().commit(final.scene, base);
   else useStore.getState().preview(base);
   return { results: final.results, changed: final.applied.length > 0 };
@@ -67,7 +74,10 @@ export function contactSheetTimes(scene: Scene, count = 6): number[] {
 }
 
 export async function renderContactSheet(scene: Scene, times: number[]): Promise<string> {
-  const images = await preloadImages(useStore.getState().assets);
+  const assets = useStore.getState().assets;
+  const images = await preloadImages(assets);
+  const svgs = await preloadSvgs(scene, assets);
+  const pool = canvasPool();
   const cols = 2;
   const cellW = 640;
   const cellH = Math.round((cellW * scene.height) / scene.width);
@@ -83,7 +93,8 @@ export async function renderContactSheet(scene: Scene, times: number[]): Promise
   frame.height = scene.height;
   const fctx = frame.getContext("2d")!;
   times.forEach((t, i) => {
-    renderScene(fctx, scene, t, { images, threeD: render3D });
+    pool.reset();
+    renderScene(fctx, scene, t, { images, svgs, makeCanvas: pool, threeD: render3D });
     const x = (i % cols) * cellW;
     const y = Math.floor(i / cols) * cellH;
     sctx.drawImage(frame, x + 1, y + 1, cellW - 2, cellH - 2);
@@ -109,7 +120,7 @@ export async function askAnimator(prompt: string): Promise<void> {
   store.setPlaying(false);
   store.pushChat({ id: newId(), role: "user", text: prompt });
   const replyId = newId();
-  store.pushChat({ id: replyId, role: "assistant", text: "Planning the animation…", pending: true, kind: "plan" });
+  store.pushChat({ id: replyId, role: "assistant", text: "Planning… (new illustrations can take a minute to draw)", pending: true, kind: "plan" });
 
   try {
     const s = useStore.getState();
@@ -129,7 +140,9 @@ export async function askAnimator(prompt: string): Promise<void> {
     useStore.getState().updateChat(replyId, { text: `Building… (${ops.length} steps)` });
     const built = await buildUp(ops);
     const skipped = plan.skipped?.length ? `\n(${plan.skipped.length} step${plan.skipped.length > 1 ? "s" : ""} skipped as invalid.)` : "";
-    const replyText = (plan.reply || "Done.") + skipped;
+    const drew = plan.drawn?.length ? `
+(Drew new illustrations: ${plan.drawn.join(", ")}.)` : "";
+    const replyText = (plan.reply || "Done.") + drew + skipped;
     useStore.getState().updateChat(replyId, { text: replyText, changes: built.results });
     await recordVoices(replyId, replyText);
     useStore.getState().updateChat(replyId, { pending: false });

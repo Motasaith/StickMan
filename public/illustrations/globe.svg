@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400">
+<ellipse cx="200" cy="360" rx="110" ry="13" fill="#2B2D42" opacity="0.08"/>
+<clipPath id="ball"><circle cx="200" cy="190" r="130"/></clipPath>
+<circle cx="200" cy="190" r="130" fill="#4FA3FF"/>
+<g clip-path="url(#ball)">
+<g fill="#5BB85D">
+<animateTransform attributeName="transform" type="translate" values="0 0;-260 0" dur="8s" repeatCount="indefinite"/>
+<path d="M80 110 C110 80 170 90 180 130 C188 160 150 170 140 200 C130 236 90 240 80 210 C70 180 50 140 80 110 Z"/>
+<path d="M210 210 C240 190 290 200 300 240 C310 280 270 310 240 300 C210 290 190 240 210 210 Z"/>
+<path d="M250 90 C270 70 320 80 330 110 C340 140 300 150 280 140 C260 130 234 110 250 90 Z"/>
+<path d="M340 110 C370 80 430 90 440 130 C448 160 410 170 400 200 C390 236 350 240 340 210 C330 180 310 140 340 110 Z"/>
+<path d="M470 210 C500 190 550 200 560 240 C570 280 530 310 500 300 C470 290 450 240 470 210 Z"/>
+<path d="M510 90 C530 70 580 80 590 110 C600 140 560 150 540 140 C520 130 494 110 510 90 Z"/>
+</g>
+</g>
+<circle cx="200" cy="190" r="130" fill="none" stroke="#3A87E0" stroke-width="8"/>
+<path d="M120 120 C140 96 170 84 196 82" stroke="#FFFFFF" stroke-width="12" stroke-linecap="round" fill="none" opacity="0.5"/>
+<rect x="194" y="320" width="12" height="20" fill="#8D99AE"/><rect x="140" y="336" width="120" height="16" rx="8" fill="#8D99AE"/>
+</svg>
