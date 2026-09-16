@@ -93,7 +93,20 @@ interface Probe {
 }
 
 export async function probe(file: string): Promise<Probe> {
-  const { stdout } = await execFileAsync(ffprobe.path, ["-v", "error", "-print_format", "json", "-show_streams", "-show_format", file], { timeout: 30_000, maxBuffer: 8 * 1024 * 1024 });
+  const args = ["-v", "error", "-print_format", "json", "-show_streams", "-show_format", file];
+  // Windows sometimes fails the first spawn while the file is still settling: one retry.
+  let stdout: string;
+  try {
+    ({ stdout } = await execFileAsync(ffprobe.path, args, { timeout: 30_000, maxBuffer: 8 * 1024 * 1024 }));
+  } catch (err) {
+    await new Promise((r) => setTimeout(r, 300));
+    try {
+      ({ stdout } = await execFileAsync(ffprobe.path, args, { timeout: 30_000, maxBuffer: 8 * 1024 * 1024 }));
+    } catch {
+      const detail = (err as Error).message.split("\n")[0].slice(-120);
+      throw new Error(`Could not read that media file (${detail})`);
+    }
+  }
   const data = JSON.parse(stdout) as { streams?: Array<Record<string, unknown>>; format?: { duration?: string } };
   const streams = data.streams ?? [];
   const v = streams.find((s) => s.codec_type === "video" && (s.disposition as { attached_pic?: number } | undefined)?.attached_pic !== 1);

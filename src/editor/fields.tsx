@@ -105,7 +105,7 @@ export function TextField({ value, onCommit, placeholder, multiline, rows = 3 }:
         onBlur={commit}
       />
     );
-  return <input className="text-input" value={draft} placeholder={placeholder} onChange={(e) => setDraft(e.target.value)} onBlur={commit} onKeyDown={(e) => e.key === "Enter" && (e.target as HTMLInputElement).blur()} />;
+  return <input className="field-text" value={draft} placeholder={placeholder} onChange={(e) => setDraft(e.target.value)} onBlur={commit} onKeyDown={(e) => e.key === "Enter" && (e.target as HTMLInputElement).blur()} />;
 }
 
 export function toHex(color: string | null | undefined): string {

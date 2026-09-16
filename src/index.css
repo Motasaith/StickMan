@@ -249,7 +249,7 @@
   .num-input {
     @apply h-7 w-[72px] rounded-md border border-input bg-panel-sunken px-2 text-right font-mono text-xs text-foreground outline-none focus:border-ring;
   }
-  .text-input {
+  .field-text {
     @apply h-8 w-full rounded-md border border-input bg-panel-sunken px-2 text-[13px] text-foreground outline-none focus:border-ring;
   }
   .select-native {

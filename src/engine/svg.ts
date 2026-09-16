@@ -1502,6 +1502,21 @@ function drawTextNode(ctx: Ctx, f: Frame, n: SvgNode, style: Record<string, stri
 
 // ── Checks ──────────────────────────────────────────────────────────
 
+/**
+ * Markup that travelled through JSON can arrive still escaped (\" around every attribute),
+ * which parses as tags with no attributes and draws nothing. Undo that.
+ */
+export function cleanSvgMarkup(markup: string): string {
+  const s = markup.trim();
+  if (!/\\["'\\/]/.test(s) && !s.includes("\\n")) return s;
+  return s
+    .replace(/\\r/g, "")
+    .replace(/\\n/g, "\n")
+    .replace(/\\t/g, "\t")
+    .replace(/\\(["'\\/])/g, "$1")
+    .trim();
+}
+
 /** Why an SVG can't be used, or null when it draws. */
 export function svgProblem(markup: string): string | null {
   if (markup.length > 200_000) return "the SVG is too large (over 200 KB)";

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { createCanvas } from "@napi-rs/canvas";
-import { drawSvg, parseColor, parseSvg, pathCommands, svgColors, svgProblem } from "./svg";
+import { cleanSvgMarkup, drawSvg, parseColor, parseSvg, pathCommands, svgColors, svgProblem } from "./svg";
 
 type Ctx = CanvasRenderingContext2D;
 
@@ -47,6 +47,18 @@ describe("svg parsing", () => {
     const last = cmds[cmds.length - 2];
     expect(last.c).toBe("C");
     expect(last.p.slice(-2).map(Math.round)).toEqual([10, 30]);
+  });
+
+  it("unescapes markup that came back through JSON", () => {
+    const escaped = String.raw`<svg viewBox="0 0 10 10"><circle cx="5" cy="5" r="3" fill="#f00"/></svg>`;
+    const clean = cleanSvgMarkup(escaped);
+    expect(clean).toContain(`viewBox="0 0 10 10"`);
+    const doc = parseSvg(clean)!;
+    expect(doc.viewBox).toEqual([0, 0, 10, 10]);
+    expect(svgColors(clean)).toContain("#ff0000");
+    // Plain markup is left alone.
+    const plain = `<svg viewBox="0 0 4 4"><rect width="4" height="4"/></svg>`;
+    expect(cleanSvgMarkup(plain)).toBe(plain);
   });
 });
 

@@ -5,6 +5,7 @@ import type { Asset, Scene, VideoObj } from "@/engine/scene";
 import type { RenderOptions } from "@/engine/render";
 import { videoSourceTime } from "@/engine/media";
 import { useStore } from "@/store";
+import { cleanSvgMarkup } from "@/engine/svg";
 
 const bump = () => useStore.getState().bumpImages();
 
@@ -28,7 +29,8 @@ export function svgLookup(assets: Asset[]): (src: string) => string | undefined 
   return (src) => {
     if (src.startsWith("asset:")) {
       const a = assets.find((x) => x.id === src.slice(6));
-      if (a?.svg) return a.svg;
+      // Older projects can hold markup that was saved still escaped.
+      if (a?.svg) return cleanSvgMarkup(a.svg);
     }
     const have = svgText.get(src);
     if (have !== undefined) return have ?? undefined;

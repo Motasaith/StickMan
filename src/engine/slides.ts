@@ -316,7 +316,8 @@ function layout(scene: Scene, slide: Slide, spec: SlideSpec, th: Theme, t0: numb
         enter(b, "fade", t0 + 0.3, 0.6);
       }
       const by = spec.body ? y + linesFor(spec.body, Math.round(Math.min(H * 0.04, W * 0.03)), colW, th.bodyFont) * H * 0.052 + H * 0.03 : y;
-      bulletList(spec.bullets ?? [], m, by, colW, H * 0.92);
+      // Captions sit across the bottom, so the list stops above them.
+      bulletList(spec.bullets ?? [], m, by, colW, H * 0.8);
       if (hasArt) art(spec.illustration, W * 0.62, H * 0.2, W * 0.32, H * 0.64, t0 + 0.2);
       else if (spec.illustration && vertical) art(spec.illustration, W * 0.25, H * 0.66, W * 0.5, H * 0.28, t0 + 0.2);
       break;
@@ -326,7 +327,7 @@ function layout(scene: Scene, slide: Slide, spec: SlideSpec, th: Theme, t0: numb
     case "image": {
       if (spec.layout === "illustration" || vertical) {
         const y = heading(spec.title ?? "", W - m * 2, W / 2, H * 0.08, "center");
-        const boxH = H * 0.92 - y - (spec.body ? H * 0.14 : 0);
+        const boxH = H * 0.86 - y - (spec.body ? H * 0.14 : 0);
         art(spec.illustration, W / 2 - Math.min(boxH, W * 0.8) / 2, y, Math.min(boxH, W * 0.8), boxH, t0 + 0.3);
         if (spec.body) {
           const size = Math.round(Math.min(H * 0.042, W * 0.03));
@@ -345,7 +346,7 @@ function layout(scene: Scene, slide: Slide, spec: SlideSpec, th: Theme, t0: numb
           enter(b, "fade", t0 + 0.4, 0.7);
           done(t0 + 1.1);
         }
-        if (spec.bullets?.length) bulletList(spec.bullets, x, spec.body ? y + linesFor(spec.body, Math.round(Math.min(H * 0.042, W * 0.03)), colW, th.bodyFont) * H * 0.06 + H * 0.02 : y, colW, H * 0.92);
+        if (spec.bullets?.length) bulletList(spec.bullets, x, spec.body ? y + linesFor(spec.body, Math.round(Math.min(H * 0.042, W * 0.03)), colW, th.bodyFont) * H * 0.06 + H * 0.02 : y, colW, H * 0.8);
       }
       break;
     }

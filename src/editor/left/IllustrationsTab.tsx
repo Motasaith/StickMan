@@ -74,7 +74,7 @@ export function IllustrationsTab() {
         <GroupLabel>Draw something new</GroupLabel>
         <div className="rounded-xl border border-line bg-panel-sunken p-3">
           <p className="mb-2 text-xs text-muted-foreground">Describe a picture that isn't in the library and the AI draws an animated one in the same style (about a minute).</p>
-          <textarea className="text-input h-16 resize-none py-1.5" value={topic} placeholder="a dentist chair with a lamp" onChange={(e) => setTopic(e.target.value)} />
+          <textarea className="field-text h-16 resize-none py-1.5" value={topic} placeholder="a dentist chair with a lamp" onChange={(e) => setTopic(e.target.value)} />
           <Button size="sm" className="mt-2 w-full gap-2" disabled={drawing || !topic.trim()} onClick={draw}>
             {drawing ? <Loader2 className="size-3.5 animate-spin" /> : <Wand2 className="size-3.5" />} {drawing ? "Drawing…" : "Draw with AI"}
           </Button>

@@ -7,7 +7,7 @@ import { AUDIO_ROLES, CAPTION_STYLES, CHART_KINDS, COLOR_LOOKS, FONTS, LOOPS, RE
 import { ENTER_KINDS, EXIT_KINDS, enter, exit } from "./entrances";
 import { findIllustration, ILLUSTRATIONS } from "./illustrations";
 import { findSticker } from "./stickers";
-import { svgProblem } from "./svg";
+import { cleanSvgMarkup, svgProblem } from "./svg";
 import { estimateWords } from "./media";
 import { THEME_IDS, themeById } from "./themes";
 import { SLIDE_LAYOUTS, addSlide, fitSlidesToNarration, removeSlide, setSlideDuration, speechSeconds, syncCaptions, type SlideSpec } from "./slides";
@@ -360,18 +360,20 @@ export function applyProOp(scene: Scene, op: ProOp, ctx: ProContext): string {
       return `${put(scene, obj)} "${ill.name}" illustration`;
     }
     case "svg": {
-      const problem = svgProblem(op.svg);
+      const markup = cleanSvgMarkup(op.svg);
+      const problem = svgProblem(markup);
       if (problem) throw new Error(`that SVG can't be used: ${problem}`);
       const assetId = `svg_${op.id}`;
-      ctx.newAssets.push({ id: assetId, name: op.name ?? op.id, src: "", w: op.w, h: op.h, kind: "svg", svg: op.svg, origin: "ai" });
+      ctx.newAssets.push({ id: assetId, name: op.name ?? op.id, src: "", w: op.w, h: op.h, kind: "svg", svg: markup, origin: "ai" });
       const obj: SvgObj = { ...base(op.id, op.name ?? op.id, op.x, op.y), type: "svg", src: `asset:${assetId}`, w: op.w, h: op.h, clock: op.at ?? 0, speed: 1, pivot: "center" };
       appearance(obj, op);
       return `${put(scene, obj)} drawing "${obj.name}"`;
     }
     case "svgAsset": {
-      const problem = svgProblem(op.svg);
+      const markup = cleanSvgMarkup(op.svg);
+      const problem = svgProblem(markup);
       if (problem) throw new Error(`that SVG can't be used: ${problem}`);
-      ctx.newAssets.push({ id: op.id, name: op.name ?? op.id, src: "", w: 400, h: 400, kind: "svg", svg: op.svg, origin: "ai" });
+      ctx.newAssets.push({ id: op.id, name: op.name ?? op.id, src: "", w: 400, h: 400, kind: "svg", svg: markup, origin: "ai" });
       ctx.assets.push({ id: op.id, name: op.name ?? op.id, w: 400, h: 400, kind: "svg" });
       return `drew "${op.name ?? op.id}"`;
     }

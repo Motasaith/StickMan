@@ -17,7 +17,7 @@ export function SearchBox({ value, onChange, placeholder, onEnter }: { value: st
   return (
     <div className="relative">
       <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
-      <input className="text-input pl-8" value={value} placeholder={placeholder} onChange={(e) => onChange(e.target.value)} onKeyDown={(e) => e.key === "Enter" && onEnter?.()} />
+      <input className="field-text pl-8" value={value} placeholder={placeholder} onChange={(e) => onChange(e.target.value)} onKeyDown={(e) => e.key === "Enter" && onEnter?.()} />
     </div>
   );
 }

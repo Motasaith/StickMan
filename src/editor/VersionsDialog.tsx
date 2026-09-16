@@ -67,7 +67,7 @@ export function VersionsDialog({ open, onOpenChange }: { open: boolean; onOpenCh
           <DialogDescription>Saved automatically every ten minutes while you work, plus the ones you name.</DialogDescription>
         </DialogHeader>
         <div className="flex gap-2">
-          <input className="text-input" placeholder="Name this version…" value={label} onChange={(e) => setLabel(e.target.value)} onKeyDown={(e) => e.key === "Enter" && void save()} />
+          <input className="field-text" placeholder="Name this version…" value={label} onChange={(e) => setLabel(e.target.value)} onKeyDown={(e) => e.key === "Enter" && void save()} />
           <Button size="sm" onClick={save} disabled={!label.trim() || busy === "save"}>
             {busy === "save" ? <Loader2 className="size-4 animate-spin" /> : <Bookmark className="size-4" />} Save
           </Button>
