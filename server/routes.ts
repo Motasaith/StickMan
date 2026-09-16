@@ -3,10 +3,10 @@
 
 import { Hono } from "hono";
 import { z } from "zod";
-import { VOICE_IDS } from "../src/engine/scene";
+import { LOCAL_VOICE_RE, VOICE_IDS } from "../src/engine/scene";
 import { addVersion, createProject, deleteProject, duplicateProject, getProject, getVersion, listProjects, listVersions, saveProject } from "./projects";
-import { importMedia, mediaInfo, mediaPath, mediaUrl, probe, serveMedia, MAX_UPLOAD_BYTES } from "./media";
-import { speakWithWords } from "./tts";
+import { importMedia, mediaInfo, mediaPath, mediaUrl, serveMedia, MAX_UPLOAD_BYTES } from "./media";
+import { voiceLine } from "./voices/speak";
 import { downloadStock, searchStock, stockConfigured } from "./stock";
 import { SPEECH_LANGUAGES, transcribe } from "./stt";
 import { drawIllustration } from "./illustrate";
@@ -108,13 +108,13 @@ pro.get("/api/media-info/:id", async (c) => {
 // ── Voices with word timings ────────────────────────────────────────
 
 pro.post("/api/voice", async (c) => {
-  const parsed = z.object({ text: z.string().min(1).max(3000), voice: z.enum(VOICE_IDS) }).safeParse(await c.req.json().catch(() => null));
+  const parsed = z
+    .object({ text: z.string().min(1).max(6000), voice: z.union([z.enum(VOICE_IDS), z.string().regex(LOCAL_VOICE_RE)]) })
+    .safeParse(await c.req.json().catch(() => null));
   if (!parsed.success) return c.json({ error: "Bad request" }, 400);
   try {
-    const { mp3, words } = await speakWithWords(parsed.data.text, parsed.data.voice);
-    const info = await importMedia(mp3, `voice-${parsed.data.voice}.mp3`, { origin: "tts" });
-    const duration = info.duration ?? (await probe((await mediaPath(info.id))!)).duration;
-    return c.json({ id: info.id, src: mediaUrl(info.file), duration, words, waveform: info.waveform ?? [] });
+    const v = await voiceLine(parsed.data.text, parsed.data.voice);
+    return c.json({ id: v.id, src: v.src, duration: v.duration, words: v.words, waveform: v.waveform });
   } catch (err) {
     return c.json(fail(err), 502);
   }

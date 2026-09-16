@@ -2,13 +2,13 @@
 // They join the main op list in ops.ts; the AI and the editor's panels use the same ones.
 
 import { z } from "zod";
-import type { Asset, AudioObj, Background, CaptionObj, ChartObj, RegionObj, Scene, SceneObj, SvgObj, TextObj, VideoObj, Word } from "./scene";
-import { AUDIO_ROLES, CAPTION_STYLES, CHART_KINDS, COLOR_LOOKS, FONTS, LOOPS, REGION_KINDS, TEXT_STYLES, TRANSITIONS, VOICE_IDS, findObj, uniqueId } from "./scene";
+import type { VoiceRef, Asset, AudioObj, Background, CaptionObj, ChartObj, RegionObj, Scene, SceneObj, SvgObj, TextObj, VideoObj, Word } from "./scene";
+import { AUDIO_ROLES, CAPTION_STYLES, CHART_KINDS, COLOR_LOOKS, FONTS, LOOPS, REGION_KINDS, TEXT_STYLES, TRANSITIONS, VOICE_IDS, LOCAL_VOICE_RE, findObj, uniqueId } from "./scene";
 import { ENTER_KINDS, EXIT_KINDS, enter, exit } from "./entrances";
 import { findIllustration, ILLUSTRATIONS } from "./illustrations";
 import { findSticker } from "./stickers";
 import { cleanSvgMarkup, svgProblem } from "./svg";
-import { estimateWords } from "./media";
+import { coverCrop, estimateWords } from "./media";
 import { THEME_IDS, themeById } from "./themes";
 import { SLIDE_LAYOUTS, addSlide, fitSlidesToNarration, removeSlide, setSlideDuration, speechSeconds, syncCaptions, type SlideSpec } from "./slides";
 import { worldState } from "./render";
@@ -20,6 +20,8 @@ const time = z.number().finite().min(0).max(3600);
 const color = z.string().max(40);
 const id = z.string().min(1).max(40).regex(/^[A-Za-z0-9_-]+$/, "ids use letters, digits, _ and -");
 const size = z.number().min(1).max(8000);
+/** Edge voices, or studio voices made on this computer (see VoiceRef). */
+const voiceRef = z.union([z.enum(VOICE_IDS), z.string().regex(LOCAL_VOICE_RE, "not a known voice")]).transform((v) => v as VoiceRef);
 
 const adjustSchema = z.object({
   brightness: z.number().min(-100).max(100).optional(),
@@ -50,7 +52,7 @@ const slideSpecSchema = z.object({
   steps: z.array(z.string().max(60)).max(6).optional(),
   comparison: z.object({ leftTitle: z.string().max(40), left: z.array(z.string().max(80)).max(6), rightTitle: z.string().max(40), right: z.array(z.string().max(80)).max(6) }).optional(),
   narration: z.string().max(1200).optional(),
-  voice: z.enum(VOICE_IDS).optional(),
+  voice: voiceRef.optional(),
   duration: z.number().min(1).max(120).optional(),
   transition: z.enum(TRANSITIONS).optional(),
   background: backgroundSchema.optional(),
@@ -112,7 +114,11 @@ export const proOpSchemas = [
   z.object({ op: z.literal("trim"), id, start: time.optional(), in: z.number().min(0).max(36000).optional(), duration: z.number().min(0.1).max(3600).optional() }),
   z.object({ op: z.literal("split"), id, at: time }),
   z.object({ op: z.literal("detachAudio"), id }),
-  z.object({ op: z.literal("narrate"), id: id.optional(), text: z.string().min(1).max(3000), voice: z.enum(VOICE_IDS).optional(), at: time, speaker: id.optional(), captions: z.boolean().optional() }),
+  /** Put another video or picture into a shot, keeping its place, timing and motion. */
+  z.object({ op: z.literal("swapShot"), id, asset: z.string().max(80) }),
+  /** New stock footage for a scene (resolved by the server before the ops are applied). */
+  z.object({ op: z.literal("broll"), slide: id, query: z.string().min(2).max(100), kind: z.enum(["video", "photo"]).optional(), replace: id.optional() }),
+  z.object({ op: z.literal("narrate"), id: id.optional(), text: z.string().min(1).max(3000), voice: voiceRef.optional(), at: time, speaker: id.optional(), captions: z.boolean().optional() }),
   z.object({
     op: z.literal("captions"),
     id: id.optional(),
@@ -206,7 +212,7 @@ export const proOpSchemas = [
     op: z.literal("presentation"),
     title: z.string().max(160).optional(),
     theme: z.enum(THEME_IDS).optional(),
-    voice: z.enum(VOICE_IDS).optional(),
+    voice: voiceRef.optional(),
     captions: z.union([z.boolean(), z.enum(CAPTION_STYLES)]).optional(),
     format: z.enum(["16:9", "9:16", "1:1"]).optional(),
     slides: z.array(slideSpecSchema).min(1).max(40),
@@ -259,7 +265,7 @@ export const proOpSchemas = [
         reverse: z.boolean(),
         freeze: z.number().min(0).max(30),
         text: z.string().max(3000),
-        voice: z.enum(VOICE_IDS),
+        voice: voiceRef,
         role: z.enum(AUDIO_ROLES),
         strength: z.number().min(1).max(100),
         kind: z.string().max(20),
@@ -480,6 +486,45 @@ export function applyProOp(scene: Scene, op: ProOp, ctx: ProContext): string {
       scene.objects.splice(scene.objects.indexOf(o) + 1, 0, second);
       return `split ${op.id} at ${fmt(op.at)}s (new clip ${second.id})`;
     }
+    case "swapShot": {
+      const o = need(scene, op.id);
+      if (o.type !== "video" && o.type !== "image") throw new Error(`"${op.id}" is a ${o.type}; only video and picture shots can be swapped`);
+      const a = ctx.assets.find((x) => x.id === op.asset) ?? ctx.assets.find((x) => x.name.toLowerCase() === op.asset.toLowerCase());
+      if (!a || (a.kind !== "video" && a.kind !== "image" && a.kind !== undefined)) throw new Error(`no imported video or picture called "${op.asset}"`);
+      // The shot's time on screen: a clip's span, or the picture's visible window.
+      let start: number;
+      let length: number;
+      if (o.type === "video") {
+        start = o.start;
+        length = o.duration;
+      } else {
+        const keys = o.tracks.opacity ?? [];
+        const on = keys.find((k) => k.v > 0.5);
+        const off = on ? keys.find((k) => k.t > on.t && k.v < 0.5) : undefined;
+        const slide = o.slide ? scene.slides?.find((s) => s.id === o.slide) : undefined;
+        start = on?.t ?? slide?.start ?? 0;
+        length = (off?.t ?? (slide ? slide.start + slide.duration : scene.duration)) - start;
+      }
+      const common = { id: o.id, name: a.name, x: o.x, y: o.y, rotation: o.rotation, scale: o.scale, opacity: o.opacity, w: o.w, h: o.h, slide: o.slide, pivot: o.pivot, crop: coverCrop(a.w, a.h, o.w, o.h) };
+      const motion = { ...(o.tracks.scale ? { scale: o.tracks.scale } : {}), ...(o.tracks.rotation ? { rotation: o.tracks.rotation } : {}) };
+      let next: SceneObj;
+      if (a.kind === "video") {
+        const total = a.duration ?? length;
+        const speed = Math.max(0.5, Math.min(1, (total - 0.2) / length));
+        next = { ...common, type: "video", asset: a.id, start, duration: length, in: 0, speed: Math.round(speed * 1000) / 1000, volume: 0, fadeIn: 0, fadeOut: 0, tracks: motion } as VideoObj;
+      } else {
+        next = {
+          ...common,
+          type: "image",
+          asset: a.id,
+          tracks: { ...motion, opacity: [{ t: 0, v: 0 }, { t: start, v: 1, e: "step" }, { t: start + length, v: 0, e: "step" }] },
+        } as SceneObj;
+      }
+      put(scene, next);
+      return `${op.id} now shows "${a.name}"`;
+    }
+    case "broll":
+      throw new Error("new footage has to be fetched first; try again");
     case "detachAudio": {
       const o = need(scene, op.id);
       if (o.type !== "video") throw new Error(`"${op.id}" is not a video`);

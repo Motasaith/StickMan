@@ -4,7 +4,7 @@
 import { applyOps, type OpResult } from "./engine/ops";
 import { renderScene } from "./engine/render";
 import { render3D } from "./render3d";
-import type { Scene } from "./engine/scene";
+import type { Asset, Scene } from "./engine/scene";
 import { canvasPool, preloadImages, preloadSvgs } from "./runtime/media";
 import { newId, useStore, type ChatMsg } from "./store";
 import { generateVoices, pendingVoices } from "./voice";
@@ -36,6 +36,8 @@ interface PlanResponse {
   ops?: unknown[];
   skipped?: string[];
   drawn?: string[];
+  /** Footage the server downloaded for this plan. */
+  assets?: Asset[];
   problems?: string[];
   error?: string;
 }
@@ -138,6 +140,7 @@ export async function askAnimator(prompt: string): Promise<void> {
       return;
     }
     useStore.getState().updateChat(replyId, { text: `Building… (${ops.length} steps)` });
+    if (plan.assets?.length) useStore.getState().addAssets(plan.assets);
     const built = await buildUp(ops);
     const skipped = plan.skipped?.length ? `\n(${plan.skipped.length} step${plan.skipped.length > 1 ? "s" : ""} skipped as invalid.)` : "";
     const drew = plan.drawn?.length ? `

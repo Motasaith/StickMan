@@ -204,6 +204,15 @@ export const DEFAULT_LOOK: Look = {
 export const VOICE_IDS = ["man", "woman", "boy", "girl", "oldMan", "oldWoman", "robot", "narrator", "urduMan", "urduWoman", "dog", "cat", "bird"] as const;
 export type VoiceId = (typeof VOICE_IDS)[number];
 
+/**
+ * A narration voice: one of the Edge voices above, or a studio voice made on this computer:
+ * "kokoro:af_heart" (a built-in studio voice), "preset:blend_documentary" (a ready-made blend)
+ * or "custom:sv_1a2b" (a blend or clone the user saved).
+ */
+export type VoiceRef = VoiceId | `${"kokoro" | "preset" | "custom"}:${string}`;
+export const LOCAL_VOICE_RE = /^(kokoro|preset|custom):[A-Za-z0-9_-]{1,40}$/;
+export const isLocalVoice = (v: string | undefined): boolean => !!v && LOCAL_VOICE_RE.test(v);
+
 /** x,y is the ground point between the feet. */
 export interface StickmanObj extends BaseObj {
   type: "stickman";
@@ -441,7 +450,7 @@ export interface AudioObj extends BaseObj {
   fadeOut: number;
   /** Narration: the words to speak and the voice; the asset is made from them. */
   text?: string;
-  voice?: VoiceId;
+  voice?: VoiceRef;
   /** Loudness envelope (for waveforms and lip sync), `rate` samples a second. */
   envelope?: number[];
   rate?: number;
@@ -577,6 +586,20 @@ export interface Scene {
   grade?: ColorAdjust | null;
   markers?: Marker[];
   title?: string;
+  /** Upload details written with an AI video: what to paste into YouTube, and what to check first. */
+  publish?: PublishKit;
+}
+
+export interface PublishKit {
+  title: string;
+  description: string;
+  tags: string[];
+  thumbnailText: string;
+  /** Claims to double-check before publishing. */
+  checks: string[];
+  /** Footage and voice credits. */
+  credits: string[];
+  niche?: string;
 }
 
 /** Imported pictures and generated voice audio. Kept outside the scene so undo history stays small. */

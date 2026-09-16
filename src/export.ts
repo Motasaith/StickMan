@@ -4,7 +4,7 @@
 import { ArrayBufferTarget, Muxer } from "mp4-muxer";
 import type { Asset, Scene } from "./engine/scene";
 import { renderScene, type RenderOptions } from "./engine/render";
-import { canvasPool, exportVideoLookup, preloadImages, preloadSvgs, seekVideos, videoLookup } from "./runtime/media";
+import { canvasPool, exportVideoLookup, preloadImages, preloadSvgs, releaseExportVideos, seekVideos, videoLookup } from "./runtime/media";
 import { buildAvcC, naluType, splitNalus, toLengthPrefixed } from "./avc";
 import { audioContext, mixSceneAudio } from "./audio";
 import { render3D } from "./render3d";
@@ -60,7 +60,15 @@ async function pickCodec(w: number, h: number, fps: number, bitrate: number): Pr
   return null;
 }
 
-export async function exportVideo(
+export async function exportVideo(...args: Parameters<typeof exportFrames>): Promise<ExportResult> {
+  try {
+    return await exportFrames(...args);
+  } finally {
+    releaseExportVideos();
+  }
+}
+
+async function exportFrames(
   scene: Scene,
   assets: Asset[],
   onProgress: (fraction: number) => void,

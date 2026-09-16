@@ -9,10 +9,16 @@ import { finalizeVideo } from "./finalize";
 import { chat, llmConfig, parseJsonObject, type ChatMessage } from "./llm";
 import { describeScene, drawingDetails, systemPrompt } from "./prompt";
 import { pro } from "./routes";
+import { voiceRoutes } from "./voices/routes";
+import { autovideoRoutes } from "./autovideo/routes";
 import { fillMissingArt, newArtCache } from "./artfill";
+import { fillBroll, newBrollCache } from "./autovideo/broll";
+import type { Asset } from "../src/engine/scene";
 
 export const app = new Hono();
 app.route("/", pro);
+app.route("/", voiceRoutes);
+app.route("/", autovideoRoutes);
 
 const point = z.object({ x: z.number(), y: z.number() });
 const assetInfo = z.object({
@@ -211,6 +217,9 @@ async function planOps(
   const before = new Set(lintScene(scene));
   const art = newArtCache();
   const drawn = new Set<string>();
+  const footage = newBrollCache();
+  const fetched = new Map<string, Asset>();
+  const footageNotes = new Set<string>();
   let best: { reply: string; ops: unknown[]; results: OpResult[]; score: number; warnings: string[] } | null = null;
   for (let attempt = 0; attempt < 2; attempt++) {
     const text = await chat(messages, { jsonMode: true, reasoning: "medium", temperature: 0.5 });
@@ -218,9 +227,14 @@ async function planOps(
     // Illustrations the library lacks are drawn now, so slides get a picture that really fits.
     const filled = await fillMissingArt(Array.isArray(obj?.ops) ? (obj!.ops as unknown[]) : [], art);
     filled.drawn.forEach((d) => drawn.add(d));
-    const rawOps = filled.ops;
+    // New stock footage for AI videos is downloaded now and becomes shot swaps.
+    const broll = await fillBroll(filled.ops, scene, footage);
+    broll.assets.forEach((a) => fetched.set(a.id, a));
+    broll.notes.forEach((n) => footageNotes.add(n));
+    const rawOps = broll.ops;
     const reply = typeof obj?.reply === "string" ? obj.reply : "";
-    const dry = applyOps(scene, rawOps, assets);
+    const known: AssetInfo[] = [...assets, ...[...fetched.values()].map(({ id, name, w, h, kind, duration, hasAudio }) => ({ id, name, w, h, kind, duration, hasAudio }))];
+    const dry = applyOps(scene, rawOps, known);
     const failures = dry.results.filter((r) => !r.ok);
     const warnings = lintScene(dry.scene, dry.applied).filter((w) => !before.has(w));
     const score = dry.applied.length ? failures.length * 2 + warnings.length : Infinity;
@@ -237,9 +251,11 @@ async function planOps(
       : `That was not a valid JSON object. Return ONLY {"reply": "...", "ops": [...]}.`;
     messages.push({ role: "assistant", content: text.slice(0, 20000) }, { role: "user", content: feedback });
   }
-  const skipped = best!.results.filter((r) => !r.ok).map((r) => r.message);
-  const ops = withCamerawork(scene, best!.ops, assets);
-  return { reply: best!.reply, ops, skipped, warnings: best!.warnings, drawn: [...drawn] };
+  const skipped = [...best!.results.filter((r) => !r.ok).map((r) => r.message), ...footageNotes];
+  const ops = withCamerawork(scene, best!.ops, [...assets, ...[...fetched.values()].map(({ id, name, w, h, kind, duration, hasAudio }) => ({ id, name, w, h, kind, duration, hasAudio }))]);
+  // Only footage the final plan uses goes to the editor.
+  const used = new Set((ops as Array<{ asset?: unknown }>).map((o) => o.asset));
+  return { reply: best!.reply, ops, skipped, warnings: best!.warnings, drawn: [...drawn], assets: [...fetched.values()].filter((a) => used.has(a.id)) };
 }
 
 const CAMERA_OPS = new Set(["camera3d", "orbit", "shot", "direct"]);

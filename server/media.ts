@@ -68,6 +68,11 @@ function newId(prefix: string): string {
   return `${prefix}_${randomBytes(6).toString("hex")}`;
 }
 
+/** Run ffmpeg with the given arguments (errors carry its last lines). */
+export function runFfmpeg(args: string[], timeoutMs = 600_000): Promise<void> {
+  return run(args, timeoutMs);
+}
+
 function run(args: string[], timeoutMs = 600_000): Promise<void> {
   return new Promise((resolve, reject) => {
     if (!ffmpegPath) return reject(new Error("ffmpeg is not available on this computer"));

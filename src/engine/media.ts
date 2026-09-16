@@ -497,7 +497,9 @@ interface PlacedWord {
 function placeCaption(ctx: Ctx, scene: Scene, c: CaptionObj, line: CaptionLine, scale: number, dx: number, dy: number) {
   const size = c.size * scale;
   ctx.font = fontCss(c.font, size, true, false, line.words.map((w) => w.text).join(" "));
-  const space = ctx.measureText(" ").width;
+  // Outlines and the enlarged current word (pop) spill past each word's measured width.
+  const spill = c.style === "pop" ? size * 0.3 : c.style === "outline" || c.style === "karaoke" ? size * 0.12 : 0;
+  const space = ctx.measureText(" ").width + spill;
   const widths = line.words.map((w) => ctx.measureText(w.text).width);
   const total = widths.reduce((a, b) => a + b, 0) + space * (line.words.length - 1);
   const cx = scene.width / 2 + dx;
@@ -841,4 +843,18 @@ export function composeTransition(ctx: Ctx, kind: TransitionKind, p: number, A: 
     }
   }
   ctx.restore();
+}
+
+/** Crop a source so it fills the frame (like "object-fit: cover"). */
+export function coverCrop(srcW: number, srcH: number, W: number, H: number): VideoObj["crop"] {
+  if (!srcW || !srcH) return null;
+  const aspect = srcW / srcH;
+  const box = W / H;
+  if (Math.abs(aspect - box) < 0.01) return null;
+  if (aspect > box) {
+    const cw = box / aspect;
+    return { x: (1 - cw) / 2, y: 0, w: cw, h: 1 };
+  }
+  const ch = aspect / box;
+  return { x: 0, y: (1 - ch) / 2, w: 1, h: ch };
 }

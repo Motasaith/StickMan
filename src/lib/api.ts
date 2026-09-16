@@ -1,6 +1,7 @@
 // Talking to this app's server: projects, media, voices, stock, speech-to-text, AI drawings, exports.
 
 import type { Asset, Word } from "@/engine/scene";
+import type { ScriptScene, VideoScript } from "@/engine/footage";
 
 async function json<T>(res: Response): Promise<T> {
   const data = (await res.json().catch(() => ({ error: `Server error ${res.status}` }))) as T & { error?: string };
@@ -65,6 +66,41 @@ export const api = {
     }),
 
   voice: (text: string, voice: string) => post("/api/voice", { text, voice }).then((r) => json<{ id: string; src: string; duration: number; words: Word[]; waveform: number[] }>(r)),
+
+  // Voice studio
+  voices: () => fetch("/api/voices").then((r) => json<VoiceList>(r)),
+  /** A short sample; returns a playable object URL. */
+  previewVoice: async (voice: string, opts: { text?: string; blend?: BlendPart[] } = {}) => {
+    const res = await post("/api/voices/preview", { voice, ...opts });
+    if (!res.ok) throw new Error(((await res.json().catch(() => ({}))) as { error?: string }).error ?? `Preview failed (${res.status})`);
+    return URL.createObjectURL(await res.blob());
+  },
+  saveBlend: (name: string, components: BlendPart[]) => post("/api/voices/blend", { name, components }).then((r) => json<{ id: string; name: string }>(r)),
+  cloneVoice: async (file: Blob, fileName: string, name: string, consent: boolean, note?: string) => {
+    const form = new FormData();
+    form.append("file", file, fileName);
+    form.append("name", name);
+    form.append("consent", consent ? "true" : "false");
+    if (note) form.append("note", note);
+    const res = await fetch("/api/voices/clone", { method: "POST", body: form });
+    const data = (await res.json().catch(() => ({}))) as { id?: string; name?: string; report?: CloneReport; error?: string };
+    if (!res.ok || data.error) throw Object.assign(new Error(data.error ?? `Cloning failed (${res.status})`), { report: data.report });
+    return data as { id: string; name: string; report: CloneReport };
+  },
+  deleteVoice: (id: string) => fetch(`/api/voices/${encodeURIComponent(id)}`, { method: "DELETE" }).then((r) => json<{ ok: boolean }>(r)),
+  installVoices: (what: "studio" | "clone") => post("/api/voices/install", { what }).then((r) => json<{ job: string }>(r)),
+
+  // Background jobs
+  job: <T = unknown>(id: string) => fetch(`/api/jobs/${id}`).then((r) => json<JobView<T>>(r)),
+  cancelJob: (id: string) => post(`/api/jobs/${id}/cancel`, {}).then((r) => json<{ ok: boolean }>(r)),
+
+  // AI video maker
+  autovideoStatus: () => fetch("/api/autovideo/status").then((r) => json<{ ai: boolean; stock: boolean; youtube: boolean }>(r)),
+  angles: (brief: VideoBrief) => post("/api/autovideo/angles", brief).then((r) => json<{ saturated: string[]; angles: VideoAngle[]; youtube: boolean }>(r)),
+  writeScript: (brief: VideoBrief & { angle?: { title: string; hook?: string } }) => post("/api/autovideo/script", brief).then((r) => json<{ script: VideoScript }>(r)).then((d) => d.script),
+  rewriteScene: (script: VideoScript, index: number, instruction: string, tone?: string) =>
+    post("/api/autovideo/rewrite", { script, index, instruction, tone }).then((r) => json<{ scene: ScriptScene }>(r)).then((d) => d.scene),
+  buildVideo: (script: VideoScript, voice: string, captions: boolean) => post("/api/autovideo/build", { script, voice, captions }).then((r) => json<{ job: string }>(r)),
   stockSearch: (q: string, kind: "image" | "video", orientation: string) =>
     fetch(`/api/stock/search?q=${encodeURIComponent(q)}&kind=${kind}&orientation=${orientation}`).then((r) => json<{ items: StockItem[]; configured: boolean }>(r)),
   stockImport: (item: StockItem, name: string) => post("/api/stock/import", { src: item.src, name, credit: item.credit }).then((r) => json<MediaUpload>(r)),
@@ -127,4 +163,63 @@ export function assetFromUpload(m: MediaUpload, displayName?: string): Asset {
     frames: m.frames,
     waveform: m.waveform,
   } as Asset;
+}
+
+export interface BlendPart {
+  voice: string;
+  weight: number;
+}
+
+export interface VoiceList {
+  edge: Array<{ id: string; label: string }>;
+  studio: Array<{ id: string; name: string; language: string; gender: "female" | "male"; note: string; tier: string; tags: string[]; recommended: boolean; flag: string }>;
+  presets: Array<{ id: string; name: string; desc: string; components: BlendPart[] }>;
+  saved: Array<{ id: string; rawId: string; name: string; kind: "blend" | "clone"; blend?: BlendPart[]; quality?: number; note?: string; created: number; source: "stickman" | "voicegen" }>;
+  installed: { studio: boolean; clone: boolean };
+  /** Seconds of computer time per second of speech. */
+  realtime: { edge: number; kokoro: number; clone: number };
+}
+
+export interface CloneReport {
+  ok: boolean;
+  duration: number;
+  score: number;
+  issues: string[];
+  tips: string[];
+}
+
+export interface JobView<T = unknown> {
+  id: string;
+  kind: string;
+  status: "running" | "done" | "failed" | "cancelled";
+  steps: Array<{ key: string; label: string; state: "waiting" | "running" | "done" | "failed" | "skipped"; done: number; total: number; detail?: string }>;
+  notes: string[];
+  result?: T;
+  error?: string;
+  started: number;
+  finished?: number;
+}
+
+export interface VideoBrief {
+  niche: string;
+  idea: string;
+  draft?: string;
+  tone?: string;
+  minutes: number;
+  format: "16:9" | "9:16";
+  language?: string;
+  audience?: string;
+}
+
+export interface VideoAngle {
+  title: string;
+  hook: string;
+  whyFresh: string;
+  searchPhrase: string;
+  competition: null | {
+    level: "low" | "medium" | "high";
+    bigVideos: number;
+    medianViews: number;
+    top: Array<{ title: string; channel: string; views: number; published: string }>;
+  };
 }

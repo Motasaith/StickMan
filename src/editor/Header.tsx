@@ -76,7 +76,7 @@ export function Header({ onExport, onVersions }: { onExport: () => void; onVersi
   const canUndo = useStore((s) => s.past.length > 0);
   const canRedo = useStore((s) => s.future.length > 0);
   const is3d = useStore((s) => s.scene.mode === "3d");
-  const hasSlides = useStore((s) => !!s.scene.slides?.length);
+  const sections = useStore((s) => (s.scene.slides?.length ? (s.scene.slides[0].layout === "footage" ? "ai video" : "presentation") : null));
   const size = useStore((s) => `${s.scene.width}×${s.scene.height}`);
   return (
     <header className="z-30 flex h-14 shrink-0 items-center gap-2 border-b border-line bg-panel px-3">
@@ -94,7 +94,7 @@ export function Header({ onExport, onVersions }: { onExport: () => void; onVersi
       <TitleField />
       <SaveBadge />
       <span className="eyebrow ml-2 hidden lg:flex">
-        {size} {hasSlides ? "/ presentation" : is3d ? "/ 3d" : ""}
+        {size} {sections ? `/ ${sections}` : is3d ? "/ 3d" : ""}
       </span>
       <div className="ml-auto flex items-center gap-1">
         <IconButton label="Undo (Ctrl+Z)" disabled={!canUndo} onClick={() => useStore.getState().undo()}>

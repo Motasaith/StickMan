@@ -1,8 +1,8 @@
 // The home page: say what to make, start from a template, or open a recent project.
 
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router";
-import { ArrowUpRight, Copy, Film, Loader2, MoreHorizontal, Pencil, Presentation, Sparkles, Trash2, Clapperboard, Box, Smartphone, PersonStanding } from "lucide-react";
+import { Link, useNavigate } from "react-router";
+import { ArrowUpRight, Copy, Film, Loader2, MoreHorizontal, Pencil, Presentation, Sparkles, Trash2, Clapperboard, Box, Smartphone, PersonStanding, Wand2, Mic2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -12,10 +12,11 @@ import { emptyScene, type Scene } from "@/engine/scene";
 import { applyOps } from "@/engine/ops";
 import { Logo } from "@/editor/Logo";
 
-type Kind = "animation" | "presentation" | "video" | "3d";
+type Kind = "ai" | "animation" | "presentation" | "video" | "3d";
 type Format = "16:9" | "9:16" | "1:1";
 
 const KINDS: { id: Kind; label: string; icon: typeof Film; placeholder: string }[] = [
+  { id: "ai", label: "AI video", icon: Wand2, placeholder: "A mini-documentary about the video rental giant that turned down Netflix…" },
   { id: "animation", label: "Animation", icon: PersonStanding, placeholder: "A teacher walks to the board, writes 2+2=4 and asks the class a question…" },
   { id: "presentation", label: "Presentation", icon: Presentation, placeholder: "A 6-slide presentation for a dentist about caring for your teeth, with narration…" },
   { id: "video", label: "Video edit", icon: Clapperboard, placeholder: "Upload clips, then: cut the boring start, add captions and a title…" },
@@ -57,9 +58,12 @@ interface Template {
   tone: string;
   build?: () => Scene;
   prompt?: string;
+  /** Opens this page instead of a new project. */
+  href?: string;
 }
 
 const TEMPLATES: Template[] = [
+  { id: "faceless", title: "Faceless YouTube video", blurb: "AI script, voice, stock footage and editing, ready to export", kind: "video", format: "16:9", icon: Wand2, tone: "bg-[#f6dccb]", href: "/create" },
   { id: "blank", title: "Blank canvas", blurb: "Start empty, 16:9", kind: "animation", format: "16:9", icon: Pencil, tone: "bg-[#e9e4d8]" },
   { id: "deck", title: "Presentation", blurb: "A narrated slide deck with animated illustrations", kind: "presentation", format: "16:9", icon: Presentation, tone: "bg-[#d9efe9]", build: () => applyOps(emptyScene(), DEMO_DECK).scene },
   {
@@ -89,7 +93,7 @@ export default function Projects() {
   const navigate = useNavigate();
   const [projects, setProjects] = useState<ProjectSummary[] | null>(null);
   const [prompt, setPrompt] = useState("");
-  const [kind, setKind] = useState<Kind>("animation");
+  const [kind, setKind] = useState<Kind>("ai");
   const [format, setFormat] = useState<Format>("16:9");
   const [busy, setBusy] = useState<string | null>(null);
 
@@ -118,6 +122,7 @@ export default function Projects() {
   const start = () => {
     const p = prompt.trim();
     if (!p) return;
+    if (kind === "ai") return navigate(`/create?prompt=${encodeURIComponent(p)}&format=${format === "9:16" ? "9:16" : "16:9"}`);
     const scene = sceneFor(format);
     if (kind === "3d") scene.mode = "3d";
     // The chosen kind steers the AI when the words alone don't say it.
@@ -133,6 +138,12 @@ export default function Projects() {
         <header className="flex h-[88px] items-center justify-between border-b border-line">
           <Logo className="h-7" />
           <nav className="flex items-center gap-6 text-sm">
+            <Link to="/create" className="flex items-center gap-1.5 hover:text-primary">
+              <Wand2 className="size-4" /> AI video
+            </Link>
+            <Link to="/voices" className="flex items-center gap-1.5 hover:text-primary">
+              <Mic2 className="size-4" /> Voice studio
+            </Link>
             <a href="#templates" className="hover:text-primary">Templates</a>
             <a href="#projects" className="hover:text-primary">Your projects</a>
             <Button className="gap-2 rounded-none px-5" onClick={() => create({ title: "Untitled project", scene: sceneFor("16:9"), kind: "animation" }, "new")} disabled={!!busy}>
@@ -144,7 +155,7 @@ export default function Projects() {
         <section className="grid gap-10 py-14 lg:grid-cols-[1.25fr_1fr] lg:items-end">
           <div>
             <p className="eyebrow mb-6">
-              <span className="eyebrow-dot" /> Animate · Present · Edit
+              <span className="eyebrow-dot" /> Create · Animate · Present · Edit
             </p>
             <h1 className="font-display text-[64px] font-bold leading-[0.95] sm:text-[88px]">
               Say it.
@@ -154,7 +165,7 @@ export default function Projects() {
             </h1>
           </div>
           <p className="max-w-md pb-2 text-[15px] leading-7 text-muted-foreground">
-            Describe a scene and the AI animates stick figures, characters and 3D worlds. Ask for a presentation and it designs narrated slides with animated illustrations. Or bring your own clips and edit them like a pro. Everything stays editable on a real timeline.
+            Give the AI an idea and it writes, voices and edits a faceless YouTube video from stock footage. Describe a scene and it animates stick figures, characters and 3D worlds. Ask for a presentation and it designs narrated slides with animated illustrations. Or bring your own clips and edit them like a pro. Everything stays editable on a real timeline.
           </p>
         </section>
 
@@ -211,6 +222,7 @@ export default function Projects() {
                 key={t.id}
                 disabled={!!busy}
                 onClick={() => {
+                  if (t.href) return navigate(t.href);
                   const scene = t.build ? t.build() : sceneFor(t.format);
                   if (t.kind === "3d") scene.mode = "3d";
                   if (t.id === "short") scene.background = "#111111";

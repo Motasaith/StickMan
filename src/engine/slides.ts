@@ -1,7 +1,7 @@
 // Presentations: slides laid out from their content with a theme, entrances timed to the
 // narration, and the timeline kept in order when slides grow, move or go away.
 
-import type { AudioObj, Background, ChartKind, ChartObj, DrawingObj, FontName, Scene, SceneObj, Slide, SvgObj, TextObj, TransitionKind, VoiceId, Word } from "./scene";
+import type { AudioObj, Background, ChartKind, ChartObj, DrawingObj, FontName, Scene, SceneObj, Slide, SvgObj, TextObj, TransitionKind, VoiceRef, Word } from "./scene";
 import { findObj, uniqueId } from "./scene";
 import { backgroundColor, themeById, type Theme } from "./themes";
 import { parseColor } from "./svg";
@@ -37,7 +37,7 @@ export interface SlideSpec {
   steps?: string[];
   comparison?: { leftTitle: string; left: string[]; rightTitle: string; right: string[] };
   narration?: string;
-  voice?: VoiceId;
+  voice?: VoiceRef;
   duration?: number;
   transition?: TransitionKind;
   background?: Background;
@@ -527,8 +527,29 @@ export function setSlideDuration(scene: Scene, slideId: string, duration: number
   const dt = Math.max(1, duration) - slide.duration;
   if (Math.abs(dt) < 0.01) return;
   const end = slide.start + slide.duration;
+  const before = slide.duration;
   shiftTimeline(scene, end, dt, (o) => o.slide !== slideId);
   slide.duration = Math.round((slide.duration + dt) * 100) / 100;
+  if (slide.layout === "footage") stretchShots(scene, slide, before);
+}
+
+/** An AI video scene changed length: its footage shots stretch with it, so no shot ends early. */
+function stretchShots(scene: Scene, slide: Slide, before: number) {
+  const k = slide.duration / Math.max(0.1, before);
+  const at = (t: number) => Math.round((slide.start + (t - slide.start) * k) * 1000) / 1000;
+  for (const o of scene.objects) {
+    if (o.slide !== slide.id || (o.type !== "video" && o.type !== "image")) continue;
+    for (const name of ["scale", "x", "opacity"] as const) {
+      const keys = o.tracks[name];
+      if (keys) for (const key of keys) if (key.t > slide.start - 1e-6) key.t = at(key.t);
+    }
+    if (o.type === "video") {
+      o.start = at(o.start);
+      o.duration = Math.round(o.duration * k * 1000) / 1000;
+      // The same stretch of source, played a little slower or faster.
+      o.speed = Math.round(Math.max(0.5, Math.min(2, o.speed / k)) * 1000) / 1000;
+    }
+  }
 }
 
 /** Lengthen slides whose narration now runs past their end (after real voices are recorded). */
@@ -538,6 +559,15 @@ export function fitSlidesToNarration(scene: Scene): string[] {
     const voices = scene.objects.filter((o): o is AudioObj => o.type === "audio" && o.slide === slide.id && o.role === "narration");
     if (!voices.length) continue;
     const end = Math.max(...voices.map((v) => v.start + v.duration));
+    // AI video scenes fit their voice exactly (both ways); slides only grow, keeping a pause.
+    if (slide.layout === "footage") {
+      const fit = Math.round((end - slide.start + 0.35) * 100) / 100;
+      if (Math.abs(fit - slide.duration) > 0.05) {
+        setSlideDuration(scene, slide.id, fit);
+        changed.push(slide.id);
+      }
+      continue;
+    }
     const need = end - slide.start + 1;
     if (need > slide.duration + 0.05) {
       setSlideDuration(scene, slide.id, Math.round(need * 10) / 10);
@@ -545,7 +575,7 @@ export function fitSlidesToNarration(scene: Scene): string[] {
     }
   }
   const last = scene.slides?.[scene.slides.length - 1];
-  if (last) scene.duration = Math.max(scene.duration, Math.round((last.start + last.duration) * 10) / 10);
+  if (last) scene.duration = last.layout === "footage" ? Math.round((last.start + last.duration) * 1000) / 1000 : Math.max(scene.duration, Math.round((last.start + last.duration) * 10) / 10);
   if (changed.length) syncCaptions(scene);
   return changed;
 }

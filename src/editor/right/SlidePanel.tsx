@@ -2,14 +2,14 @@ import { useState } from "react";
 import { Loader2, Mic, Play } from "lucide-react";
 import { toast } from "sonner";
 import { useStore } from "@/store";
-import { TRANSITIONS, VOICE_IDS, cloneScene, type AudioObj, type Slide } from "@/engine/scene";
+import { TRANSITIONS, cloneScene, type AudioObj, type Slide } from "@/engine/scene";
 import { themeById } from "@/engine/themes";
-import { VOICES } from "@/engine/voices";
 import { speechSeconds } from "@/engine/slides";
 import { estimateWords } from "@/engine/media";
 import { generateVoices } from "@/voice";
 import { playClip } from "@/audio";
 import { ColorInput, NumField, Row, Section, SelectField, SliderRow, Segmented, TextField, Note, run } from "../fields";
+import { VoiceSelect } from "../VoiceSelect";
 
 const TRANSITION_LABEL: Record<string, string> = { cut: "Cut", fade: "Fade", slideLeft: "Slide in from right", slideRight: "Slide in from left", slideUp: "Slide up", slideDown: "Slide down", push: "Push", zoom: "Zoom", wipe: "Wipe", circle: "Circle reveal", blur: "Blur", flip: "Flip" };
 
@@ -101,7 +101,7 @@ export function SlidePanel({ slide }: { slide: Slide }) {
         {voice && (
           <>
             <Row label="Voice">
-              <SelectField value={voice.voice ?? "narrator"} options={VOICE_IDS.map((v) => ({ value: v, label: VOICES[v].label }))} onChange={(v) => run([{ op: "edit", id: voice.id, set: { voice: v } }])} />
+              <VoiceSelect value={voice.voice ?? "narrator"} onChange={(v) => run([{ op: "edit", id: voice.id, set: { voice: v } }])} />
             </Row>
             <div className="flex items-center gap-2">
               <button className="chip" disabled={busy} onClick={record}>

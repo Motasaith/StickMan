@@ -6,6 +6,51 @@ camera shots, or your own clips trimmed and captioned. Nothing is a generated vi
 is ordinary objects and keyframes you can drag, retime and undo, and the MP4 is rendered from that
 same scene. It runs locally: projects, media and versions live in `~/.stickman-studio`.
 
+## AI video maker (faceless YouTube videos)
+
+Open **AI video** on the home page (or `/create`):
+
+1. **Niche**: Personal Finance & Wealth, Mini-Documentaries & Business Scandals, Tech & AI,
+   History, Science & Space, Psychology, Health, Mysteries & True Crime, Geography, Luxury,
+   Did-You-Know Shorts, or your own. Each niche carries its story structure, tone, recommended
+   voices, footage style, cut pacing, color grade, caption style and title look
+   (`src/engine/niches.ts`).
+2. **Idea**: a topic, plus your own draft or notes if you have them (the AI keeps your ideas and
+   best lines and completes the rest), length (a 60-second vertical short up to 12 minutes),
+   tone and narration language.
+3. **Angle**: five fresh takes and the takes that are already everywhere on YouTube. With
+   `YOUTUBE_API_KEY` in `.env` each angle shows real competition from YouTube search (views of
+   the top results); without it, it is the AI's judgment.
+4. **Script**: scene by scene, with chapters, narration, Pexels searches, photo or video, and
+   on-screen text (titles, counting numbers, lists, name bars, quotes). Edit anything, rewrite a
+   scene ("more gripping", "simpler words"...) or the whole script. Claims the AI could have
+   wrong are listed under "Check before you publish".
+5. **Voice**: online Edge voices (fast), studio voices, blends, or your own clones, with samples
+   read from your script and a time estimate for this computer.
+6. **Build** (a background job): voices every scene, picks several Pexels clips per scene (never
+   the same clip twice), downloads them at 720p, cuts shots every few seconds with slow zooms,
+   chapter transitions and markers, captions timed to the words, an opening title, a subscribe
+   card and the niche's grade. The result opens in the editor as a normal project; its
+   "YouTube details" (title, description with footage credits, tags, thumbnail text, checks)
+   are in the project panel. The AI Director can re-voice a scene, swap footage for a scene
+   ("broll") or put your own clip into a shot ("swapShot").
+
+## Voice studio
+
+`/voices` holds the local voices, merged from VoiceGen Studio (`D:\try\voicegen-web`):
+
+- **Studio voices**: Kokoro-82M, 40 voices in 7 languages (Hindi voices also read Urdu).
+- **Blends**: two to four studio voices mixed by weight into a new speaker that no other channel
+  has. Fast enough for long videos.
+- **Clones**: Chatterbox-Turbo learns a voice from 10 to 30 seconds of speech (upload or record),
+  after a consent check and a recording quality report. Slow on older CPUs (about an hour per
+  minute of speech on the development laptop), so best for short videos.
+- Voices made in VoiceGen Studio on the same machine appear here too, and its downloaded models
+  are used in place (set `VOICEGEN_DATA_DIR` if it lives elsewhere). Otherwise the models download
+  into `~/.stickman-studio/voice-models` from the Install buttons.
+- The engines run in their own Node process (`server/voices/worker.ts`), one request at a time,
+  and stop after five idle minutes to give the memory back.
+
 ## Presentations, media and the pro editor
 
 - **Narrated presentations**: one `presentation` op designs a whole deck: 12 layouts (title,
@@ -90,6 +135,8 @@ LLM_BASE_URL=https://ollama.com/v1
 LLM_API_KEY=...
 LLM_MODEL=gpt-oss:120b         # plans the animation (text, good at JSON)
 VISION_LLM_MODEL=gemma4:31b    # checks rendered frames; finds joints on puppet pictures
+PEXELS_API_KEY=...             # stock footage (free at pexels.com/api)
+YOUTUBE_API_KEY=...            # optional: real competition numbers for video angles
 ```
 
 Production: `npm run build && npm start` (serves `dist/` and the AI endpoints on port 5178).
@@ -144,6 +191,13 @@ prompt ──> PLAN (LLM_MODEL)       returns ops: draw, character, walk, write,
   stock, transcription, AI illustration and export conversion. `server/artfill.ts` draws missing
   illustrations for the AI's plans.
 - `src/pages/`, `src/editor/`: the home page and the editor (panels, stage, timeline, inspector, dialogs).
+- `src/pages/Create.tsx`, `src/create/`: the AI video maker wizard; `src/pages/Voices.tsx`: the voice studio.
+- `src/engine/footage.ts`: script + recorded narration + stock clips -> an edited timeline (pure, tested).
+- `server/autovideo/`: the script writer and angle finder (`writer.ts`), YouTube competition
+  (`youtube.ts`), footage gathering (`stock.ts`), the build job (`pipeline.ts`) and the AI
+  Director's footage swaps (`broll.ts`). `server/jobs.ts` tracks background jobs.
+- `server/voices/`: the Kokoro and Chatterbox engines and their worker process, saved voices
+  (`library.ts`), and `speak.ts`, which voices a line with any voice.
 - `server/finalize.ts`: ffmpeg pass that re-encodes an export's sound as AAC in MP4. Firefox has
   no AAC encoder, and many players (Windows Films & TV, Media Player) show Opus-in-MP4 or WebM as silent.
 - `src/export.ts`, `src/avc.ts`: MP4 in the browser (WebCodecs H.264 Baseline + AAC or Opus + mp4-muxer). The MP4 header is
@@ -178,6 +232,7 @@ npm test                                           # engine unit tests
 npx tsx scripts/try-ai.ts "<prompt>" out.json      # one real AI plan, no browser
 npx tsx scripts/contact-sheet.ts out.json sheet.png 4 0.5 1.5 2.5   # look at frames
 node scripts/ai-pro.mjs <outDir> --kind presentation --prompt "<prompt>" [--export]   # real AI run from the home page (dev server up)
+node scripts/create-ui.mjs <outDir> --niche finance --length short [--voice custom:<id>] [--export]   # the AI video maker, idea to export
 node scripts/pro-ui.mjs <outDir>                                     # projects page, deck template, every panel, adding items, playback
 npx tsx scripts/sticker-sheet.ts out.png illustrations 1.2           # contact sheet of the sticker or illustration library
 npx tsx scripts/slides-sheet.ts out.png                              # sample deck rendered in Node

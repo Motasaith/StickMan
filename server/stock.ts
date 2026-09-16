@@ -36,7 +36,8 @@ async function pexels(path: string) {
   return res.json() as Promise<Record<string, unknown>>;
 }
 
-export async function searchStock(query: string, kind: "image" | "video", orientation: "landscape" | "portrait" | "square", perPage = 18): Promise<StockItem[]> {
+/** Search Pexels. `maxDim` caps the longer side of the chosen file (smaller downloads for 720p edits). */
+export async function searchStock(query: string, kind: "image" | "video", orientation: "landscape" | "portrait" | "square", perPage = 18, maxDim = 1920): Promise<StockItem[]> {
   const q = `query=${encodeURIComponent(query)}&per_page=${perPage}&orientation=${orientation}`;
   if (kind === "image") {
     const data = (await pexels(`/v1/search?${q}`)) as { photos?: Array<{ id: number; url: string; photographer: string; width: number; height: number; src: Record<string, string> }> };
@@ -57,7 +58,7 @@ export async function searchStock(query: string, kind: "image" | "video", orient
   return (data.videos ?? [])
     .map((v) => {
       const mp4s = v.video_files.filter((f) => f.file_type === "video/mp4").sort((a, b) => (b.width || 0) - (a.width || 0));
-      const file = mp4s.find((f) => Math.max(f.width || 0, f.height || 0) <= 1920) ?? mp4s[mp4s.length - 1];
+      const file = mp4s.find((f) => Math.max(f.width || 0, f.height || 0) <= maxDim) ?? mp4s[mp4s.length - 1];
       return {
         id: `pexels-video-${v.id}`,
         kind: "video" as const,

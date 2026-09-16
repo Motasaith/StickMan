@@ -1,13 +1,13 @@
 import { useMemo, useState } from "react";
 import { Captions, Loader2, Mic, Play } from "lucide-react";
 import { toast } from "sonner";
-import { AUDIO_ROLES, VOICE_IDS, cloneScene, uniqueId, type AudioObj } from "@/engine/scene";
-import { VOICES } from "@/engine/voices";
+import { AUDIO_ROLES, cloneScene, uniqueId, type AudioObj } from "@/engine/scene";
 import { useStore } from "@/store";
 import { api } from "@/lib/api";
 import { generateVoices } from "@/voice";
 import { playClip } from "@/audio";
 import { NumField, Row, Section, SelectField, SliderRow, TextField, Note, run } from "../../fields";
+import { VoiceSelect } from "../../VoiceSelect";
 
 export function AudioSection({ obj }: { obj: AudioObj }) {
   const asset = useStore((s) => s.assets.find((a) => a.id === obj.asset));
@@ -64,7 +64,7 @@ export function AudioSection({ obj }: { obj: AudioObj }) {
         <>
           <TextField multiline rows={4} value={obj.text ?? ""} placeholder="The words to speak…" onCommit={(v) => edit({ text: v })} />
           <Row label="Voice">
-            <SelectField value={obj.voice ?? "narrator"} options={VOICE_IDS.map((v) => ({ value: v, label: VOICES[v].label }))} onChange={(v) => edit({ voice: v })} />
+            <VoiceSelect value={obj.voice ?? "narrator"} onChange={(v) => edit({ voice: v })} />
           </Row>
           <Row label="Lips move on">
             <SelectField value={obj.speaker ?? ""} options={[{ value: "", label: "Nobody (off screen)" }, ...speakers.map((o) => ({ value: o.id, label: o.name }))]} onChange={(v) => {

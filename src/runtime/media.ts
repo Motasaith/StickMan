@@ -113,11 +113,13 @@ interface Player {
 
 /** One element per video object, so two clips of the same file can show different moments. */
 const players = new Map<string, Player>();
+/** The export seeks its own elements, so the live preview can't pause or free them mid-export. */
+const exportPlayers = new Map<string, Player>();
 
-function playerFor(obj: VideoObj, assets: Asset[]): Player | null {
+function playerFor(obj: VideoObj, assets: Asset[], pool = players): Player | null {
   const a = assets.find((x) => x.id === obj.asset);
   if (!a) return null;
-  let p = players.get(obj.id);
+  let p = pool.get(obj.id);
   if (p && p.asset !== a.id) {
     p.el.pause();
     p.el.removeAttribute("src");
@@ -136,7 +138,7 @@ function playerFor(obj: VideoObj, assets: Asset[]): Player | null {
       bump();
     });
     el.addEventListener("seeked", bump);
-    players.set(obj.id, player);
+    pool.set(obj.id, player);
     p = player;
   }
   return p;
@@ -162,12 +164,27 @@ export function videoLookup(assets: Asset[], playing: boolean): RenderOptions["v
   };
 }
 
+function release(id: string, p: Player, pool = players) {
+  p.el.pause();
+  p.el.removeAttribute("src");
+  p.el.load();
+  pool.delete(id);
+}
+
+/** Clips close to the playhead keep their element; the rest let theirs go (browsers cap how many exist). */
+const isNear = (o: VideoObj, t: number) => t >= o.start - 3 && t <= o.start + o.duration + 2;
+
 /** Sound of video clips during playback comes from their elements. */
-export function syncVideoSound(scene: Scene, playing: boolean, t: number) {
+export function syncVideoSound(scene: Scene, playing: boolean, t: number, assets?: Asset[]) {
   const live = new Set<string>();
   for (const o of scene.objects) {
-    if (o.type !== "video") continue;
+    if (o.type !== "video" || !isNear(o, t)) continue;
     live.add(o.id);
+    // Load the next shot a moment early so the cut doesn't flash black.
+    if (assets && playing && t < o.start && !players.has(o.id)) {
+      const warm = playerFor(o, assets);
+      if (warm) warm.el.currentTime = videoSourceTime(o, o.start) ?? o.in;
+    }
     const p = players.get(o.id);
     if (!p) continue;
     const on = playing && videoSourceTime(o, t) !== null && !o.hidden;
@@ -179,24 +196,19 @@ export function syncVideoSound(scene: Scene, playing: boolean, t: number) {
     p.el.volume = Math.max(0, Math.min(1, gain));
     if (!on && !p.el.paused) p.el.pause();
   }
-  for (const [id, p] of players) {
-    if (!live.has(id)) {
-      p.el.pause();
-      p.el.removeAttribute("src");
-      p.el.load();
-      players.delete(id);
-    }
-  }
+  for (const [id, p] of players) if (!live.has(id)) release(id, p);
 }
 
 /** Export: seek every video visible at t to its exact frame and wait for it. */
 export async function seekVideos(scene: Scene, t: number, assets: Asset[]) {
   const jobs: Promise<void>[] = [];
+  const near = new Set(scene.objects.filter((o): o is VideoObj => o.type === "video" && isNear(o, t)).map((o) => o.id));
+  for (const [id, p] of exportPlayers) if (!near.has(id)) release(id, p, exportPlayers);
   for (const o of scene.objects) {
     if (o.type !== "video") continue;
     const at = videoSourceTime(o, t);
     if (at === null) continue;
-    const p = playerFor(o, assets);
+    const p = playerFor(o, assets, exportPlayers);
     if (!p) continue;
     const el = p.el;
     el.pause();
@@ -222,9 +234,14 @@ export async function seekVideos(scene: Scene, t: number, assets: Asset[]) {
 
 export function exportVideoLookup(assets: Asset[]): RenderOptions["videoFrame"] {
   return (obj) => {
-    const p = playerFor(obj, assets);
+    const p = playerFor(obj, assets, exportPlayers);
     return p && p.el.readyState >= 2 ? p.el : undefined;
   };
+}
+
+/** Free the export's video elements once it is done. */
+export function releaseExportVideos() {
+  for (const [id, p] of exportPlayers) release(id, p, exportPlayers);
 }
 
 // ── Scratch canvases ────────────────────────────────────────────────

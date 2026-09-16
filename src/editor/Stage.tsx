@@ -138,7 +138,7 @@ export function Stage() {
       }
       const st = useStore.getState();
       syncAudio(st.playing, st.time, st.scene, st.assets);
-      syncVideoSound(st.scene, st.playing, st.time);
+      syncVideoSound(st.scene, st.playing, st.time, st.assets);
       const hasVideo = st.scene.objects.some((o) => o.type === "video");
       const hasAnimatedSvg = st.scene.objects.some((o) => o.type === "svg");
       const sig = [st.scene, st.time, st.selectedId, st.assets, st.imagesVersion, st.playing];

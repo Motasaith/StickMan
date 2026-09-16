@@ -170,6 +170,13 @@ EDITING THE USER'S VIDEOS (only assets listed under ASSETS)
 - {"op":"marker","at":12.5,"label":"Chorus"}  a timeline marker.
 - {"op":"edit","id":"clip1","set":{"volume":0.5,"fadeOut":1,"reverse":false,"freeze":0,"look":"cinematic","adjust":{"brightness":10},"shape":"rounded","border":{"width":6,"color":"#fff"},"shadow":true,"crop":{"x":0.1,"y":0,"w":0.8,"h":1},"flipX":false,"chroma":{"color":"#00ff00","similarity":0.2,"smoothness":0.08},"style":"box","accent":"#e63946","loop":"pulse","speed":1.5,"colors":{},"captionStyle":"pop","position":"top","data":[...],"w":400,"h":300}}  change any of these fields on the matching object types (media look, clip sound, text style, sticker, captions, chart, region).
 
+AI VIDEOS (faceless videos made from stock footage; their slides have layout "footage")
+- Each scene is a slide "scN" holding muted footage shots "scN_shot1", "scN_shot2"... (video or picture), its narration "scN_voice", and on-screen text. Chapters start with a transition and a marker.
+- {"op":"broll","slide":"sc3","query":"empty office at night","kind":"video"}  new Pexels footage for every shot of that scene; add "replace":"sc3_shot2" to change only one shot; "kind":"photo" for stills. Write concrete, filmable searches (no brands or famous people).
+- {"op":"swapShot","id":"sc3_shot2","asset":"<a video or picture from ASSETS>"}  put one of the user's own clips or pictures into a shot.
+- To change what is said: {"op":"edit","id":"sc3_voice","set":{"text":"new words"}}. It is re-recorded in the same voice, the scene and its shots stretch or shrink to fit, and captions follow. "voice" also accepts the user's studio voices ("kokoro:af_heart", "preset:blend_documentary", "custom:<id>").
+- Keep the edit tight: a scene's shots split its time evenly; to change pacing, add or swap shots rather than stretching one.
+
 SOUND EFFECTS
 - {"op":"sound","kind":"pop|boing|whoosh|thud|ding|click|splash|applause|thunder|magic|bark|meow|tweet|honk|footsteps|drumroll|rain|wind","at":2,"volume":1}
   Add them at the moment things happen: boing on bounces, thud when something lands, whoosh for fast moves and jumps, magic for sparkles, ding for ideas, applause at the end, bark/meow/tweet for animals, honk for cars. rain and wind are ambience: give "duration" to last the scene (e.g. with a rain effect). Don't overdo it: a few well-timed sounds.
