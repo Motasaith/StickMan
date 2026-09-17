@@ -66,8 +66,9 @@ pro.post("/api/projects/:id/duplicate", async (c) => {
 });
 
 pro.get("/api/demo", async (c) => {
+  // No local snapshot: the client uses the sample bundled with the repo (public/demo).
   const demo = await getDemo();
-  return demo ? c.json(demo) : c.json({ error: "No demo project yet" }, 404);
+  return c.json(demo ?? { bundled: true });
 });
 
 /** Make a project the home page demo (a snapshot). */

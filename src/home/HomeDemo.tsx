@@ -36,9 +36,17 @@ export function HomeDemo() {
   useEffect(() => {
     let cancelled = false;
     const uninstall = installDemoLimits();
-    fetch("/api/demo")
-      .then((r) => (r.ok ? (r.json() as Promise<Pick<ProjectData, "title" | "scene" | "assets" | "kind">>) : null))
-      .catch(() => null)
+    // A locally saved sample (PUT /api/demo) wins; otherwise the one bundled with the repo.
+    const sample = async () => {
+      for (const url of ["/api/demo", "/demo/project.json"]) {
+        const got = await fetch(url)
+          .then((r) => (r.ok ? (r.json() as Promise<Pick<ProjectData, "title" | "scene" | "assets" | "kind">>) : null))
+          .catch(() => null);
+        if (got?.scene) return got;
+      }
+      return null;
+    };
+    sample()
       .then((p) => {
         if (cancelled) return;
         const s = useStore.getState();

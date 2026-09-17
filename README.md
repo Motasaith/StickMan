@@ -85,9 +85,19 @@ Then:
 - **Live editor demo** on the home page: the real editor on a finished AI video. Nothing is
   saved; each tool works a few times (3 AI Director requests, 3 of each kind of thing added,
   1 AI picture and 1 AI drawing, no uploads), and "Open in editor" copies it into a real
-  project. The sample is a snapshot of any project:
+  project.
+- **The sample ships with the repository** in `public/demo` (about 2 MB: the clips are trimmed to
+  the seconds the video uses, re-encoded at 480px wide, and the voices are 64 kbps mp3), so a
+  fresh clone has something to play. Credits for its footage are in `public/demo/CREDITS.txt`.
+  To use one of your own projects instead:
+
+  ```bash
+  npx tsx scripts/bundle-demo.ts p_yourprojectid   # writes public/demo, commit it
+  ```
+
+  A machine-local sample takes priority over the bundled one:
   `curl -X PUT localhost:5178/api/demo -H "Content-Type: application/json" -d '{"projectId":"p_..."}'`
-  (stored in `~/.stickman-studio/demo-project.json`; without one, the dentist deck is used).
+  (stored in `~/.stickman-studio/demo-project.json`). With neither, the dentist deck is used.
 
 ## Voice studio
 

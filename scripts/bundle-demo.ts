@@ -1,0 +1,127 @@
+// Bundle a project into the repository as the home page demo, so a fresh clone has something to
+// play. Each clip is trimmed to the part the video actually uses and re-encoded small, voices
+// become mp3, and everything lands in public/demo with a credits file.
+// Usage: npx tsx scripts/bundle-demo.ts [projectId] [--width 480] [--crf 32]
+
+import { mkdir, readFile, rm, writeFile, stat } from "node:fs/promises";
+import { join } from "node:path";
+import { getProject } from "../server/projects";
+import { MEDIA_DIR, probe as mediaProbe, runFfmpeg } from "../server/media";
+import type { Asset, AudioObj, Scene, VideoObj } from "../src/engine/scene";
+
+const arg = (name: string, fallback: string) => {
+  const i = process.argv.indexOf(name);
+  return i > 0 ? process.argv[i + 1] : fallback;
+};
+const id = process.argv[2]?.startsWith("p_") ? process.argv[2] : "";
+const WIDTH = Number(arg("--width", "480"));
+const CRF = Number(arg("--crf", "32"));
+const OUT = join(process.cwd(), "public", "demo");
+const PAD = 0.25;
+
+if (!id) {
+  console.error("Usage: npx tsx scripts/bundle-demo.ts <projectId> [--width 480] [--crf 32]");
+  process.exit(1);
+}
+
+const round = (n: number) => Math.round(n * 1000) / 1000;
+const mb = (n: number) => `${(n / 1e6).toFixed(2)} MB`;
+
+const project = await getProject(id);
+if (!project) throw new Error(`No project ${id}`);
+const scene = project.scene as Scene;
+const assets = (project.assets ?? []) as Asset[];
+
+await rm(OUT, { recursive: true, force: true });
+await mkdir(OUT, { recursive: true });
+
+/** The stretch of a clip the timeline plays, with a little padding. */
+function usedSpan(assetId: string): { from: number; to: number } | null {
+  let from = Infinity;
+  let to = 0;
+  for (const o of scene.objects) {
+    if (o.type !== "video" || o.asset !== assetId) continue;
+    const v = o as VideoObj;
+    from = Math.min(from, v.in);
+    to = Math.max(to, v.in + v.duration * (v.speed || 1));
+  }
+  if (!Number.isFinite(from)) return null;
+  return { from: Math.max(0, from - PAD), to: to + PAD };
+}
+
+const out: Asset[] = [];
+const credits: string[] = [];
+let kept = 0;
+
+for (const a of assets) {
+  const source = join(MEDIA_DIR, a.src.replace("/api/media/", ""));
+  const used = scene.objects.some((o) => "asset" in o && o.asset === a.id);
+  if (!used) {
+    console.log(`skip (unused) ${a.name}`);
+    continue;
+  }
+  if (a.credit) credits.push(a.credit);
+
+  if (a.kind === "video") {
+    const span = usedSpan(a.id) ?? { from: 0, to: a.duration ?? 5 };
+    const file = `${a.id}.mp4`;
+    const height = Math.round((WIDTH * (a.h || 1280)) / (a.w || 720) / 2) * 2;
+    await runFfmpeg([
+      "-ss", String(round(span.from)),
+      "-to", String(round(span.to)),
+      "-i", source,
+      "-an",
+      "-vf", `scale=${WIDTH}:${height}:flags=lanczos`,
+      "-c:v", "libx264", "-preset", "slow", "-crf", String(CRF), "-pix_fmt", "yuv420p",
+      "-movflags", "+faststart",
+      join(OUT, file),
+    ]);
+    const probe = await mediaProbe(join(OUT, file)).catch(() => null);
+    // Every clip now starts where the video first used it.
+    for (const o of scene.objects) {
+      if (o.type === "video" && o.asset === a.id) (o as VideoObj).in = round(Math.max(0, (o as VideoObj).in - span.from));
+    }
+    out.push({ ...a, src: `/demo/${file}`, w: WIDTH, h: height, duration: probe?.duration ?? round(span.to - span.from), filmstrip: undefined, frames: undefined });
+    kept += (await stat(join(OUT, file))).size;
+  } else if (a.kind === "audio") {
+    const file = `${a.id}.mp3`;
+    await runFfmpeg(["-i", source, "-vn", "-ac", "1", "-ar", "24000", "-b:a", "64k", join(OUT, file)]);
+    const probe = await mediaProbe(join(OUT, file)).catch(() => null);
+    out.push({ ...a, src: `/demo/${file}`, duration: probe?.duration ?? a.duration });
+    kept += (await stat(join(OUT, file))).size;
+  } else {
+    // Pictures and SVGs are small: copy them as they are.
+    const ext = a.src.split(".").pop() ?? "bin";
+    const file = `${a.id}.${ext}`;
+    await writeFile(join(OUT, file), await readFile(source));
+    out.push({ ...a, src: `/demo/${file}` });
+    kept += (await stat(join(OUT, file))).size;
+  }
+  console.log(`${a.kind} ${a.name} -> ${out[out.length - 1].src}`);
+}
+
+// Voice clips keep their word timings; only the file changed.
+for (const o of scene.objects) {
+  if (o.type === "audio") {
+    const a = out.find((x) => x.id === (o as AudioObj).asset);
+    if (a?.duration) (o as AudioObj).duration = Math.min((o as AudioObj).duration, a.duration);
+  }
+}
+
+const bundle = { title: project.title, kind: project.kind, scene, assets: out };
+await writeFile(join(OUT, "project.json"), JSON.stringify(bundle));
+await writeFile(
+  join(OUT, "CREDITS.txt"),
+  [
+    `${project.title}`,
+    "",
+    "The sample project shown on the Stickman Studio home page. The clips are short excerpts,",
+    "re-encoded small, used inside this demo project; the voices were generated by the app.",
+    "",
+    "Credits:",
+    ...[...new Set(credits)].map((c) => `- ${c}`),
+    "",
+  ].join("\n")
+);
+const jsonSize = (await stat(join(OUT, "project.json"))).size;
+console.log(`\npublic/demo: ${out.length} files, ${mb(kept)} media + ${mb(jsonSize)} project.json`);
