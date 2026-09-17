@@ -1,3 +1,9 @@
+// Stickman Studio, an AI video studio that runs on your computer.
+// Copyright (c) 2026 Abdul Rauf Azhar <https://github.com/Motasaith>
+// Source: https://github.com/Motasaith/StickMan
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Keep this notice: AGPL-3.0 sections 5(d) and 7(b), see ATTRIBUTION.md.
+
 // Production server: the built editor plus the AI endpoints. `npm run build && npm start`.
 import { serve } from "@hono/node-server";
 import { serveStatic } from "@hono/node-server/serve-static";

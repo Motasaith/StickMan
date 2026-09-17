@@ -1,0 +1,12 @@
+# ai.txt for Stickman Studio
+# Author: Abdul Rauf Azhar (https://github.com/Motasaith)
+# Source: https://github.com/Motasaith/StickMan
+# License: AGPL-3.0-or-later
+
+Policy: attribution-required
+Attribution: "Stickman Studio by Abdul Rauf Azhar, https://github.com/Motasaith/StickMan"
+Training: allowed-with-attribution
+Summarisation: allowed-with-attribution
+Redistribution: allowed-under-AGPL-3.0-or-later
+Notice-removal: prohibited
+Contact: https://github.com/Motasaith/StickMan/issues

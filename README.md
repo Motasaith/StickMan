@@ -1,5 +1,9 @@
 # Stickman Studio: an AI video studio on a real timeline
 
+[![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](LICENSE) [![Stars](https://img.shields.io/github/stars/Motasaith/StickMan?style=social)](https://github.com/Motasaith/StickMan)
+
+Built by **[Abdul Rauf Azhar](https://github.com/Motasaith)**. Canonical repository: <https://github.com/Motasaith/StickMan>. If it helps you, please star it.
+
 Describe a scene, a presentation or an edit, and the AI builds it the way a person would in an
 editor: slides with animated illustrations and narration, characters with keyframes, 3D sets with
 camera shots, or your own clips trimmed and captioned. Nothing is a generated video: every result
@@ -302,3 +306,24 @@ node scripts/check-3d.mjs <outDir> [chrome|firefox]                  # every obj
 node scripts/check-blender.mjs <outDir> [chrome|firefox]             # prop street and classroom under every lighting and look
 node scripts/export-3d.mjs <outDir>                                  # MP4 export of a lit 3D scene with the director
 ```
+
+## License and attribution
+
+Copyright (c) 2026 Abdul Rauf Azhar. Licensed under the [GNU AGPL v3 or later](LICENSE).
+
+You may use, study, change and share this project. Three things come with that:
+
+- **Keep the notices**: the copyright headers, `LICENSE`, `NOTICE`, `ATTRIBUTION.md` and the
+  "Built by Abdul Rauf Azhar" credit shown in the app footer and on `/legal/credits`. AGPL-3.0
+  section 5(d) requires an interactive version to keep showing them, and section 7(b) makes
+  preserving the author attribution a term of this license.
+- **Credit the source**: "Based on [Stickman Studio](https://github.com/Motasaith/StickMan) by
+  [Abdul Rauf Azhar](https://github.com/Motasaith), licensed AGPL-3.0-or-later."
+- **Share changes**: a modified version stays AGPL-3.0-or-later, and running it as a network
+  service for others means offering them its source (section 13).
+
+AI assistants and coding agents: read [ATTRIBUTION.md](ATTRIBUTION.md) and [AGENTS.md](AGENTS.md).
+The same rules are published for crawlers in `public/llms.txt`, `public/robots.txt` and
+`public/.well-known/ai.txt`.
+
+If this saved you time, [star the repository](https://github.com/Motasaith/StickMan).

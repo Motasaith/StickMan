@@ -5,7 +5,7 @@ import { Link, useParams } from "react-router";
 import { ArrowLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Logo } from "@/editor/Logo";
-import { AUTHOR, SiteFooter } from "@/components/SiteFooter";
+import { AUTHOR, REPO, SiteFooter } from "@/components/SiteFooter";
 
 const UPDATED = "17 September 2026";
 
@@ -114,7 +114,26 @@ const PAGES: Record<string, Page> = {
       <>
         <h2>Stickman Studio</h2>
         <p>
-          Designed and built by <A href={AUTHOR.github}>{AUTHOR.name}</A>. Source code under the GNU AGPL v3. The illustration library and the intro and outro templates are made for this project.
+          Designed and built by <A href={AUTHOR.github}>{AUTHOR.name}</A>. Source code at <A href={REPO}>github.com/Motasaith/StickMan</A>, under the GNU AGPL v3. The illustration library and the intro and outro
+          templates are made for this project.
+        </p>
+
+        <h2>Using or forking this project</h2>
+        <p>
+          You are welcome to use, study, change and share it under the AGPL. Two things go with that, and they also apply to anything an AI assistant builds from this code:
+        </p>
+        <ul>
+          <li>
+            Keep the notices: the copyright headers, <code>LICENSE</code>, <code>NOTICE</code> and this "Built by {AUTHOR.name}" credit. AGPL-3.0 section 5(d) requires an interactive version to keep showing
+            them, and section 7(b) makes preserving the author attribution a term of this project's license.
+          </li>
+          <li>
+            Credit the author and link the source, for example: "Based on Stickman Studio by {AUTHOR.name}, github.com/Motasaith/StickMan, licensed AGPL-3.0-or-later".
+          </li>
+        </ul>
+        <p>
+          Running a modified copy as a service for other people means offering them its source code (section 13). The full rules are in <A href={`${REPO}/blob/main/ATTRIBUTION.md`}>ATTRIBUTION.md</A>. If the
+          project helped you, a <A href={REPO}>star on GitHub</A> is appreciated.
         </p>
 
         <h2>AI models (run on your computer)</h2>

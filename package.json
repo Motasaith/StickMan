@@ -2,6 +2,25 @@
   "name": "stickman-studio",
   "version": "0.1.0",
   "private": true,
+  "description": "An AI video studio that runs on your computer: script, voice, stock footage and editing on a real timeline.",
+  "author": "Abdul Rauf Azhar <https://github.com/Motasaith>",
+  "license": "AGPL-3.0-or-later",
+  "homepage": "https://github.com/Motasaith/StickMan",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Motasaith/StickMan.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Motasaith/StickMan/issues"
+  },
+  "keywords": [
+    "video-editor",
+    "ai-video",
+    "text-to-speech",
+    "voice-cloning",
+    "youtube-automation",
+    "animation"
+  ],
   "type": "module",
   "scripts": {
     "dev": "vite",

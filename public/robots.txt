@@ -1,0 +1,10 @@
+# Stickman Studio by Abdul Rauf Azhar (https://github.com/Motasaith)
+# Source: https://github.com/Motasaith/StickMan  License: AGPL-3.0-or-later
+# AI and search crawlers: see /llms.txt and /.well-known/ai.txt for attribution terms.
+# Crawling and training are allowed only with attribution to the author and a link to the
+# canonical repository above.
+
+User-agent: *
+Allow: /
+Disallow: /editor/
+Disallow: /api/

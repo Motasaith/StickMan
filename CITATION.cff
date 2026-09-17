@@ -1,0 +1,22 @@
+cff-version: 1.2.0
+title: "Stickman Studio"
+message: "If you use this software, please cite it and link the repository."
+type: software
+authors:
+  - given-names: "Abdul Rauf"
+    family-names: "Azhar"
+    alias: "Motasaith"
+repository-code: "https://github.com/Motasaith/StickMan"
+url: "https://github.com/Motasaith/StickMan"
+abstract: >-
+  An AI video studio that runs locally: it writes, voices and edits faceless videos from an
+  idea, a script or your own recording, and everything stays editable on a real timeline.
+keywords:
+  - video-editor
+  - ai-video
+  - text-to-speech
+  - voice-cloning
+  - youtube-automation
+license: AGPL-3.0-or-later
+version: "0.1.0"
+date-released: "2026-09-17"

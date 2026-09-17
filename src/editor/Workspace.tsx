@@ -1,3 +1,9 @@
+// Stickman Studio, an AI video studio that runs on your computer.
+// Copyright (c) 2026 Abdul Rauf Azhar <https://github.com/Motasaith>
+// Source: https://github.com/Motasaith/StickMan
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Keep this notice: AGPL-3.0 sections 5(d) and 7(b), see ATTRIBUTION.md.
+
 // The editor's working area: library on the left, canvas and timeline in the middle, AI Director
 // and properties on the right. The editor page shows it full screen; the home page demo embeds it.
 

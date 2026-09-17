@@ -1,10 +1,12 @@
 // The footer on every page outside the editor: what the studio is, where things are, the legal
 // pages, and who built it.
 
+import { Star } from "lucide-react";
 import { Link } from "react-router";
 import { Logo } from "@/editor/Logo";
 
 export const AUTHOR = { name: "Abdul Rauf Azhar", github: "https://github.com/Motasaith" };
+export const REPO = "https://github.com/Motasaith/StickMan";
 
 export function GithubMark({ className }: { className?: string }) {
   return (
@@ -39,6 +41,7 @@ const COLUMNS: { title: string; links: { label: string; to: string }[] }[] = [
       { label: "Privacy policy", to: "/legal/privacy" },
       { label: "Terms of use", to: "/legal/terms" },
       { label: "Credits and licenses", to: "/legal/credits" },
+      { label: "Attribution and reuse", to: `${REPO}/blob/main/ATTRIBUTION.md` },
     ],
   },
 ];
@@ -54,6 +57,15 @@ export function SiteFooter() {
             An AI video studio that runs on your computer. Turn an idea, a script or your own recording into an edited video, then change anything on a real timeline.
           </p>
           <p className="mt-3 text-xs leading-5 text-muted-foreground">Your projects, media and voices stay in a folder on this machine. No account needed.</p>
+          <a
+            href={REPO}
+            target="_blank"
+            rel="noreferrer"
+            className="mt-4 inline-flex items-center gap-2 border border-line bg-panel-raised px-3 py-1.5 text-sm transition hover:border-foreground"
+            title="Star the project on GitHub"
+          >
+            <GithubMark className="size-4" /> Star it on GitHub <Star className="size-3.5 text-primary" />
+          </a>
         </div>
         {COLUMNS.map((c) => (
           <nav key={c.title} aria-label={c.title}>
@@ -61,7 +73,11 @@ export function SiteFooter() {
             <ul className="space-y-2 text-sm">
               {c.links.map((l) => (
                 <li key={l.label}>
-                  {l.to.includes("#") ? (
+                  {l.to.startsWith("http") ? (
+                    <a href={l.to} target="_blank" rel="noreferrer" className="text-muted-foreground transition hover:text-foreground">
+                      {l.label}
+                    </a>
+                  ) : l.to.includes("#") ? (
                     <a href={l.to} className="text-muted-foreground transition hover:text-foreground">
                       {l.label}
                     </a>
@@ -83,7 +99,7 @@ export function SiteFooter() {
             <a href="https://www.gnu.org/licenses/agpl-3.0.html" target="_blank" rel="noreferrer" className="underline underline-offset-2 hover:text-foreground">
               GNU AGPL v3
             </a>
-            .
+            . Forks and copies must keep this credit.
           </p>
           <a href={AUTHOR.github} target="_blank" rel="noreferrer" className="group inline-flex items-center gap-2 text-sm text-foreground">
             <span>
