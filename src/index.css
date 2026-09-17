@@ -271,3 +271,19 @@
     @apply flex flex-col items-center justify-center gap-1 rounded-lg border border-line bg-panel-sunken p-2 text-center text-[11px] text-muted-foreground transition hover:border-primary/60 hover:text-foreground;
   }
 }
+
+/* Long-form text on the legal pages. */
+@layer components {
+  .legal h2 {
+    @apply mb-3 mt-10 font-display text-xl font-semibold;
+  }
+  .legal p {
+    @apply mb-4 text-[15px] leading-7 text-foreground/85;
+  }
+  .legal ul {
+    @apply mb-4 list-disc space-y-2 pl-5 text-[15px] leading-7 text-foreground/85;
+  }
+  .legal code {
+    @apply rounded bg-panel-raised px-1 py-0.5 font-mono text-[13px];
+  }
+}

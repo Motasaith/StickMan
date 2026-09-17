@@ -12,6 +12,7 @@ import { emptyScene, type Scene } from "@/engine/scene";
 import { applyOps } from "@/engine/ops";
 import { Logo } from "@/editor/Logo";
 import { HomeDemo } from "@/home/HomeDemo";
+import { SiteFooter } from "@/components/SiteFooter";
 import { DEMO_DECK } from "@/home/demoScene";
 
 type Kind = "ai" | "animation" | "presentation" | "video" | "3d";
@@ -313,7 +314,7 @@ export default function Projects() {
           )}
         </section>
       </div>
-      <footer className="border-t border-line py-6 text-center text-xs text-muted-foreground">Stickman Studio · runs on your computer · emoji by Twemoji (CC-BY 4.0)</footer>
+      <SiteFooter />
     </div>
   );
 }

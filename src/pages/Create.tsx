@@ -16,6 +16,7 @@ import { AngleStep } from "@/create/AngleStep";
 import { ScriptStep } from "@/create/ScriptStep";
 import { VoiceStep } from "@/create/VoiceStep";
 import { BuildStep } from "@/create/BuildStep";
+import { SiteFooter } from "@/components/SiteFooter";
 
 /** How much the AI does, part by part. */
 export interface HelpChoices {
@@ -239,6 +240,7 @@ export default function Create() {
           />
         )}
       </div>
+      <SiteFooter />
     </div>
   );
 }

@@ -171,6 +171,10 @@ Then:
   meow, tweet, honk, footsteps, drum roll, plus rain and wind ambience. They are synthesized in the
   browser (no files), shown on the timeline, and mixed into the export with the voices.
 
+## Site pages
+
+Every page outside the editor ends with the site footer (links, license, and "Built by Abdul Rauf Azhar" linking to https://github.com/Motasaith). Legal pages live at `/legal/privacy`, `/legal/terms` and `/legal/credits` (`src/pages/Legal.tsx`); update the date there when they change.
+
 ## Run it
 
 ```bash

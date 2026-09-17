@@ -10,6 +10,7 @@ import { Logo } from "@/editor/Logo";
 import { cn } from "@/lib/utils";
 import { api, type BlendPart, type CloneReport } from "@/lib/api";
 import { playPreview, refreshVoices, usePreviewState, useVoices } from "@/lib/voices";
+import { SiteFooter } from "@/components/SiteFooter";
 
 function PreviewButton({ voice, blend, text, disabled }: { voice: string; blend?: BlendPart[]; text?: string; disabled?: boolean }) {
   const opts = { ...(blend ? { blend } : {}), ...(text ? { text } : {}) };
@@ -207,6 +208,7 @@ export default function Voices() {
           )}
         </section>
       </div>
+      <SiteFooter />
     </div>
   );
 }

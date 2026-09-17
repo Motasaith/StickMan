@@ -13,6 +13,7 @@ import { loadFonts } from "./fonts";
 const Editor = lazy(() => import("@/pages/Editor"));
 const Create = lazy(() => import("@/pages/Create"));
 const Voices = lazy(() => import("@/pages/Voices"));
+const Legal = lazy(() => import("@/pages/Legal"));
 
 if (import.meta.env.DEV) installDebugHandle();
 void loadFonts();
@@ -34,6 +35,7 @@ createRoot(document.getElementById("root")!).render(
             <Route path="/" element={<Projects />} />
             <Route path="/create" element={<Create />} />
             <Route path="/voices" element={<Voices />} />
+            <Route path="/legal/:page" element={<Legal />} />
             <Route
               path="/editor/:projectId"
               element={
