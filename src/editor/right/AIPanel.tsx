@@ -14,6 +14,7 @@ const SUGGESTIONS: Record<string, string[]> = {
   ],
   video: ["Cut the boring start and add word-by-word captions", "Make it vertical for TikTok and add a big title", "Blur the faces and add a name bar for the speaker", "Add a cinematic color grade and fade in and out"],
   slides: ["Add a slide with a pie chart of the survey results", "Make the narration friendlier and shorter", "Switch to the midnight theme", "Add captions in the highlight style"],
+  footage: ["Add a neon intro and a 10-second end screen", "Swap the b-roll in scene 2 for city skyline shots", "Use glitch transitions between the scenes", "Make the captions karaoke style and bigger"],
   scene: ["Make the characters wave and say hello", "Add a thumbs up sticker when they finish", "Add confetti and applause at the end", "Zoom the camera in slowly"],
 };
 
@@ -23,10 +24,24 @@ export function AIPanel() {
   const review = useStore((s) => s.review);
   const voices = useStore((s) => s.voices);
   const selected = useStore((s) => (s.selectedId && !s.selectedId.startsWith("slide:") ? findObj(s.scene, s.selectedId)?.name : undefined));
-  const kind = useStore((s) => (s.scene.slides?.length ? "slides" : s.scene.objects.some((o) => o.type === "video") ? "video" : s.scene.objects.length ? "scene" : "empty"));
+  const kind = useStore((s) => (s.scene.slides?.some((x) => x.layout === "footage") ? "footage" : s.scene.slides?.length ? "slides" : s.scene.objects.some((o) => o.type === "video") ? "video" : s.scene.objects.length ? "scene" : "empty"));
   const [prompt, setPrompt] = useState("");
   const [health, setHealth] = useState<{ configured: boolean; model: string } | null>(null);
   const listRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
+  const demo = useStore((s) => s.demo);
+  const aiUsed = useStore((s) => s.demoUses.ai ?? 0);
+
+  // Other tools (the AI tools menu) can start a request here.
+  useEffect(() => {
+    const fill = (e: Event) => {
+      const text = (e as CustomEvent<string>).detail;
+      if (typeof text === "string") setPrompt(text);
+      requestAnimationFrame(() => inputRef.current?.focus());
+    };
+    window.addEventListener("stickman-director-prompt", fill);
+    return () => window.removeEventListener("stickman-director-prompt", fill);
+  }, []);
 
   useEffect(() => {
     fetch("/api/health")
@@ -119,6 +134,8 @@ export function AIPanel() {
         <div className={cn("rounded-xl border border-line bg-panel-sunken p-2 transition focus-within:border-ring", busy && "ai-glow")}>
           {selected && <span className="mb-1.5 inline-block rounded-md bg-panel-raised px-2 py-0.5 text-[11px] text-muted-foreground">Editing: {selected}</span>}
           <textarea
+            ref={inputRef}
+            data-ai-prompt
             className="block max-h-40 min-h-[64px] w-full resize-none bg-transparent px-1 text-[13px] leading-relaxed outline-none placeholder:text-muted-foreground/70"
             placeholder={busy ? "Working on it…" : "Tell me what to make or change…"}
             value={prompt}
@@ -137,6 +154,7 @@ export function AIPanel() {
             <label className="flex cursor-pointer items-center gap-1.5 text-[11px] text-muted-foreground" title="After building, the AI looks at frames and fixes what it sees">
               <input type="checkbox" checked={review} onChange={(e) => useStore.getState().setReview(e.target.checked)} /> Check its work
             </label>
+            {demo && <span className="text-[11px] text-primary">{Math.max(0, 3 - aiUsed)} of 3 demo requests left</span>}
             <button
               className="ml-auto flex size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground transition hover:scale-105 disabled:opacity-40"
               disabled={busy || !prompt.trim()}

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router";
-import { ArrowUpRight, Copy, Film, Loader2, MoreHorizontal, Pencil, Presentation, Sparkles, Trash2, Clapperboard, Box, Smartphone, PersonStanding, Wand2, Mic2 } from "lucide-react";
+import { ArrowUpRight, Copy, Film, Loader2, MoreHorizontal, Pencil, Presentation, Sparkles, Trash2, Clapperboard, Box, Smartphone, PersonStanding, Wand2, Mic2, ImagePlus, Palette } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -11,6 +11,8 @@ import { cn } from "@/lib/utils";
 import { emptyScene, type Scene } from "@/engine/scene";
 import { applyOps } from "@/engine/ops";
 import { Logo } from "@/editor/Logo";
+import { HomeDemo } from "@/home/HomeDemo";
+import { DEMO_DECK } from "@/home/demoScene";
 
 type Kind = "ai" | "animation" | "presentation" | "video" | "3d";
 type Format = "16:9" | "9:16" | "1:1";
@@ -32,22 +34,6 @@ function titleFrom(prompt: string): string {
   return t ? t[0].toUpperCase() + t.slice(1) : "Untitled project";
 }
 
-const DEMO_DECK = [
-  {
-    op: "presentation",
-    title: "Healthy Smiles",
-    theme: "medical",
-    captions: true,
-    slides: [
-      { layout: "title", title: "Healthy Smiles", subtitle: "A guide to caring for your teeth", illustration: "teeth", narration: "Welcome! Today we will learn how to keep your smile healthy for life." },
-      { layout: "bullets", title: "Daily habits", bullets: ["Brush twice a day for two minutes", "Floss once a day", "Drink water after meals"], illustration: "toothbrush", narration: "Three simple habits protect your teeth every single day." },
-      { layout: "stat", title: "Did you know?", stat: { value: 92, label: "of adults have had a cavity", suffix: "%" }, illustration: "tooth", narration: "Most adults have had at least one cavity, so prevention really matters." },
-      { layout: "steps", title: "How to brush", steps: ["Wet the brush", "Small circles", "Every surface", "Rinse"], narration: "Follow these four steps each time you brush." },
-      { layout: "closing", title: "Keep smiling!", subtitle: "See your dentist every six months", illustration: "happyface", narration: "Keep smiling, and see your dentist every six months." },
-    ],
-  },
-];
-
 interface Template {
   id: string;
   title: string;
@@ -61,6 +47,17 @@ interface Template {
   /** Opens this page instead of a new project. */
   href?: string;
 }
+
+const AI_FEATURES: { title: string; blurb: string; icon: typeof Film; href: string; tag: string }[] = [
+  { title: "AI video maker", blurb: "An idea, your script or your recording becomes an edited video with b-roll, music and captions.", icon: Wand2, href: "/create", tag: "YouTube" },
+  { title: "Voice studio", blurb: "40 natural voices, blends no other channel has, and cloning from 10 seconds of speech.", icon: Mic2, href: "/voices", tag: "Voices" },
+  { title: "AI Director", blurb: "Say what to change and it edits the timeline: scenes, captions, transitions, grades.", icon: Sparkles, href: "#demo", tag: "Editor" },
+  { title: "Thumbnails and Shorts", blurb: "Four thumbnail layouts, a vertical Short from any video, chapters and subtitle files.", icon: ImagePlus, href: "#demo", tag: "Publish" },
+  { title: "AI pictures and drawings", blurb: "Generate photos and backgrounds, or animated illustrations that match your slides.", icon: Palette, href: "#demo", tag: "Visuals" },
+  { title: "B-roll finder", blurb: "Clips and photos from Pexels, Wikimedia, NASA and Openverse, with credits kept.", icon: Film, href: "#demo", tag: "Footage" },
+  { title: "Animated intros", blurb: "Eight title sequences and three outros, including a YouTube end screen.", icon: Clapperboard, href: "/create", tag: "Branding" },
+  { title: "Presentations", blurb: "Narrated slide decks with animated illustrations and captions, from one sentence.", icon: Presentation, href: "#templates", tag: "Slides" },
+];
 
 const TEMPLATES: Template[] = [
   { id: "faceless", title: "Faceless YouTube video", blurb: "AI script, voice, stock footage and editing, ready to export", kind: "video", format: "16:9", icon: Wand2, tone: "bg-[#f6dccb]", href: "/create" },
@@ -80,6 +77,19 @@ const TEMPLATES: Template[] = [
   { id: "short", title: "Social short", blurb: "Vertical 9:16 with bold captions", kind: "video", format: "9:16", icon: Smartphone, tone: "bg-[#f3dde4]" },
   { id: "edit", title: "Edit my videos", blurb: "Upload clips, trim, caption, export", kind: "video", format: "16:9", icon: Clapperboard, tone: "bg-[#efe6cf]" },
 ];
+
+/** In-page anchors scroll; other links route. */
+function FeatureLink({ href, className, children }: { href: string; className: string; children: React.ReactNode }) {
+  return href.startsWith("#") ? (
+    <a href={href} className={className}>
+      {children}
+    </a>
+  ) : (
+    <Link to={href} className={className}>
+      {children}
+    </Link>
+  );
+}
 
 function ago(ms: number): string {
   const s = (Date.now() - ms) / 1000;
@@ -144,6 +154,7 @@ export default function Projects() {
             <Link to="/voices" className="flex items-center gap-1.5 hover:text-primary">
               <Mic2 className="size-4" /> Voice studio
             </Link>
+            <a href="#demo" className="hover:text-primary">Live editor</a>
             <a href="#templates" className="hover:text-primary">Templates</a>
             <a href="#projects" className="hover:text-primary">Your projects</a>
             <Button className="gap-2 rounded-none px-5" onClick={() => create({ title: "Untitled project", scene: sceneFor("16:9"), kind: "animation" }, "new")} disabled={!!busy}>
@@ -209,6 +220,47 @@ export default function Projects() {
           </div>
         </section>
 
+        <section id="ai" className="pt-14">
+          <div className="mb-5 flex flex-wrap items-end justify-between gap-2">
+            <div>
+              <p className="eyebrow mb-2">
+                <span className="eyebrow-dot" /> AI features
+              </p>
+              <h2 className="font-display text-3xl font-semibold">The AI does the heavy lifting</h2>
+            </div>
+            <p className="max-w-md text-sm text-muted-foreground">Each one is a click away here, and in the editor under the AI tools button.</p>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {AI_FEATURES.map((f) => (
+              <FeatureLink key={f.title} href={f.href} className="group flex flex-col gap-2 border border-line bg-panel p-4 transition hover:-translate-y-0.5 hover:border-foreground hover:shadow-[4px_4px_0_0_hsl(var(--foreground))]">
+                <span className="flex items-center justify-between">
+                  <f.icon className="size-5 text-primary" strokeWidth={1.75} />
+                  <span className="font-mono text-[10px] uppercase tracking-wide text-muted-foreground">{f.tag}</span>
+                </span>
+                <span className="font-display text-[17px] font-semibold leading-tight">{f.title}</span>
+                <span className="text-[13px] leading-5 text-muted-foreground">{f.blurb}</span>
+              </FeatureLink>
+            ))}
+          </div>
+        </section>
+      </div>
+
+      <section id="demo" className="mx-auto max-w-[1560px] px-6 pt-16">
+        <div className="mx-auto mb-6 flex max-w-[1200px] flex-wrap items-end justify-between gap-2">
+          <div>
+            <p className="eyebrow mb-2">
+              <span className="eyebrow-dot" /> Live editor
+            </p>
+            <h2 className="font-display text-3xl font-semibold">Try the real editor on a finished AI video</h2>
+          </div>
+          <p className="max-w-md text-sm text-muted-foreground">
+            Play it, ask the AI Director for changes, add stickers, swap b-roll or open the AI tools. Each tool works a few times here; open it in the editor to keep going.
+          </p>
+        </div>
+        <HomeDemo />
+      </section>
+
+      <div className="mx-auto max-w-[1200px] px-6">
         <section id="templates" className="py-16">
           <div className="mb-6 flex items-end justify-between">
             <div>

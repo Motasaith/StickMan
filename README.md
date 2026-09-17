@@ -8,7 +8,21 @@ same scene. It runs locally: projects, media and versions live in `~/.stickman-s
 
 ## AI video maker (faceless YouTube videos)
 
-Open **AI video** on the home page (or `/create`):
+Open **AI video** on the home page (or `/create`). First choose how much the AI does:
+
+- **Full AI**: it writes, voices, finds visuals and edits.
+- **My script**: your words stay exactly as written; the AI splits them into scenes, plans a
+  visual search for each, voices and edits.
+- **My voice**: record in the browser (with a teleprompter) or upload a recording. It is
+  transcribed on this computer and every scene is cut to the moment you say it
+  (`src/engine/align.ts`). With no written script, the recording becomes the script.
+- **Only visuals**: your script and voice, plain cuts, no overlays or music.
+- **Fine-tune** mixes these per part: script (AI / polish my draft / mine), voice (AI / mine),
+  visuals (Pexels stock, AI pictures, real photos from Wikimedia, NASA and Openverse, a mix, or
+  none), editing (transitions and zooms, or plain cuts), on-screen text, captions, Creative
+  Commons background music, and the channel name.
+
+Then:
 
 1. **Niche**: Personal Finance & Wealth, Mini-Documentaries & Business Scandals, Tech & AI,
    History, Science & Space, Psychology, Health, Mysteries & True Crime, Geography, Luxury,
@@ -34,6 +48,42 @@ Open **AI video** on the home page (or `/create`):
    "YouTube details" (title, description with footage credits, tags, thumbnail text, checks)
    are in the project panel. The AI Director can re-voice a scene, swap footage for a scene
    ("broll") or put your own clip into a shot ("swapShot").
+7. **Intro and outro**: animated title sequences instead of plain cards: cinematic, bold, glitch,
+   neon, minimal, split, pop and news intros; an end screen (10 seconds, with space for
+   YouTube's end-screen elements), a thank-you card and an "up next" outro
+   (`src/engine/intros.ts`). Each niche picks a default; the pickers play live previews, and
+   the editor's project panel can add, swap or remove them later (also as AI ops).
+
+### YouTube kit (editor, project panel)
+
+- **Thumbnail maker**: frames from the video or an AI background, big outlined text in four
+  layouts, accent colors and fonts, downloaded as 1280x720 JPGs.
+- **Chapters** from the timeline markers, in YouTube's format (starts at 0:00, three or more,
+  10 seconds apart), ready to paste into the description.
+- **Subtitles** as `.srt` or `.vtt`, timed to the narration words.
+- **Make a Short**: a 9:16 video under a minute from the opening scenes of a long AI video,
+  reusing its voices, footage and music.
+- Uploading straight to YouTube needs Google OAuth and is not built in; export the MP4 and use
+  the details above.
+
+### Free media and AI sources
+
+- Pexels video and photos (`PEXELS_API_KEY`), Wikimedia Commons, NASA and Openverse (no key).
+  Credits are kept with each file and added to the description.
+- AI pictures: FLUX.1 schnell on Hugging Face when `HF_TOKEN` is set (free monthly credits,
+  `HF_IMAGE_MODEL` picks another model), otherwise Pollinations (anonymous use is slow and
+  watermarked; `POLLINATIONS_API_KEY` removes both).
+- Music: Creative Commons tracks from Openverse, in the Sounds tab and in builds.
+- The editor's Stock tab searches all of these and draws AI pictures.
+- **Finding the AI tools**: the home page lists them under "AI features". In the editor, the
+  **AI tools** button in the header lists every one and jumps to it, left-rail tabs with an AI
+  tool carry a small spark, and "Draw with AI" sits at the top of the Art tab.
+- **Live editor demo** on the home page: the real editor on a finished AI video. Nothing is
+  saved; each tool works a few times (3 AI Director requests, 3 of each kind of thing added,
+  1 AI picture and 1 AI drawing, no uploads), and "Open in editor" copies it into a real
+  project. The sample is a snapshot of any project:
+  `curl -X PUT localhost:5178/api/demo -H "Content-Type: application/json" -d '{"projectId":"p_..."}'`
+  (stored in `~/.stickman-studio/demo-project.json`; without one, the dentist deck is used).
 
 ## Voice studio
 
@@ -137,6 +187,8 @@ LLM_MODEL=gpt-oss:120b         # plans the animation (text, good at JSON)
 VISION_LLM_MODEL=gemma4:31b    # checks rendered frames; finds joints on puppet pictures
 PEXELS_API_KEY=...             # stock footage (free at pexels.com/api)
 YOUTUBE_API_KEY=...            # optional: real competition numbers for video angles
+HF_TOKEN=...                   # optional: FLUX pictures on Hugging Face, no watermark
+POLLINATIONS_API_KEY=...       # optional: faster, watermark-free Pollinations pictures
 ```
 
 Production: `npm run build && npm start` (serves `dist/` and the AI endpoints on port 5178).
@@ -233,6 +285,9 @@ npx tsx scripts/try-ai.ts "<prompt>" out.json      # one real AI plan, no browse
 npx tsx scripts/contact-sheet.ts out.json sheet.png 4 0.5 1.5 2.5   # look at frames
 node scripts/ai-pro.mjs <outDir> --kind presentation --prompt "<prompt>" [--export]   # real AI run from the home page (dev server up)
 node scripts/create-ui.mjs <outDir> --niche finance --length short [--voice custom:<id>] [--export]   # the AI video maker, idea to export
+node scripts/home-ui.mjs <outDir>                                    # home page AI features, live editor demo and its limits, AI tools menu
+node scripts/kit-ui.mjs <outDir> [--visuals stock|ai|real|mix]  # home demo, "My voice" build from a recording, YouTube kit, Short, stock sources
+npx tsx scripts/intro-sheet.ts out.png [16:9|9:16]                  # frames of every intro and outro template
 node scripts/pro-ui.mjs <outDir>                                     # projects page, deck template, every panel, adding items, playback
 npx tsx scripts/sticker-sheet.ts out.png illustrations 1.2           # contact sheet of the sticker or illustration library
 npx tsx scripts/slides-sheet.ts out.png                              # sample deck rendered in Node

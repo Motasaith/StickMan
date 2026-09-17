@@ -5,6 +5,7 @@ import { z } from "zod";
 import { chat, parseJsonObject } from "../llm";
 import { nicheById, WORDS_PER_MINUTE, type Niche } from "../../src/engine/niches";
 import type { ScriptScene, VideoScript } from "../../src/engine/footage";
+import { groupSentences, sentencesOf } from "../../src/engine/align";
 
 export interface BriefInput {
   niche: string;
@@ -227,6 +228,137 @@ export async function writeScript(input: BriefInput & { angle?: { title: string;
   }
   if (!best) throw new Error("The AI couldn't write the script. Try again or change the idea a little.");
   return best;
+}
+
+
+const annotation = z.object({
+  chapter: z.string().max(60).optional().catch(undefined),
+  visuals: z.array(z.string().min(2).max(80)).min(1).max(4).catch(["abstract background"]),
+  media: z.enum(["video", "photo"]).optional().catch(undefined),
+  overlay: overlaySchema,
+});
+
+const splitSchema = z.object({
+  title: z.string().min(2).max(120),
+  description: z.string().max(3000).catch(""),
+  tags: z.array(z.string().max(40)).max(20).catch([]),
+  thumbnailText: z.string().max(60).catch(""),
+  checks: z.array(z.string().max(300)).max(30).catch([]),
+  scenes: z.array(annotation.extend({ from: z.number().int(), to: z.number().int() })).min(1),
+});
+
+const annotateSchema = z.object({
+  title: z.string().min(2).max(120).catch("Untitled video"),
+  description: z.string().max(3000).catch(""),
+  tags: z.array(z.string().max(40)).max(20).catch([]),
+  thumbnailText: z.string().max(60).catch(""),
+  checks: z.array(z.string().max(300)).max(30).catch([]),
+  scenes: z.array(annotation),
+});
+
+const VISUAL_RULES = `VISUALS (Pexels stock search, English): 1 to 3 per scene, most fitting first, concrete and filmable ("empty shopping mall at night", "hands counting cash"). No brand names, logos, famous people or text. "media": "photo" only when a still fits better, else "video".
+ON-SCREEN TEXT ("overlay"), on at most one scene in three, else null: {"kind":"title","text":...} at a chapter start; {"kind":"stat","text":"what it means","value":42,"prefix":"$","suffix":"%"} only for a number the scene says; {"kind":"list","text":"heading","items":[2 to 4 short items]}; {"kind":"lowerThird","text":"name","sub":"who it is"}; {"kind":"quote","text":"...","sub":"who"} only for a real quote in the scene.`;
+
+/**
+ * The creator's own script, word for word: the AI only groups its sentences into scenes and
+ * plans the visuals. If the grouping it returns doesn't cover every sentence in order, the
+ * app groups them itself and asks only for visuals.
+ */
+export async function splitScript(input: BriefInput & { text: string }): Promise<VideoScript> {
+  const sentences = sentencesOf(input.text);
+  if (!sentences.length) throw new Error("The script is empty.");
+  const short = input.minutes < 1;
+  const numbered = sentences.map((t, i) => `${i + 1}. ${t}`).join("\n");
+  const n = nicheById(input.niche);
+  let scenes: ScriptScene[] | null = null;
+  let meta: Omit<z.infer<typeof annotateSchema>, "scenes"> | null = null;
+  try {
+    const text = await chat(
+      [
+        {
+          role: "system",
+          content: `You plan the visuals for a creator's finished narration script. You never change their words.
+The script is given as numbered sentences. Group consecutive sentences into scenes of ${short ? "8 to 22" : "15 to 45"} words, one idea each, covering every sentence exactly once and in order.${short ? "" : " Give scenes short chapter names (3 to 6 chapters)."}
+Return ONLY JSON: {"title": "a clickable, honest title", "description": "2-4 sentence YouTube description", "tags": ["8 to 12 tags"], "thumbnailText": "3 to 5 words", "checks": ["specific claims in the script worth verifying"], "scenes": [{"from": 1, "to": 3, "chapter": "...", "visuals": ["..."], "media": "video", "overlay": null}]}
+${VISUAL_RULES}`,
+        },
+        { role: "user", content: `Channel type: ${n.label}. Footage that suits it: ${n.footage}.\n\nScript:\n${numbered.slice(0, 60000)}` },
+      ],
+      { jsonMode: true, temperature: 0.5, reasoning: "medium", timeoutMs: 300_000 }
+    );
+    const parsed = splitSchema.safeParse(parseJsonObject(text));
+    if (parsed.success) {
+      const groups = parsed.data.scenes;
+      // Every sentence once, in order.
+      let next = 1;
+      const valid = groups.every((g) => {
+        const ok = g.from === next && g.to >= g.from && g.to <= sentences.length;
+        next = g.to + 1;
+        return ok;
+      }) && next === sentences.length + 1;
+      meta = parsed.data;
+      if (valid) {
+        scenes = groups.map((g, i) => ({
+          id: `s${i + 1}`,
+          chapter: short ? undefined : g.chapter?.trim() || undefined,
+          narration: sentences.slice(g.from - 1, g.to).join(" "),
+          visuals: g.visuals.map((v) => v.trim()).filter(Boolean).slice(0, 3),
+          media: g.media,
+          overlay: g.overlay && g.overlay.text ? g.overlay : null,
+        }));
+      }
+    }
+  } catch {
+    // Fall through to the app's own grouping.
+  }
+
+  if (!scenes) {
+    const groups = groupSentences(sentences, short ? 16 : 30);
+    let notes: z.infer<typeof annotateSchema> | null = null;
+    try {
+      const text = await chat(
+        [
+          {
+            role: "system",
+            content: `You plan the visuals for the scenes of a creator's narration script. Keep the scenes exactly as given: one entry per scene, same order.
+Return ONLY JSON: {"title": "...", "description": "...", "tags": ["..."], "thumbnailText": "...", "checks": ["..."], "scenes": [{"chapter": "...", "visuals": ["..."], "media": "video", "overlay": null}]}
+${VISUAL_RULES}`,
+          },
+          { role: "user", content: `Channel type: ${n.label}.\n\n${groups.map((g, i) => `Scene ${i + 1}: ${g}`).join("\n")}` },
+        ],
+        { jsonMode: true, temperature: 0.5, reasoning: "low", timeoutMs: 240_000 }
+      );
+      const parsed = annotateSchema.safeParse(parseJsonObject(text));
+      if (parsed.success) notes = parsed.data;
+    } catch {
+      notes = null;
+    }
+    const fallback = n.footage.split(",").map((v) => v.trim()).filter(Boolean);
+    scenes = groups.map((g, i) => {
+      const a = notes?.scenes[i];
+      return {
+        id: `s${i + 1}`,
+        chapter: short ? undefined : a?.chapter?.trim() || undefined,
+        narration: g,
+        visuals: a?.visuals.length ? a.visuals.slice(0, 3) : [fallback[i % Math.max(1, fallback.length)] ?? "abstract background"],
+        media: a?.media,
+        overlay: a?.overlay && a.overlay.text ? a.overlay : null,
+      };
+    });
+    meta = meta ?? notes;
+  }
+
+  return {
+    title: meta?.title?.trim() || input.idea.slice(0, 80) || sentences[0].slice(0, 80),
+    hook: sentences[0],
+    description: meta?.description?.trim() ?? "",
+    tags: (meta?.tags ?? []).map((t) => t.trim()).filter(Boolean).slice(0, 15),
+    thumbnailText: meta?.thumbnailText?.trim() ?? "",
+    niche: input.niche,
+    format: input.format,
+    scenes,
+    checks: meta?.checks ?? [],
+  };
 }
 
 /** Rewrite one scene in context ("make it punchier", "add a number"...). */

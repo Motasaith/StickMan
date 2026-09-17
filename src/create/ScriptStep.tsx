@@ -43,7 +43,8 @@ export function ScriptStep({ state, patch }: { state: WizardState; patch: Patch 
   const again = async () => {
     setBusy("all");
     try {
-      setScript(await api.writeScript({ ...briefOf(state), angle: state.angle ?? undefined }));
+      const mine = state.help.script === "mine";
+      setScript(mine ? await api.splitScript({ ...briefOf(state), text: script.scenes.map((x) => x.narration).join(" ") }) : await api.writeScript({ ...briefOf(state), angle: state.angle ?? undefined }));
     } catch (err) {
       toast.error("Couldn't write a new script", { description: (err as Error).message });
     } finally {
@@ -144,18 +145,18 @@ export function ScriptStep({ state, patch }: { state: WizardState; patch: Patch 
         })}
 
         <div className="flex items-center justify-between pt-2">
-          <Button variant="ghost" className="rounded-none" onClick={() => patch({ step: state.angles ? 2 : 1 })}>
+          <Button variant="ghost" className="rounded-none" onClick={() => patch({ step: state.angles && state.help.script === "ai" ? 2 : 1 })}>
             Back
           </Button>
           <Button className="gap-2 rounded-none" disabled={empty || !!busy} onClick={() => patch({ step: 4 })}>
-            <ArrowRight className="size-4" /> Choose the voice
+            <ArrowRight className="size-4" /> {state.help.voice === "mine" ? "Add your recording" : "Choose the voice"}
           </Button>
         </div>
       </div>
 
       <aside className="space-y-4 lg:sticky lg:top-6 lg:self-start">
         <Button variant="outline" className="w-full gap-2 rounded-none" disabled={!!busy} onClick={again}>
-          {busy === "all" ? <Loader2 className="size-4 animate-spin" /> : <RefreshCw className="size-4" />} Write a different version
+          {busy === "all" ? <Loader2 className="size-4 animate-spin" /> : <RefreshCw className="size-4" />} {state.help.script === "mine" ? "Re-plan scenes and visuals" : "Write a different version"}
         </Button>
         {script.checks.length > 0 && (
           <div className="border border-warn/50 bg-warn/10 p-4">

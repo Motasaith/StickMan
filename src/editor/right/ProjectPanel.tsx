@@ -4,6 +4,8 @@ import { COLOR_LOOKS, LIGHTING_PRESETS, cloneScene } from "@/engine/scene";
 import { THEMES } from "@/engine/themes";
 import { ColorInput, NumField, Row, Section, SelectField, SliderRow, Segmented, Note, run } from "../fields";
 import { PublishSection } from "./PublishSection";
+import { IntroSection } from "./IntroSection";
+import { YoutubeKit } from "./YoutubeKit";
 
 const FORMATS = [
   { value: "1280x720", label: "16:9 HD (1280×720)" },
@@ -28,7 +30,9 @@ export function ProjectPanel() {
         <p className="eyebrow">Project</p>
         <p className="mt-1 text-sm text-muted-foreground">Nothing selected. Click something on the canvas or timeline to edit it.</p>
       </div>
+      <YoutubeKit />
       {scene.publish && <PublishSection kit={scene.publish} />}
+      <IntroSection />
       <Section title="Format">
         <Row label="Size">
           <SelectField

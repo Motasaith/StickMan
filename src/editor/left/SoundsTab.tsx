@@ -4,6 +4,7 @@ import { soundBuffer } from "@/sfx";
 import { audioContext } from "@/audio";
 import { useStore } from "@/store";
 import { PanelHeader, GroupLabel } from "./common";
+import { MusicSearch } from "./MusicSearch";
 
 const LABEL: Record<SoundKind, string> = {
   pop: "Pop", boing: "Boing", whoosh: "Whoosh", thud: "Thud", ding: "Ding", click: "Click", splash: "Splash", applause: "Applause", thunder: "Thunder", magic: "Magic",
@@ -23,9 +24,11 @@ async function hear(kind: SoundKind) {
 export function SoundsTab() {
   return (
     <>
-      <PanelHeader title="Sound effects" subtitle="Made on your computer, no files or licences. Click a name to add it at the playhead." />
+      <PanelHeader title="Music and sound effects" subtitle="Creative Commons music you can use in monetized videos, and effects made on your computer." />
       <div className="min-h-0 flex-1 overflow-y-auto px-4 py-3">
-        <GroupLabel>Effects</GroupLabel>
+        <GroupLabel>Music</GroupLabel>
+        <MusicSearch />
+        <GroupLabel>Effects (click to add at the playhead)</GroupLabel>
         <div className="flex flex-col gap-1">
           {SOUND_KINDS.map((k) => (
             <div key={k} className="flex items-center gap-2 rounded-md border border-line bg-panel-sunken px-2 py-1.5">

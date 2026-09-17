@@ -4,9 +4,30 @@
 import type { SceneObj } from "./scene";
 import { animateTrack, sampleKeys, upsertKey, removeKeys } from "./tracks";
 
-export const ENTER_KINDS = ["fade", "pop", "slideUp", "slideDown", "slideLeft", "slideRight", "zoom", "drop", "spin", "typewriter", "drawOn", "grow"] as const;
+export const ENTER_KINDS = [
+  "fade",
+  "pop",
+  "bounceIn",
+  "stamp",
+  "slideUp",
+  "slideDown",
+  "slideLeft",
+  "slideRight",
+  "rise",
+  "elastic",
+  "zoom",
+  "grow",
+  "drop",
+  "spin",
+  "roll",
+  "swingIn",
+  "glitchIn",
+  "flicker",
+  "typewriter",
+  "drawOn",
+] as const;
 export type EnterKind = (typeof ENTER_KINDS)[number];
-export const EXIT_KINDS = ["fade", "pop", "slideUp", "slideDown", "slideLeft", "slideRight", "zoom", "spin"] as const;
+export const EXIT_KINDS = ["fade", "pop", "slideUp", "slideDown", "slideLeft", "slideRight", "zoom", "spin", "fall", "shrink", "flicker", "glitchOut"] as const;
 export type ExitKind = (typeof EXIT_KINDS)[number];
 
 function base(obj: SceneObj, prop: "x" | "y" | "scale" | "rotation" | "opacity"): number {
@@ -27,6 +48,18 @@ function arrive(obj: SceneObj, prop: "x" | "y" | "scale" | "rotation" | "opacity
   upsertKey(keys, 0, from);
   if (start > 0.001) upsertKey(keys, start, from);
   upsertKey(keys, start + dur, to, e);
+}
+
+/** Keys through a sequence of values after `start`, fractions of `dur`; the last value is the resting one. */
+function sequence(obj: SceneObj, prop: "x" | "y" | "scale" | "rotation", steps: Array<[number, number]>, start: number, dur: number, relative: "add" | "mul") {
+  const rest = at(obj, prop, start + dur);
+  const keys = (obj.tracks[prop] ??= []);
+  removeKeys(keys, -1, start + dur);
+  const value = (v: number) => (relative === "add" ? rest + v : rest * v);
+  upsertKey(keys, 0, value(steps[0][1]));
+  if (start > 0.001) upsertKey(keys, start, value(steps[0][1]));
+  for (const [f, v] of steps.slice(1)) upsertKey(keys, start + f * dur, value(v), "easeInOut");
+  upsertKey(keys, start + dur, rest, "easeOut");
 }
 
 /** Write an entrance: before `start` the object is hidden, then it arrives over `dur` seconds. */
@@ -77,6 +110,43 @@ export function enter(obj: SceneObj, kind: EnterKind, start: number, dur = 0.6) 
       arrive(obj, "rotation", at(obj, "rotation", start + dur) - 180, start, dur);
       arrive(obj, "scale", at(obj, "scale", start + dur) * 0.3, start, dur);
       break;
+    case "bounceIn":
+      if (pivoted) obj.pivot = "center";
+      sequence(obj, "scale", [[0, 0.2], [0.45, 1.18], [0.65, 0.92], [0.82, 1.04]], start, dur, "mul");
+      break;
+    case "stamp":
+      // Slams down from large, like a rubber stamp.
+      if (pivoted) obj.pivot = "center";
+      sequence(obj, "scale", [[0, 2.4], [0.55, 0.94], [0.75, 1.03]], start, dur, "mul");
+      break;
+    case "rise":
+      sequence(obj, "y", [[0, Math.max(50, size * 0.4)], [0.7, -3]], start, Math.max(dur, 0.9), "add");
+      break;
+    case "elastic":
+      sequence(obj, "x", [[0, -Math.max(90, size * 0.6)], [0.45, 22], [0.65, -10], [0.82, 4]], start, dur, "add");
+      break;
+    case "roll":
+      if (pivoted) obj.pivot = "center";
+      sequence(obj, "x", [[0, -Math.max(120, size)]], start, dur, "add");
+      sequence(obj, "rotation", [[0, -360]], start, dur, "add");
+      break;
+    case "swingIn":
+      if (pivoted) obj.pivot = "center";
+      sequence(obj, "rotation", [[0, -35], [0.45, 12], [0.7, -5], [0.88, 2]], start, dur, "add");
+      break;
+    case "glitchIn": {
+      // Jumps sideways a few times before settling.
+      const x = at(obj, "x", start + dur);
+      const keys = (obj.tracks.x ??= []);
+      removeKeys(keys, -1, start + dur);
+      upsertKey(keys, 0, x);
+      const jitter = [14, -18, 9, -6, 3];
+      jitter.forEach((j, k) => upsertKey(keys, start + ((k + 0.5) / jitter.length) * dur, x + j, "step"));
+      upsertKey(keys, start + dur, x, "step");
+      break;
+    }
+    case "flicker":
+      break;
     case "typewriter":
     case "drawOn": {
       const keys = (obj.tracks.reveal ??= []);
@@ -88,8 +158,17 @@ export function enter(obj: SceneObj, kind: EnterKind, start: number, dur = 0.6) 
     }
   }
   // Every entrance starts invisible and becomes visible as it arrives.
-  const fadeDur = kind === "typewriter" || kind === "drawOn" ? 0.01 : Math.min(dur, 0.35);
   const target = at(obj, "opacity", start + dur) || 1;
+  if (kind === "flicker" || kind === "glitchIn") {
+    const op = (obj.tracks.opacity ??= []);
+    removeKeys(op, -1, start + dur);
+    upsertKey(op, 0, 0);
+    const blinks = [1, 0.1, 0.8, 0, 1, 0.4];
+    blinks.forEach((v, k) => upsertKey(op, start + (k / blinks.length) * dur, v * target, "step"));
+    upsertKey(op, start + dur, target, "step");
+    return;
+  }
+  const fadeDur = kind === "typewriter" || kind === "drawOn" ? 0.01 : kind === "stamp" ? Math.min(dur, 0.12) : Math.min(dur, 0.35);
   const op = (obj.tracks.opacity ??= []);
   removeKeys(op, -1, start + fadeDur);
   upsertKey(op, 0, 0);
@@ -122,6 +201,28 @@ export function exit(obj: SceneObj, kind: ExitKind, end: number, dur = 0.5) {
     case "slideRight":
       leave("x", at(obj, "x", start) + (kind === "slideRight" ? 1 : -1) * Math.max(80, size * 0.5));
       break;
+    case "fall":
+      leave("y", at(obj, "y", start) + Math.max(160, size * 1.2));
+      leave("rotation", at(obj, "rotation", start) + 12);
+      break;
+    case "shrink":
+      if (pivoted) obj.pivot = "center";
+      leave("scale", at(obj, "scale", start) * 0.05);
+      break;
+    case "flicker":
+    case "glitchOut": {
+      if (kind === "glitchOut") {
+        const x = at(obj, "x", start);
+        const keys = (obj.tracks.x ??= []);
+        [12, -16, 8, -4].forEach((j, k) => upsertKey(keys, start + ((k + 0.5) / 4) * dur, x + j, "step"));
+      }
+      const op = (obj.tracks.opacity ??= []);
+      const from = at(obj, "opacity", start);
+      removeKeys(op, start, 1e9, true);
+      upsertKey(op, start, from);
+      [0.2, 0.9, 0, 0.6, 0].forEach((v, k) => upsertKey(op, start + ((k + 1) / 5) * dur, v * from, "step"));
+      return;
+    }
     case "fade":
       break;
   }

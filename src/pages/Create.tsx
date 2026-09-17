@@ -7,7 +7,8 @@ import { ArrowLeft, Check, Mic2 } from "lucide-react";
 import { toast } from "sonner";
 import { Logo } from "@/editor/Logo";
 import { cn } from "@/lib/utils";
-import { api, type VideoAngle } from "@/lib/api";
+import { api, type AutovideoStatus, type VideoAngle, type VisualMode } from "@/lib/api";
+import type { Recording } from "@/create/RecordingPanel";
 import { VIDEO_LENGTHS, nicheById } from "@/engine/niches";
 import type { VideoScript } from "@/engine/footage";
 import { NicheStep } from "@/create/NicheStep";
@@ -16,7 +17,32 @@ import { ScriptStep } from "@/create/ScriptStep";
 import { VoiceStep } from "@/create/VoiceStep";
 import { BuildStep } from "@/create/BuildStep";
 
+/** How much the AI does, part by part. */
+export interface HelpChoices {
+  /** Write the script, polish the creator's draft, or keep their script word for word. */
+  script: "ai" | "polish" | "mine";
+  /** An AI voice, or the creator's own recording. */
+  voice: "ai" | "mine";
+  visuals: VisualMode;
+  /** Straight cuts instead of the full edit (transitions, zooms, titles). */
+  simple: boolean;
+  overlays: boolean;
+  music: boolean;
+  intro: string | null;
+  outro: string | null;
+  channel: string;
+}
+
+export const HELP_PRESETS: Array<{ id: string; label: string; blurb: string; help: Partial<HelpChoices> }> = [
+  { id: "full", label: "Full AI", blurb: "The AI writes, voices, finds footage and edits.", help: { script: "ai", voice: "ai", visuals: "stock", simple: false, overlays: true, music: true } },
+  { id: "script", label: "My script", blurb: "Your words, kept exactly. The AI voices, finds visuals and edits.", help: { script: "mine", voice: "ai", visuals: "stock", simple: false, overlays: true, music: true } },
+  { id: "voice", label: "My voice", blurb: "Record or upload your narration. The AI transcribes it, finds visuals and edits.", help: { script: "mine", voice: "mine", visuals: "stock", simple: false, overlays: true, music: true } },
+  { id: "visuals", label: "Only visuals", blurb: "Your script and your voice. The AI only finds footage and makes simple cuts.", help: { script: "mine", voice: "mine", visuals: "stock", simple: true, overlays: false, music: false } },
+];
+
 export interface WizardState {
+  help: HelpChoices;
+  recording: Recording | null;
   step: 1 | 2 | 3 | 4 | 5;
   niche: string | null;
   idea: string;
@@ -34,7 +60,11 @@ export interface WizardState {
 
 const KEY = "stickman-create";
 
+export const defaultHelp = (): HelpChoices => ({ script: "ai", voice: "ai", visuals: "stock", simple: false, overlays: true, music: true, intro: null, outro: null, channel: "" });
+
 const fresh = (): WizardState => ({
+  help: defaultHelp(),
+  recording: null,
   step: 1,
   niche: null,
   idea: "",
@@ -53,14 +83,17 @@ const fresh = (): WizardState => ({
 function load(): WizardState {
   try {
     const raw = sessionStorage.getItem(KEY);
-    if (raw) return { ...fresh(), ...(JSON.parse(raw) as Partial<WizardState>) };
+    if (raw) {
+      const saved = JSON.parse(raw) as Partial<WizardState>;
+      return { ...fresh(), ...saved, help: { ...defaultHelp(), ...saved.help } };
+    }
   } catch {
     // A private window may block storage; start fresh.
   }
   return fresh();
 }
 
-const STEPS = ["Idea", "Angle", "Script", "Voice", "Build"] as const;
+const STEPS = ["Idea", "Angle", "Script", "Voice & finish", "Build"] as const;
 
 export type Patch = (p: Partial<WizardState>) => void;
 
@@ -81,7 +114,7 @@ export default function Create() {
   const [params, setParams] = useSearchParams();
   const navigate = useNavigate();
   const [state, setState] = useState<WizardState>(load);
-  const [status, setStatus] = useState<{ ai: boolean; stock: boolean; youtube: boolean } | null>(null);
+  const [status, setStatus] = useState<AutovideoStatus | null>(null);
 
   const patch: Patch = (p) => setState((s) => ({ ...s, ...p }));
 
@@ -96,7 +129,7 @@ export default function Create() {
       setParams({}, { replace: true });
     }
     document.documentElement.classList.remove("theme-editor");
-    api.autovideoStatus().then(setStatus).catch(() => setStatus({ ai: false, stock: false, youtube: false }));
+    api.autovideoStatus().then(setStatus).catch(() => setStatus(null));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -111,7 +144,7 @@ export default function Create() {
   const reachable = (i: number) => {
     if (state.job) return i === 5;
     if (i === 1) return true;
-    if (i === 2) return !!state.angles;
+    if (i === 2) return !!state.angles && state.help.script === "ai";
     if (i === 3) return !!state.script;
     if (i === 4) return !!state.script;
     return false;
@@ -159,7 +192,7 @@ export default function Create() {
           {niche && state.step > 1 && <p className="mt-3 text-sm text-muted-foreground">Making: <span className="font-medium text-foreground">{niche.label}</span></p>}
         </section>
 
-        {status && (!status.ai || !status.stock) && (
+        {status && (!status.ai || (!status.stock && state.help.visuals !== "none" && state.help.visuals !== "ai")) && (
           <div className="mb-6 border border-warn/50 bg-warn/10 p-4 text-sm">
             {!status.ai && <p>The AI isn't set up: add LLM_BASE_URL and LLM_API_KEY to .env, then restart.</p>}
             {!status.stock && <p>Stock footage isn't set up: add PEXELS_API_KEY to .env (free at pexels.com/api). Videos will use colored backgrounds until then.</p>}
@@ -194,7 +227,7 @@ export default function Create() {
         {state.step === 1 && <NicheStep state={state} patch={patch} />}
         {state.step === 2 && <AngleStep state={state} patch={patch} youtube={!!status?.youtube} />}
         {state.step === 3 && <ScriptStep state={state} patch={patch} />}
-        {state.step === 4 && <VoiceStep state={state} patch={patch} />}
+        {state.step === 4 && <VoiceStep state={state} patch={patch} status={status} />}
         {state.step === 5 && (
           <BuildStep
             state={state}

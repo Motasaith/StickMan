@@ -150,7 +150,14 @@ export function Stage() {
       raf = requestAnimationFrame(loop);
     };
     raf = requestAnimationFrame(loop);
-    return () => cancelAnimationFrame(raf);
+    return () => {
+      cancelAnimationFrame(raf);
+      // Leaving the page: nothing may keep playing.
+      const st = useStore.getState();
+      if (st.playing) useStore.setState({ playing: false });
+      syncAudio(false, st.time, st.scene, st.assets);
+      syncVideoSound(st.scene, false, st.time, st.assets);
+    };
   }, []);
 
   const toScene = (e: { clientX: number; clientY: number }): Pt => {
@@ -460,7 +467,7 @@ function Transport({ zoom, setZoom }: { zoom: "fit" | number; setZoom: (z: "fit"
         <button
           className="rounded-md p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground"
           title="Full screen preview"
-          onClick={() => document.querySelector<HTMLCanvasElement>("canvas")?.requestFullscreen?.()}
+          onClick={(e) => e.currentTarget.closest("main")?.querySelector("canvas")?.requestFullscreen?.()}
         >
           <Maximize2 className="size-4" />
         </button>
@@ -477,7 +484,7 @@ function draw(canvas: HTMLCanvasElement, s: ReturnType<typeof useStore.getState>
   const sel = s.selectedId ? findObj(scene, s.selectedId) : undefined;
   if (!sel || s.playing || sel.hidden) return;
   const px = scene.width / (canvas.getBoundingClientRect().width || scene.width);
-  const accent = getComputedStyle(document.documentElement).getPropertyValue("--primary").trim();
+  const accent = getComputedStyle(canvas).getPropertyValue("--primary").trim();
   const color = accent ? `hsl(${accent})` : "#e1e5cb";
 
   if (scene.mode === "3d") {

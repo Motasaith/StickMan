@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { flushSave, useStore } from "@/store";
+import { demoAllows, flushSave, useStore } from "@/store";
 import { downloadBlob, exportVideo, finalizeForPlayers } from "@/export";
 import { generateVoices, pendingVoices } from "@/voice";
 import { api } from "@/lib/api";
@@ -44,6 +44,7 @@ export function ExportDialog({ open, onOpenChange }: { open: boolean; onOpenChan
   }, [open]);
 
   const run = async () => {
+    if (!demoAllows("export")) return;
     const controller = new AbortController();
     const set = (phase: string, progress: number) => setJob({ phase, progress, controller });
     setDone(null);

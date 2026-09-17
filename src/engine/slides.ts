@@ -489,7 +489,8 @@ function pictureFromImage(scene: Scene, slide: Slide, asset: string, x: number, 
 export function shiftTimeline(scene: Scene, from: number, dt: number, only?: (o: SceneObj) => boolean) {
   if (!dt) return;
   const moveKeys = (tracks: Record<string, { t: number }[]>) => {
-    for (const keys of Object.values(tracks)) for (const k of keys) if (k.t >= from - 1e-6 && k.t > 0) k.t = Math.max(0, k.t + dt);
+    // From the very start (an intro), keys at 0 move too: nothing may show before its new time.
+    for (const keys of Object.values(tracks)) for (const k of keys) if (k.t >= from - 1e-6 && (k.t > 0 || from <= 0)) k.t = Math.max(0, k.t + dt);
   };
   const shiftWords = (words: Word[] | undefined) => {
     if (!words) return;
@@ -503,7 +504,7 @@ export function shiftTimeline(scene: Scene, from: number, dt: number, only?: (o:
   for (const o of scene.objects) {
     if (only && !only(o)) continue;
     moveKeys(o.tracks);
-    if (o.links) for (const l of o.links) if (l.t >= from && l.t > 0) l.t += dt;
+    if (o.links) for (const l of o.links) if (l.t >= from && (l.t > 0 || from <= 0)) l.t += dt;
     if ((o.type === "video" || o.type === "audio") && o.start >= from - 1e-6) o.start = Math.max(0, o.start + dt);
     if (o.type === "audio") shiftWords(o.words);
     if (o.type === "caption") shiftWords(o.words);
@@ -515,7 +516,7 @@ export function shiftTimeline(scene: Scene, from: number, dt: number, only?: (o:
   }
   // The filter only picks which objects move; slides, markers and the camera always follow.
   moveKeys(scene.camera.tracks);
-  for (const s of scene.slides ?? []) if (s.start >= from - 1e-6 && s.start > 0) s.start += dt;
+  for (const s of scene.slides ?? []) if (s.start >= from - 1e-6 && (s.start > 0 || from <= 0)) s.start += dt;
   for (const mk of scene.markers ?? []) if (mk.t >= from) mk.t += dt;
   scene.duration = Math.max(0.5, Math.round((scene.duration + dt) * 10) / 10);
 }

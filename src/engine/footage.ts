@@ -54,16 +54,26 @@ export interface ShotSource {
 }
 
 export interface SceneMedia {
-  narration: { asset: string; duration: number; words: Word[] } | null;
+  /** The scene's voice: a whole recording, or a stretch of one (`in` seconds in). Word times are from the start of the stretch. */
+  narration: { asset: string; duration: number; words: Word[]; in?: number } | null;
   shots: ShotSource[];
 }
 
 export interface FootageOptions {
-  voice: VoiceRef;
+  /** The narration voice; none when the creator recorded it. */
+  voice?: VoiceRef;
   style: NicheStyle;
   captions?: boolean;
   /** "Subscribe" card on the last scene. */
   endCard?: boolean;
+  /** The video's name over the first shot (off when an intro sequence does that job). */
+  openingTitle?: boolean;
+  /** On-screen text from the script. */
+  overlays?: boolean;
+  /** Plain cuts: no transitions, no slow zooms. */
+  simple?: boolean;
+  /** Silence around each scene's narration; a continuous recording needs none. */
+  padding?: { lead: number; tail: number };
 }
 
 /** Silence before and after each scene's narration. */
@@ -74,13 +84,13 @@ const round = (n: number) => Math.round(n * 1000) / 1000;
 
 export const frameFor = (format: VideoScript["format"]) => (format === "9:16" ? { w: 720, h: 1280 } : { w: 1280, h: 720 });
 
-function sceneDuration(scene: ScriptScene, media: SceneMedia | undefined): number {
-  if (media?.narration) return round(LEAD + media.narration.duration + TAIL);
-  return round(Math.max(3, LEAD + speechSeconds(scene.narration) + TAIL));
+function sceneDuration(scene: ScriptScene, media: SceneMedia | undefined, pad: { lead: number; tail: number }): number {
+  if (media?.narration) return round(Math.max(0.6, pad.lead + media.narration.duration + pad.tail));
+  return round(Math.max(3, pad.lead + speechSeconds(scene.narration) + pad.tail));
 }
 
-function transitionInto(script: VideoScript, i: number, style: NicheStyle): Slide["transition"] {
-  if (i === 0) return { kind: "cut", duration: 0 };
+function transitionInto(script: VideoScript, i: number, style: NicheStyle, simple: boolean): Slide["transition"] {
+  if (i === 0 || simple) return { kind: "cut", duration: 0 };
   const cur = script.scenes[i];
   const prev = script.scenes[i - 1];
   const newChapter = !!cur.chapter && cur.chapter !== prev.chapter;
@@ -93,14 +103,17 @@ function transitionInto(script: VideoScript, i: number, style: NicheStyle): Slid
 export function buildFootage(script: VideoScript, media: SceneMedia[], opts: FootageOptions): { scene: Scene; problems: string[] } {
   const { w: W, h: H } = frameFor(script.format);
   const vertical = H > W;
-  const style = opts.style;
+  const simple = !!opts.simple;
+  const style: NicheStyle = simple ? { ...opts.style, zoom: 0, chapterTransition: "cut", sceneTransition: "cut" } : opts.style;
+  const pad = opts.padding ?? { lead: LEAD, tail: TAIL };
+  const showOverlays = opts.overlays !== false && !simple;
   let scene = emptyScene(W, H);
   scene.background = "#000000";
   scene.title = script.title;
   scene.slides = [];
   scene.markers = [];
 
-  const transitions = script.scenes.map((_, i) => transitionInto(script, i, style));
+  const transitions = script.scenes.map((_, i) => transitionInto(script, i, style, simple));
   const ops: unknown[] = [];
   /** Objects made by ops, and the scene section each belongs to. */
   const members = new Map<string, string>();
@@ -111,7 +124,7 @@ export function buildFootage(script: VideoScript, media: SceneMedia[], opts: Foo
   script.scenes.forEach((sc, i) => {
     const m = media[i];
     const id = `sc${i + 1}`;
-    const dur = sceneDuration(sc, m);
+    const dur = sceneDuration(sc, m, pad);
     const start = round(t);
     const end = round(start + dur);
     const slide: Slide = {
@@ -203,7 +216,7 @@ export function buildFootage(script: VideoScript, media: SceneMedia[], opts: Foo
     }
 
     // Narration: the recorded voice, or the script waiting to be voiced.
-    const vStart = round(start + LEAD);
+    const vStart = round(start + pad.lead);
     const n = m?.narration;
     const voice: AudioObj = {
       id: `${id}_voice`,
@@ -218,15 +231,15 @@ export function buildFootage(script: VideoScript, media: SceneMedia[], opts: Foo
       asset: n?.asset ?? null,
       role: "narration",
       start: vStart,
-      duration: n ? round(n.duration) : round(dur - LEAD - TAIL),
-      in: 0,
+      duration: n ? round(n.duration) : round(dur - pad.lead - pad.tail),
+      in: round(n?.in ?? 0),
       speed: 1,
       volume: 1,
       fadeIn: 0,
       fadeOut: 0,
       text: sc.narration,
-      voice: opts.voice,
-      words: n ? n.words.map((w) => ({ text: w.text, start: round(vStart + w.start), end: round(vStart + w.end) })) : estimateWords(sc.narration, vStart, dur - LEAD - TAIL),
+      ...(opts.voice ? { voice: opts.voice } : {}),
+      words: n ? n.words.map((w) => ({ text: w.text, start: round(vStart + w.start), end: round(vStart + w.end) })) : estimateWords(sc.narration, vStart, dur - pad.lead - pad.tail),
       slide: id,
     };
     scene.objects.push(voice);
@@ -240,7 +253,7 @@ export function buildFootage(script: VideoScript, media: SceneMedia[], opts: Foo
       members.set(op.id as string, id);
     };
     const titleSize = Math.round(vertical ? W * 0.085 : H * 0.075);
-    const o = sc.overlay;
+    const o = showOverlays ? sc.overlay : null;
     if (o?.kind === "title") {
       add({ op: "heading", id: `${id}_title`, text: o.text.slice(0, 80), x: W / 2, y: vertical ? H * 0.16 : H * 0.1, size: titleSize, style: style.headingStyle, align: "center", maxWidth: W * 0.84, at, until, enter: "slideUp", exit: "fade", ...heading });
     } else if (o?.kind === "lowerThird") {
@@ -264,10 +277,10 @@ export function buildFootage(script: VideoScript, media: SceneMedia[], opts: Foo
     }
 
     // The video's name over the opening shot.
-    if (i === 0 && !o && script.thumbnailText) {
+    if (i === 0 && !o && script.thumbnailText && opts.openingTitle !== false && !simple) {
       add({ op: "heading", id: `${id}_open`, text: script.thumbnailText.slice(0, 50), x: W / 2, y: vertical ? H * 0.38 : H * 0.36, size: Math.round(titleSize * 1.35), style: "outline", align: "center", maxWidth: W * 0.86, at: 0.2, until: round(Math.min(end - 0.2, 3.4)), enter: "pop", exit: "fade", ...heading });
     }
-    if (i === script.scenes.length - 1 && opts.endCard !== false) {
+    if (i === script.scenes.length - 1 && opts.endCard !== false && !simple) {
       const cardAt = round(Math.max(start + 0.3, end - 3.2));
       add({ op: "heading", id: `${id}_subscribe`, text: vertical ? "Follow for more" : "Subscribe for more", x: W / 2, y: vertical ? H * 0.2 : H * 0.12, size: Math.round(titleSize * 0.7), style: "box", align: "center", at: cardAt, until: round(end + 0.5), enter: "pop", ...heading, color: "#FFFFFF" });
       const bell = Math.round(vertical ? W * 0.2 : H * 0.16);

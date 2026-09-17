@@ -95,12 +95,40 @@ export const api = {
   cancelJob: (id: string) => post(`/api/jobs/${id}/cancel`, {}).then((r) => json<{ ok: boolean }>(r)),
 
   // AI video maker
-  autovideoStatus: () => fetch("/api/autovideo/status").then((r) => json<{ ai: boolean; stock: boolean; youtube: boolean }>(r)),
+  autovideoStatus: () => fetch("/api/autovideo/status").then((r) => json<AutovideoStatus>(r)),
   angles: (brief: VideoBrief) => post("/api/autovideo/angles", brief).then((r) => json<{ saturated: string[]; angles: VideoAngle[]; youtube: boolean }>(r)),
   writeScript: (brief: VideoBrief & { angle?: { title: string; hook?: string } }) => post("/api/autovideo/script", brief).then((r) => json<{ script: VideoScript }>(r)).then((d) => d.script),
   rewriteScene: (script: VideoScript, index: number, instruction: string, tone?: string) =>
     post("/api/autovideo/rewrite", { script, index, instruction, tone }).then((r) => json<{ scene: ScriptScene }>(r)).then((d) => d.scene),
-  buildVideo: (script: VideoScript, voice: string, captions: boolean) => post("/api/autovideo/build", { script, voice, captions }).then((r) => json<{ job: string }>(r)),
+  buildVideo: (body: { script: VideoScript; voice?: string; recording?: { asset: string; words: Word[] }; options: BuildOptions }) => post("/api/autovideo/build", body).then((r) => json<{ job: string }>(r)),
+  splitScript: (brief: VideoBrief & { text: string }) => post("/api/autovideo/split", brief).then((r) => json<{ script: VideoScript }>(r)).then((d) => d.script),
+  /** Upload the creator's narration; returns it transcribed with word timings. */
+  uploadRecording: (file: Blob, name: string, language: string, onProgress?: (f: number) => void) =>
+    new Promise<{ media: MediaUpload; words: Word[]; text: string }>((resolve, reject) => {
+      const form = new FormData();
+      form.append("file", file, name);
+      form.append("language", language);
+      const xhr = new XMLHttpRequest();
+      xhr.open("POST", "/api/autovideo/recording");
+      xhr.upload.onprogress = (e) => e.lengthComputable && onProgress?.(e.loaded / e.total);
+      xhr.onload = () => {
+        try {
+          const data = JSON.parse(xhr.responseText) as { media: MediaUpload; words: Word[]; text: string; error?: string };
+          if (xhr.status >= 400 || data.error) reject(new Error(data.error ?? `Upload failed (${xhr.status})`));
+          else resolve(data);
+        } catch {
+          reject(new Error(`Upload failed (${xhr.status})`));
+        }
+      };
+      xhr.onerror = () => reject(new Error("Upload failed: the server didn't answer"));
+      xhr.send(form);
+    }),
+  mediaSearch: (source: string, q: string, kind: "image" | "video", orientation: string) =>
+    fetch(`/api/media-search?source=${source}&q=${encodeURIComponent(q)}&kind=${kind}&orientation=${orientation}`).then((r) => json<{ items: MediaItem[] }>(r)),
+  mediaImport: (item: { src: string; credit: string; kind: "image" | "video" | "audio" }, name: string, origin?: string) =>
+    post("/api/media-search/import", { src: item.src, credit: item.credit, kind: item.kind, name, origin }).then((r) => json<MediaUpload>(r)),
+  musicSearch: (q: string) => fetch(`/api/music/search?q=${encodeURIComponent(q)}`).then((r) => json<{ items: MusicItem[] }>(r)),
+  aiImage: (prompt: string, w: number, h: number, seed?: number) => post("/api/ai/image", { prompt, w, h, seed }).then((r) => json<MediaUpload & { watermark: boolean }>(r)),
   stockSearch: (q: string, kind: "image" | "video", orientation: string) =>
     fetch(`/api/stock/search?q=${encodeURIComponent(q)}&kind=${kind}&orientation=${orientation}`).then((r) => json<{ items: StockItem[]; configured: boolean }>(r)),
   stockImport: (item: StockItem, name: string) => post("/api/stock/import", { src: item.src, name, credit: item.credit }).then((r) => json<MediaUpload>(r)),
@@ -116,6 +144,25 @@ export const api = {
     return { blob: await res.blob(), ext: res.headers.get("X-File-Ext") ?? "bin" };
   },
 };
+
+/** Checked before calls that add files or use AI; the home page demo uses it to limit them. Throw to refuse. */
+let guard: ((feature: string) => void) | null = null;
+export const setApiGuard = (g: ((feature: string) => void) | null) => {
+  guard = g;
+};
+const GATED: Record<string, string> = { upload: "upload", uploadRecording: "upload", cloneVoice: "upload", stockImport: "import", mediaImport: "import", aiImage: "aiImage", illustrate: "illustrate", transcribe: "transcribe" };
+for (const [name, feature] of Object.entries(GATED)) {
+  const table = api as unknown as Record<string, (...args: unknown[]) => Promise<unknown>>;
+  const call = table[name];
+  table[name] = (...args) => {
+    try {
+      guard?.(feature);
+    } catch (err) {
+      return Promise.reject(err);
+    }
+    return call(...args);
+  };
+}
 
 export interface MediaUpload {
   id: string;
@@ -222,4 +269,50 @@ export interface VideoAngle {
     medianViews: number;
     top: Array<{ title: string; channel: string; views: number; published: string }>;
   };
+}
+
+export type VisualMode = "stock" | "ai" | "mix" | "real" | "none";
+
+export interface BuildOptions {
+  visuals: VisualMode;
+  simple: boolean;
+  overlays: boolean;
+  captions: boolean;
+  music: boolean;
+  intro: string | null;
+  outro: string | null;
+  channel?: string;
+}
+
+export interface TemplateInfo {
+  id: string;
+  label: string;
+  blurb: string;
+  duration: number;
+}
+
+export interface AutovideoStatus {
+  ai: boolean;
+  stock: boolean;
+  youtube: boolean;
+  aiImages: boolean;
+  intros: TemplateInfo[];
+  outros: TemplateInfo[];
+  sources: Array<{ id: string; label: string; kinds: Array<"image" | "video">; blurb: string }>;
+}
+
+export interface MediaItem extends StockItem {
+  source: string;
+  license?: string;
+}
+
+export interface MusicItem {
+  id: string;
+  title: string;
+  src: string;
+  duration: number;
+  credit: string;
+  license: string;
+  page: string;
+  genres: string[];
 }

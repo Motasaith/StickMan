@@ -49,6 +49,9 @@ interface State {
   timelineZoom: number;
   snapping: boolean;
   uploads: Upload[];
+  /** The home page demo: never saved, and features have a few uses each. */
+  demo: boolean;
+  demoUses: Record<string, number>;
 
   /** Replace the scene and record the previous one (or `base`) for undo. */
   commit: (next: Scene, base?: Scene) => void;
@@ -73,7 +76,8 @@ interface State {
   addAssets: (a: Asset[]) => void;
   removeAsset: (id: string) => void;
   bumpImages: () => void;
-  loadProject: (p: Project & { id?: string; title?: string; kind?: string }) => void;
+  loadProject: (p: Project & { id?: string; title?: string; kind?: string; demo?: boolean }) => void;
+  countDemoUse: (feature: string) => void;
   newProject: (width: number, height: number) => void;
   setTitle: (t: string) => void;
   pushChat: (m: ChatMsg) => void;
@@ -125,6 +129,8 @@ export const useStore = create<State>((set, get) => ({
   timelineZoom: 1,
   snapping: true,
   uploads: [],
+  demo: false,
+  demoUses: {},
 
   commit: (next, base) =>
     set((s) => ({
@@ -139,6 +145,8 @@ export const useStore = create<State>((set, get) => ({
   updateAsset: (id, patch) => set((s) => ({ assets: s.assets.map((a) => (a.id === id ? { ...a, ...patch } : a)) })),
   run: (ops) => {
     const s = get();
+    const feature = opFeature(ops);
+    if (s.demo && feature && !demoAllows(feature)) return [{ ok: false, message: "That's the demo limit for this tool. Open the full editor to keep going." }];
     const out = applyOps(s.scene, ops, s.assets);
     if (out.newAssets.length) s.addAssets(out.newAssets);
     if (out.applied.length) s.commit(out.scene);
@@ -180,7 +188,9 @@ export const useStore = create<State>((set, get) => ({
       selectedKey: null,
       time: 0,
       playing: false,
-      chat: loadChat(p.id ?? null),
+      chat: p.demo ? [] : loadChat(p.id ?? null),
+      demo: !!p.demo,
+      mode: p.demo ? "ai" : get().mode,
       saveStatus: "saved",
       saveError: null,
     }),
@@ -197,7 +207,19 @@ export const useStore = create<State>((set, get) => ({
   setUpload: (u) => set((s) => ({ uploads: [...s.uploads.filter((x) => x.id !== u.id), u] })),
   removeUpload: (id) => set((s) => ({ uploads: s.uploads.filter((x) => x.id !== id) })),
   setSaveStatus: (saveStatus, saveError = null) => set({ saveStatus, saveError }),
+  countDemoUse: (feature) => set((s) => ({ demoUses: { ...s.demoUses, [feature]: (s.demoUses[feature] ?? 0) + 1 } })),
 }));
+
+/** Demo limits, installed by the home page demo. `allow` says whether a feature may run once more (and counts it). */
+export const demoGuards: { allow: ((feature: string) => boolean) | null } = { allow: null };
+export const demoAllows = (feature: string) => !useStore.getState().demo || !demoGuards.allow || demoGuards.allow(feature);
+
+/** Basic edits (moving, retiming, deleting) are never limited; each kind of thing added is. */
+const FREE_OPS = new Set(["update", "remove", "order", "move", "clearMotion", "show", "hide"]);
+function opFeature(ops: unknown[]): string | null {
+  const names = ops.map((o) => (o as { op?: string })?.op).filter((n): n is string => !!n && !FREE_OPS.has(n));
+  return names[0] ?? null;
+}
 
 /** Undo restores the scene; assets are only ever added, so newer ones (recordings) stay. */
 function mergeAssets(older: Asset[], current: Asset[]): Asset[] {
@@ -250,7 +272,7 @@ useStore.subscribe((s, prev) => {
     if (s.saveStatus !== "saving") useStore.getState().setSaveStatus("pending");
     schedule(1200);
   }
-  if (s.chat !== prev.chat && s.projectId === prev.projectId) {
+  if (s.chat !== prev.chat && s.projectId === prev.projectId && !s.demo) {
     try {
       localStorage.setItem(chatKey(s.projectId), JSON.stringify(s.chat.filter((m) => !m.pending).slice(-60)));
     } catch {

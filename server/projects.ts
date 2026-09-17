@@ -115,6 +115,28 @@ export async function duplicateProject(id: string): Promise<ProjectFile> {
   return (await getProject(copy.id))!;
 }
 
+// ── Home page demo ──────────────────────────────────────────────────
+
+const DEMO_FILE = join(DATA_DIR, "demo-project.json");
+
+/** A frozen copy of a project that the home page plays and lets visitors try edits on. */
+export async function getDemo(): Promise<Pick<ProjectFile, "title" | "scene" | "assets" | "kind"> | null> {
+  try {
+    return JSON.parse(await readFile(DEMO_FILE, "utf8"));
+  } catch {
+    return null;
+  }
+}
+
+/** Snapshot a project as the demo. Later edits to that project don't change the demo. */
+export async function setDemo(id: string) {
+  const p = await getProject(id);
+  if (!p) throw new Error("That project doesn't exist.");
+  await mkdir(DATA_DIR, { recursive: true });
+  await atomicWrite(DEMO_FILE, JSON.stringify({ title: p.title, scene: p.scene, assets: p.assets, kind: p.kind }));
+  return { title: p.title };
+}
+
 // ── Versions ────────────────────────────────────────────────────────
 
 export interface VersionSummary {

@@ -9,6 +9,7 @@ import { findIllustration, ILLUSTRATIONS } from "./illustrations";
 import { findSticker } from "./stickers";
 import { cleanSvgMarkup, svgProblem } from "./svg";
 import { coverCrop, estimateWords } from "./media";
+import { addIntro, addOutro, introById, outroById } from "./intros";
 import { THEME_IDS, themeById } from "./themes";
 import { SLIDE_LAYOUTS, addSlide, fitSlidesToNarration, removeSlide, setSlideDuration, speechSeconds, syncCaptions, type SlideSpec } from "./slides";
 import { worldState } from "./render";
@@ -229,6 +230,25 @@ export const proOpSchemas = [
     notes: z.string().max(1200).optional(),
   }),
   z.object({ op: z.literal("removeSlide"), id }),
+  /** Animated title sequences before or after the video (see intros.ts for the templates). */
+  z.object({
+    op: z.literal("intro"),
+    template: z.string().max(30),
+    title: z.string().max(120).optional(),
+    subtitle: z.string().max(160).optional(),
+    channel: z.string().max(60).optional(),
+    accent: color.optional(),
+    accent2: color.optional(),
+  }),
+  z.object({
+    op: z.literal("outro"),
+    template: z.string().max(30),
+    title: z.string().max(120).optional(),
+    subtitle: z.string().max(160).optional(),
+    channel: z.string().max(60).optional(),
+    accent: color.optional(),
+    accent2: color.optional(),
+  }),
   z.object({ op: z.literal("theme"), theme: z.enum(THEME_IDS) }),
   z.object({
     op: z.literal("edit"),
@@ -525,6 +545,19 @@ export function applyProOp(scene: Scene, op: ProOp, ctx: ProContext): string {
     }
     case "broll":
       throw new Error("new footage has to be fetched first; try again");
+    case "intro":
+    case "outro": {
+      const known = op.op === "intro" ? introById(op.template) : outroById(op.template);
+      if (!known) throw new Error(`no ${op.op} template "${op.template}"`);
+      if (scene.mode === "3d") throw new Error(`${op.op}s work in the 2D view`);
+      const card = { title: op.title ?? scene.publish?.thumbnailText ?? scene.title ?? "Untitled", subtitle: op.subtitle, channel: op.channel, accent: op.accent, accent2: op.accent2 };
+      const out = op.op === "intro" ? addIntro(scene, op.template, card) : addOutro(scene, op.template, card);
+      if (out.problems.length) throw new Error(out.problems[0]);
+      // Ops change the scene in place.
+      for (const k of Object.keys(scene)) delete (scene as unknown as Record<string, unknown>)[k];
+      Object.assign(scene, out.scene);
+      return `added the ${known.label} ${op.op} (${known.duration}s)`;
+    }
     case "detachAudio": {
       const o = need(scene, op.id);
       if (o.type !== "video") throw new Error(`"${op.id}" is not a video`);

@@ -7,7 +7,11 @@ import { LOCAL_VOICE_RE, VOICE_IDS, type VoiceRef } from "../../src/engine/scene
 import { llmConfig } from "../llm";
 import { stockConfigured } from "../stock";
 import { cancelJob } from "../jobs";
-import { rewriteScene, suggestAngles, writeScript } from "./writer";
+import { rewriteScene, splitScript, suggestAngles, writeScript } from "./writer";
+import { importMedia, mediaPath, mediaUrl, MAX_UPLOAD_BYTES } from "../media";
+import { SPEECH_LANGUAGES, transcribe, type SpeechLanguage } from "../stt";
+import { SOURCES, aiImagesKeyed, downloadMedia, generateImage, searchMedia, searchMusic } from "../sources";
+import { INTROS, OUTROS } from "../../src/engine/intros";
 import { checkCompetition, youtubeConfigured } from "./youtube";
 import { startBuild } from "./pipeline";
 
@@ -27,7 +31,15 @@ const brief = z.object({
 });
 
 autovideoRoutes.get("/api/autovideo/status", (c) =>
-  c.json({ ai: !!llmConfig().baseUrl, stock: stockConfigured(), youtube: youtubeConfigured() })
+  c.json({
+    ai: !!llmConfig().baseUrl,
+    stock: stockConfigured(),
+    youtube: youtubeConfigured(),
+    aiImages: aiImagesKeyed(),
+    intros: INTROS.map(({ id, label, blurb, duration }) => ({ id, label, blurb, duration })),
+    outros: OUTROS.map(({ id, label, blurb, duration }) => ({ id, label, blurb, duration })),
+    sources: SOURCES,
+  })
 );
 
 autovideoRoutes.post("/api/autovideo/angles", async (c) => {
@@ -49,6 +61,93 @@ autovideoRoutes.post("/api/autovideo/script", async (c) => {
   if (!body.data.idea.trim() && !body.data.draft?.trim() && !body.data.angle) return c.json({ error: "Say what the video is about, or paste your draft." }, 400);
   try {
     return c.json({ script: await writeScript(body.data) });
+  } catch (err) {
+    return c.json(fail(err), 502);
+  }
+});
+
+/** The creator's finished script, kept word for word. */
+autovideoRoutes.post("/api/autovideo/split", async (c) => {
+  const body = brief.extend({ text: z.string().min(10).max(60000) }).safeParse(await c.req.json().catch(() => null));
+  if (!body.success) return c.json({ error: "Paste the script first." }, 400);
+  try {
+    return c.json({ script: await splitScript(body.data) });
+  } catch (err) {
+    return c.json(fail(err), 502);
+  }
+});
+
+const LANGUAGE_NAMES: Record<string, SpeechLanguage> = { english: "english", urdu: "urdu", hindi: "hindi", spanish: "spanish", french: "french", italian: "italian", portuguese: "portuguese" };
+
+/** The creator's own narration: stored, then transcribed with word timings. */
+autovideoRoutes.post("/api/autovideo/recording", async (c) => {
+  const len = Number(c.req.header("content-length") ?? 0);
+  if (len > MAX_UPLOAD_BYTES + 1024 * 1024) return c.json({ error: "That file is over 300 MB." }, 413);
+  try {
+    const form = await c.req.parseBody();
+    const file = form.file;
+    if (!(file instanceof File)) return c.json({ error: "Add your recording." }, 400);
+    const language = LANGUAGE_NAMES[String(form.language ?? "english").toLowerCase()] ?? "english";
+    if (!SPEECH_LANGUAGES.includes(language)) return c.json({ error: "That language can't be transcribed." }, 400);
+    const info = await importMedia(Buffer.from(await file.arrayBuffer()), file.name || "narration.webm", { origin: "recording" });
+    if (info.kind !== "audio" && info.kind !== "video") return c.json({ error: "That file has no sound." }, 422);
+    const path = await mediaPath(info.id);
+    const words = await transcribe(path!, language, 0, null);
+    if (!words.length) return c.json({ error: "No speech was found in that recording." }, 422);
+    return c.json({ media: { ...info, src: mediaUrl(info.file) }, words, text: words.map((w) => w.text).join(" ") });
+  } catch (err) {
+    return c.json(fail(err), 502);
+  }
+});
+
+// ── Media search for the editor ─────────────────────────────────────
+
+autovideoRoutes.get("/api/media-search", async (c) => {
+  const source = SOURCES.find((x) => x.id === c.req.query("source"))?.id ?? "pexels";
+  const q = (c.req.query("q") ?? "").trim().slice(0, 100);
+  const kind = c.req.query("kind") === "video" ? "video" : "image";
+  const o = c.req.query("orientation");
+  const orientation = o === "portrait" || o === "square" ? o : "landscape";
+  if (!q) return c.json({ items: [] });
+  if (source === "pexels" && !stockConfigured()) return c.json({ items: [], error: "Add PEXELS_API_KEY to .env for Pexels." });
+  try {
+    return c.json({ items: await searchMedia(source, q, kind, orientation, 24) });
+  } catch (err) {
+    return c.json({ ...fail(err), items: [] }, 502);
+  }
+});
+
+autovideoRoutes.post("/api/media-search/import", async (c) => {
+  const body = z.object({ src: z.string().url(), name: z.string().max(120), credit: z.string().max(300), kind: z.enum(["image", "video", "audio"]), origin: z.string().max(20).optional() }).safeParse(await c.req.json().catch(() => null));
+  if (!body.success) return c.json({ error: "Bad request" }, 400);
+  try {
+    const bytes = await downloadMedia(body.data.src);
+    const ext = body.data.kind === "video" ? ".mp4" : body.data.kind === "audio" ? ".mp3" : /\.png(\?|$)/i.test(body.data.src) ? ".png" : ".jpg";
+    const info = await importMedia(bytes, `${body.data.name}${ext}`, { origin: body.data.origin ?? "stock", credit: body.data.credit });
+    return c.json({ ...info, src: mediaUrl(info.file) });
+  } catch (err) {
+    return c.json(fail(err), 502);
+  }
+});
+
+autovideoRoutes.get("/api/music/search", async (c) => {
+  const q = (c.req.query("q") ?? "").trim().slice(0, 100);
+  if (!q) return c.json({ items: [] });
+  try {
+    return c.json({ items: await searchMusic(q, { minSeconds: Number(c.req.query("min") ?? 20) || 0, perPage: 20 }) });
+  } catch (err) {
+    return c.json({ ...fail(err), items: [] }, 502);
+  }
+});
+
+/** An AI picture, stored in the media library. */
+autovideoRoutes.post("/api/ai/image", async (c) => {
+  const body = z.object({ prompt: z.string().min(3).max(800), w: z.number().int().min(256).max(2048), h: z.number().int().min(256).max(2048), seed: z.number().int().min(0).max(1e9).optional() }).safeParse(await c.req.json().catch(() => null));
+  if (!body.success) return c.json({ error: "Describe the picture." }, 400);
+  try {
+    const img = await generateImage(body.data.prompt, body.data.w, body.data.h, body.data.seed ?? Math.floor(Math.random() * 1e6));
+    const info = await importMedia(img.bytes, `AI ${body.data.prompt.slice(0, 30).replace(/[^\w\- ]+/g, "")}.jpg`, { origin: "ai", credit: img.credit });
+    return c.json({ ...info, src: mediaUrl(info.file), watermark: img.watermark });
   } catch (err) {
     return c.json(fail(err), 502);
   }
@@ -107,12 +206,30 @@ autovideoRoutes.post("/api/autovideo/build", async (c) => {
   const body = z
     .object({
       script: scriptBody,
-      voice: z.union([z.enum(VOICE_IDS), z.string().regex(LOCAL_VOICE_RE)]),
-      captions: z.boolean().default(true),
+      voice: z.union([z.enum(VOICE_IDS), z.string().regex(LOCAL_VOICE_RE)]).optional(),
+      recording: z
+        .object({
+          asset: z.string().max(40),
+          words: z.array(z.object({ text: z.string().max(80), start: z.number().min(0), end: z.number().min(0) })).max(20000),
+        })
+        .optional(),
+      options: z
+        .object({
+          visuals: z.enum(["stock", "ai", "mix", "real", "none"]).default("stock"),
+          simple: z.boolean().default(false),
+          overlays: z.boolean().default(true),
+          captions: z.boolean().default(true),
+          music: z.boolean().default(false),
+          intro: z.string().max(30).nullable().default(null),
+          outro: z.string().max(30).nullable().default(null),
+          channel: z.string().max(60).optional(),
+        })
+        .prefault({}),
     })
     .safeParse(await c.req.json().catch(() => null));
   if (!body.success) return c.json({ error: "The script or voice isn't valid." }, 400);
-  const job = startBuild({ script: body.data.script, voice: body.data.voice as VoiceRef, captions: body.data.captions });
+  if (!body.data.voice && !body.data.recording) return c.json({ error: "Pick a voice or add your recording." }, 400);
+  const job = startBuild({ script: body.data.script, voice: body.data.voice as VoiceRef | undefined, recording: body.data.recording, options: body.data.options });
   return c.json({ job: job.id });
 });
 

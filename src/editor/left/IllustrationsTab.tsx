@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Loader2, Wand2 } from "lucide-react";
+import { Loader2, Sparkles, Wand2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { ILLUSTRATIONS, ILLUSTRATION_CATEGORIES, type Illustration } from "@/engine/illustrations";
@@ -7,7 +7,7 @@ import { useStore } from "@/store";
 import { uniqueId } from "@/engine/scene";
 import { api } from "@/lib/api";
 import { cn } from "@/lib/utils";
-import { PanelHeader, SearchBox, GroupLabel, addAt } from "./common";
+import { PanelHeader, SearchBox, addAt } from "./common";
 
 export function IllustrationsTab() {
   const [q, setQ] = useState("");
@@ -52,6 +52,24 @@ export function IllustrationsTab() {
   return (
     <>
       <PanelHeader title="Illustrations" subtitle={`${ILLUSTRATIONS.length} animated drawings for slides and explainers.`}>
+        <form
+          className="mb-3 rounded-lg border border-primary/40 bg-primary/[0.06] p-2"
+          onSubmit={(e) => {
+            e.preventDefault();
+            void draw();
+          }}
+        >
+          <p className="mb-1.5 flex items-center gap-1.5 text-xs font-medium text-primary">
+            <Sparkles className="size-3.5" /> Draw with AI
+            <span className="font-normal text-muted-foreground">(about a minute)</span>
+          </p>
+          <div className="flex gap-1.5">
+            <input data-ai-draw className="field-text min-w-0 flex-1" value={topic} placeholder="a dentist chair with a lamp" onChange={(e) => setTopic(e.target.value)} />
+            <Button type="submit" size="sm" className="h-8 shrink-0 gap-1" disabled={drawing || !topic.trim()} title="Draw a new animated illustration">
+              {drawing ? <Loader2 className="size-3.5 animate-spin" /> : <Wand2 className="size-3.5" />} {drawing ? "Drawing" : "Draw"}
+            </Button>
+          </div>
+        </form>
         <SearchBox value={q} onChange={setQ} placeholder="Search: teeth, growth, rocket…" />
         <div className="mt-2 flex flex-wrap gap-1">
           {["all", ...ILLUSTRATION_CATEGORIES].map((c) => (
@@ -70,15 +88,24 @@ export function IllustrationsTab() {
             </button>
           ))}
         </div>
-        {list.length === 0 && <p className="text-sm text-muted-foreground">Nothing in the library matches. Ask the AI to draw it below.</p>}
-        <GroupLabel>Draw something new</GroupLabel>
-        <div className="rounded-xl border border-line bg-panel-sunken p-3">
-          <p className="mb-2 text-xs text-muted-foreground">Describe a picture that isn't in the library and the AI draws an animated one in the same style (about a minute).</p>
-          <textarea className="field-text h-16 resize-none py-1.5" value={topic} placeholder="a dentist chair with a lamp" onChange={(e) => setTopic(e.target.value)} />
-          <Button size="sm" className="mt-2 w-full gap-2" disabled={drawing || !topic.trim()} onClick={draw}>
-            {drawing ? <Loader2 className="size-3.5 animate-spin" /> : <Wand2 className="size-3.5" />} {drawing ? "Drawing…" : "Draw with AI"}
-          </Button>
-        </div>
+        {list.length === 0 && (
+          <div className="space-y-2 text-sm text-muted-foreground">
+            <p>Nothing in the library matches.</p>
+            {q.trim() && (
+              <Button
+                size="sm"
+                variant="outline"
+                className="gap-1.5 border-primary/40 text-primary"
+                onClick={() => {
+                  setTopic(q.trim());
+                  requestAnimationFrame(() => document.querySelector<HTMLElement>("[data-ai-draw]")?.focus());
+                }}
+              >
+                <Sparkles className="size-3.5" /> Draw "{q.trim().slice(0, 30)}" with AI
+              </Button>
+            )}
+          </div>
+        )}
       </div>
     </>
   );

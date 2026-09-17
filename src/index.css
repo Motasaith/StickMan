@@ -58,7 +58,10 @@
     color-scheme: light;
   }
 
-  :root.theme-editor {
+  :root.theme-editor,
+  .theme-editor-scope,
+  /* Menus and dialogs opened from the home page demo render outside it. */
+  :root[data-demo-active] :is([data-slot="dialog-content"], [data-slot="alert-dialog-content"], [data-slot="popover-content"], [data-slot="dropdown-menu-content"], [data-slot="dropdown-menu-sub-content"], [data-slot="context-menu-content"], [data-slot="context-menu-sub-content"], [data-slot="select-content"], [data-slot="tooltip-content"]) {
     --background: 105 8% 10%;
     --foreground: 53 20% 92%;
 
@@ -102,6 +105,12 @@
     --clip-slide: 220 25% 62%;
 
     color-scheme: dark;
+  }
+
+  /* The editor inside another page (the home page demo). */
+  .theme-editor-scope {
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
   }
 
   * {

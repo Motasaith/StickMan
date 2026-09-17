@@ -6,7 +6,7 @@ import { renderScene } from "./engine/render";
 import { render3D } from "./render3d";
 import type { Asset, Scene } from "./engine/scene";
 import { canvasPool, preloadImages, preloadSvgs } from "./runtime/media";
-import { newId, useStore, type ChatMsg } from "./store";
+import { demoAllows, newId, useStore, type ChatMsg } from "./store";
 import { generateVoices, pendingVoices } from "./voice";
 
 const assetInfo = () =>
@@ -116,7 +116,7 @@ function historyForAi(chat: ChatMsg[]) {
 
 export async function askAnimator(prompt: string): Promise<void> {
   const store = useStore.getState();
-  if (store.aiBusy) return;
+  if (store.aiBusy || !demoAllows("ai")) return;
   const history = historyForAi(store.chat);
   store.setAiBusy(true);
   store.setPlaying(false);

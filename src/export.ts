@@ -68,6 +68,22 @@ export async function exportVideo(...args: Parameters<typeof exportFrames>): Pro
   }
 }
 
+/** One finished frame at full size, videos included (for thumbnails). */
+export async function renderStill(scene: Scene, assets: Asset[], t: number): Promise<HTMLCanvasElement> {
+  const pool = canvasPool();
+  const canvas = document.createElement("canvas");
+  canvas.width = scene.width;
+  canvas.height = scene.height;
+  try {
+    const opts: RenderOptions = { images: await preloadImages(assets), svgs: await preloadSvgs(scene, assets), videoFrame: exportVideoLookup(assets), makeCanvas: pool, threeD: render3D };
+    if (scene.objects.some((o) => o.type === "video")) await seekVideos(scene, t, assets);
+    renderScene(canvas.getContext("2d")!, scene, t, opts);
+    return canvas;
+  } finally {
+    releaseExportVideos();
+  }
+}
+
 async function exportFrames(
   scene: Scene,
   assets: Asset[],

@@ -11,7 +11,34 @@ import { playClip } from "@/audio";
 import { ColorInput, NumField, Row, Section, SelectField, SliderRow, Segmented, TextField, Note, run } from "../fields";
 import { VoiceSelect } from "../VoiceSelect";
 
-const TRANSITION_LABEL: Record<string, string> = { cut: "Cut", fade: "Fade", slideLeft: "Slide in from right", slideRight: "Slide in from left", slideUp: "Slide up", slideDown: "Slide down", push: "Push", zoom: "Zoom", wipe: "Wipe", circle: "Circle reveal", blur: "Blur", flip: "Flip" };
+export const TRANSITION_LABEL: Record<string, string> = {
+  cut: "Cut",
+  fade: "Fade",
+  dipBlack: "Dip to black",
+  flash: "Flash",
+  slideLeft: "Slide in from right",
+  slideRight: "Slide in from left",
+  slideUp: "Slide up",
+  slideDown: "Slide down",
+  push: "Push",
+  whipLeft: "Whip left",
+  whipRight: "Whip right",
+  zoom: "Zoom",
+  zoomIn: "Punch in",
+  zoomOut: "Pull out",
+  spin: "Spin",
+  wipe: "Wipe",
+  diagonal: "Diagonal wipe",
+  clock: "Clock wipe",
+  circle: "Circle reveal",
+  barn: "Barn doors",
+  split: "Split",
+  blinds: "Blinds",
+  blur: "Blur",
+  pixelate: "Pixelate",
+  glitch: "Glitch",
+  flip: "Flip",
+};
 
 export function SlidePanel({ slide }: { slide: Slide }) {
   const scene = useStore((s) => s.scene);

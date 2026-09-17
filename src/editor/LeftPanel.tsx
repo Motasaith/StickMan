@@ -15,18 +15,19 @@ import { SoundsTab } from "./left/SoundsTab";
 import { SlidesTab } from "./left/SlidesTab";
 import { RecordTab } from "./left/RecordTab";
 
-const TABS: { id: LeftTab; label: string; icon: typeof Box }[] = [
+/** `ai` names the AI tool inside a tab; those tabs wear a small spark. */
+const TABS: { id: LeftTab; label: string; icon: typeof Box; ai?: string }[] = [
   { id: "media", label: "Media", icon: Clapperboard },
-  { id: "stock", label: "Stock", icon: Globe2 },
+  { id: "stock", label: "Stock", icon: Globe2, ai: "AI pictures and b-roll search" },
   { id: "slides", label: "Slides", icon: Presentation },
   { id: "text", label: "Text", icon: Type },
-  { id: "illustrations", label: "Art", icon: Wand2 },
+  { id: "illustrations", label: "Art", icon: Wand2, ai: "Draw with AI" },
   { id: "stickers", label: "Stickers", icon: Smile },
   { id: "shapes", label: "Shapes", icon: Shapes },
-  { id: "characters", label: "People", icon: PawPrint },
+  { id: "characters", label: "People", icon: PawPrint, ai: "AI turns a photo into a puppet" },
   { id: "props", label: "3D", icon: Box },
   { id: "effects", label: "Effects", icon: Sparkles },
-  { id: "sounds", label: "Sounds", icon: Music },
+  { id: "sounds", label: "Sounds", icon: Music, ai: "Music finder" },
   { id: "record", label: "Record", icon: Mic },
 ];
 
@@ -54,13 +55,14 @@ export function LeftPanel() {
             <TooltipTrigger asChild>
               <button
                 onClick={() => useStore.getState().setLeftTab(t.id)}
-                className={cn("flex w-[52px] flex-col items-center gap-1 rounded-lg py-2 text-[10px] transition", tab === t.id ? "bg-panel-raised text-foreground" : "text-muted-foreground hover:bg-accent hover:text-foreground")}
+                className={cn("relative flex w-[52px] flex-col items-center gap-1 rounded-lg py-2 text-[10px] transition", tab === t.id ? "bg-panel-raised text-foreground" : "text-muted-foreground hover:bg-accent hover:text-foreground")}
               >
                 <t.icon className={cn("size-[18px]", tab === t.id && "text-primary")} />
                 {t.label}
+                {t.ai && <Sparkles aria-hidden className="absolute right-1.5 top-1 size-2.5 text-primary" />}
               </button>
             </TooltipTrigger>
-            <TooltipContent side="right">{t.label}</TooltipContent>
+            <TooltipContent side="right">{t.ai ? `${t.label}: ${t.ai}` : t.label}</TooltipContent>
           </Tooltip>
         ))}
       </nav>

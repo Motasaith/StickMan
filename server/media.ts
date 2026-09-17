@@ -181,9 +181,20 @@ export async function importMedia(bytes: Buffer, originalName: string, opts: { o
     const looksImage = [".png", ".jpg", ".webp", ".gif"].includes(ext) || (p.video && (p.duration === 0 || ["png", "mjpeg", "webp"].includes(p.video)) && !p.audio);
     if (looksImage && p.w) {
       const id = newId("img");
-      const file = `${id}${ext === ".bin" ? ".png" : ext}`;
-      await rename(tmp, join(MEDIA_DIR, file));
-      const info: MediaInfo = { id, file, name, kind: "image", mime: MIME[extname(file)] ?? "image/png", w: p.w, h: p.h, bytes: bytes.length, ...opts };
+      let file = `${id}${ext === ".bin" ? ".png" : ext}`;
+      let { w, h } = p;
+      const MAX = 2560;
+      // Huge photos (camera originals) are scaled down: nothing in a video needs more.
+      if (Math.max(w, h) > MAX && ext !== ".gif") {
+        const k = MAX / Math.max(w, h);
+        w = Math.round((w * k) / 2) * 2;
+        h = Math.round((h * k) / 2) * 2;
+        file = `${id}${ext === ".png" ? ".png" : ".jpg"}`;
+        await run(["-i", tmp, "-vf", `scale=${w}:${h}`, ...(file.endsWith(".jpg") ? ["-q:v", "3"] : []), join(MEDIA_DIR, file)], 120_000);
+        await rm(tmp, { force: true });
+      } else await rename(tmp, join(MEDIA_DIR, file));
+      const size = (await stat(join(MEDIA_DIR, file))).size;
+      const info: MediaInfo = { id, file, name, kind: "image", mime: MIME[extname(file)] ?? "image/png", w, h, bytes: size, ...opts };
       await writeMeta(info);
       return info;
     }

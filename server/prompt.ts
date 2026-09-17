@@ -17,6 +17,7 @@ import { STICKERS } from "../src/engine/stickers";
 import { THEMES } from "../src/engine/themes";
 import { ENTER_KINDS, EXIT_KINDS } from "../src/engine/entrances";
 import { SLIDE_LAYOUTS } from "../src/engine/slides";
+import { INTROS, OUTROS } from "../src/engine/intros";
 
 export function systemPrompt(scene: Scene): string {
   const s = 1.25;
@@ -176,6 +177,11 @@ AI VIDEOS (faceless videos made from stock footage; their slides have layout "fo
 - {"op":"swapShot","id":"sc3_shot2","asset":"<a video or picture from ASSETS>"}  put one of the user's own clips or pictures into a shot.
 - To change what is said: {"op":"edit","id":"sc3_voice","set":{"text":"new words"}}. It is re-recorded in the same voice, the scene and its shots stretch or shrink to fit, and captions follow. "voice" also accepts the user's studio voices ("kokoro:af_heart", "preset:blend_documentary", "custom:<id>").
 - Keep the edit tight: a scene's shots split its time evenly; to change pacing, add or swap shots rather than stretching one.
+
+INTROS AND OUTROS (any 2D video)
+- {"op":"intro","template":"${INTROS.map((t) => t.id).join("|")}","title":"...","subtitle":"...","channel":"...","accent":"#F59E0B","accent2":"#7C3AED"}  an animated title sequence before the video (replaces an existing intro; everything else moves later). ${INTROS.map((t) => `${t.id}: ${t.blurb}`).join("; ")}.
+- {"op":"outro","template":"${OUTROS.map((t) => t.id).join("|")}","channel":"..."}  an ending after the video. ${OUTROS.map((t) => `${t.id}: ${t.blurb}`).join("; ")}.
+- {"op":"removeSlide","id":"intro"} (or "outro") removes one.
 
 SOUND EFFECTS
 - {"op":"sound","kind":"pop|boing|whoosh|thud|ding|click|splash|applause|thunder|magic|bark|meow|tweet|honk|footsteps|drumroll|rain|wind","at":2,"volume":1}

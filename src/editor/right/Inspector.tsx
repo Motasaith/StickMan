@@ -191,6 +191,9 @@ function TransformSection({ obj, time }: { obj: SceneObj; time: number }) {
   );
 }
 
+/** Readable names for camelCase animation ids. */
+const nice = (id: string) => id.replace(/([A-Z])/g, " $1").replace(/^./, (c) => c.toUpperCase()).replace(/ In$| Out$/, "");
+
 function AnimateSection({ obj, time }: { obj: SceneObj; time: number }) {
   const t = Math.round(time * 100) / 100;
   const scene = useStore((s) => s.scene);
@@ -201,19 +204,19 @@ function AnimateSection({ obj, time }: { obj: SceneObj; time: number }) {
   return (
     <Section title={`Animate · at ${t}s`}>
       <Row label="Comes in">
-        <SelectField value={enter} options={ENTER_KINDS} onChange={setEnter} />
+        <SelectField value={enter} options={ENTER_KINDS.map((k) => ({ value: k, label: nice(k) }))} onChange={setEnter} />
         <button className="chip" onClick={() => run([{ op: "enter", id: obj.id, kind: enter, at: t }])}>
           Add
         </button>
       </Row>
       <Row label="Leaves">
-        <SelectField value={exit} options={EXIT_KINDS} onChange={setExit} />
+        <SelectField value={exit} options={EXIT_KINDS.map((k) => ({ value: k, label: nice(k) }))} onChange={setExit} />
         <button className="chip" onClick={() => run([{ op: "exit", id: obj.id, kind: exit, at: t + 0.5 }])}>
           Add
         </button>
       </Row>
       <Row label="Keeps moving">
-        <SelectField value={obj.loop ?? "none"} options={LOOPS} onChange={(l) => run([{ op: "loop", id: obj.id, kind: l }])} />
+        <SelectField value={obj.loop ?? "none"} options={LOOPS.map((k) => ({ value: k, label: nice(k) }))} onChange={(l) => run([{ op: "loop", id: obj.id, kind: l }])} />
       </Row>
       {obj.loop && obj.loop !== "none" && (
         <Row label="Loop strength">

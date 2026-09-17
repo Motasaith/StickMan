@@ -4,7 +4,7 @@
 import { Hono } from "hono";
 import { z } from "zod";
 import { LOCAL_VOICE_RE, VOICE_IDS } from "../src/engine/scene";
-import { addVersion, createProject, deleteProject, duplicateProject, getProject, getVersion, listProjects, listVersions, saveProject } from "./projects";
+import { addVersion, createProject, deleteProject, duplicateProject, getDemo, getProject, getVersion, listProjects, listVersions, saveProject, setDemo } from "./projects";
 import { importMedia, mediaInfo, mediaPath, mediaUrl, serveMedia, MAX_UPLOAD_BYTES } from "./media";
 import { voiceLine } from "./voices/speak";
 import { downloadStock, searchStock, stockConfigured } from "./stock";
@@ -60,6 +60,22 @@ pro.post("/api/projects/:id/duplicate", async (c) => {
   try {
     const p = await duplicateProject(c.req.param("id"));
     return c.json({ id: p.id });
+  } catch (err) {
+    return c.json(fail(err), 404);
+  }
+});
+
+pro.get("/api/demo", async (c) => {
+  const demo = await getDemo();
+  return demo ? c.json(demo) : c.json({ error: "No demo project yet" }, 404);
+});
+
+/** Make a project the home page demo (a snapshot). */
+pro.put("/api/demo", async (c) => {
+  const body = z.object({ projectId: z.string().max(40) }).safeParse(await c.req.json().catch(() => null));
+  if (!body.success) return c.json({ error: "Bad request" }, 400);
+  try {
+    return c.json(await setDemo(body.data.projectId));
   } catch (err) {
     return c.json(fail(err), 404);
   }

@@ -29,7 +29,7 @@ import {
 export type AssetInfo = Pick<Asset, "id" | "name" | "w" | "h" | "joints" | "kind" | "duration" | "hasAudio">;
 
 const num = z.number().finite();
-const time = z.number().finite().min(0).max(600);
+const time = z.number().finite().min(0).max(3600);
 const color = z.string().max(40);
 const id = z.string().min(1).max(40).regex(/^[A-Za-z0-9_-]+$/, "ids use letters, digits, _ and -");
 const easeSchema = z.enum(["linear", "easeIn", "easeOut", "easeInOut", "step"]);
@@ -127,7 +127,7 @@ export const opSchema = z.discriminatedUnion("op", [
     floor: color.optional(),
     background: color.optional(),
     backgroundImage: z.string().nullable().optional(),
-    duration: z.number().min(0.5).max(600).optional(),
+    duration: z.number().min(0.5).max(3600).optional(),
     width: z.number().int().min(64).max(3840).optional(),
     height: z.number().int().min(64).max(3840).optional(),
     fps: z.number().int().min(1).max(60).optional(),
@@ -312,7 +312,7 @@ export const opSchema = z.discriminatedUnion("op", [
   }),
   z.object({ op: z.literal("orbit"), degrees: num, at: time, duration: z.number().min(0.1).max(120) }),
   z.object({ op: z.literal("shot"), kind: z.enum(SHOT_KINDS), target: id.optional(), target2: id.optional(), at: time, duration: z.number().min(0.3).max(120) }),
-  z.object({ op: z.literal("direct"), from: z.number().min(0).max(600).optional() }),
+  z.object({ op: z.literal("direct"), from: z.number().min(0).max(3600).optional() }),
   z.object({
     op: z.literal("prop"),
     id,

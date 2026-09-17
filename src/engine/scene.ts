@@ -323,7 +323,7 @@ export interface SoundObj extends BaseObj {
   volume: number;
 }
 
-export const TEXT_STYLES = ["plain", "outline", "shadow", "box", "highlight", "lowerThird", "gradient"] as const;
+export const TEXT_STYLES = ["plain", "outline", "shadow", "glow", "box", "highlight", "lowerThird", "gradient"] as const;
 export type TextStyle = (typeof TEXT_STYLES)[number];
 
 /** x,y is the top of the text at its alignment point. */
@@ -522,7 +522,34 @@ export type SceneObj =
   | RegionObj
   | ChartObj;
 
-export const TRANSITIONS = ["cut", "fade", "slideLeft", "slideRight", "slideUp", "slideDown", "push", "zoom", "wipe", "circle", "blur", "flip"] as const;
+export const TRANSITIONS = [
+  "cut",
+  "fade",
+  "dipBlack",
+  "flash",
+  "slideLeft",
+  "slideRight",
+  "slideUp",
+  "slideDown",
+  "push",
+  "whipLeft",
+  "whipRight",
+  "zoom",
+  "zoomIn",
+  "zoomOut",
+  "spin",
+  "wipe",
+  "diagonal",
+  "clock",
+  "circle",
+  "barn",
+  "split",
+  "blinds",
+  "blur",
+  "pixelate",
+  "glitch",
+  "flip",
+] as const;
 export type TransitionKind = (typeof TRANSITIONS)[number];
 
 export type Background =

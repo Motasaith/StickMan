@@ -418,6 +418,17 @@ export function drawTextObj(ctx: Ctx, obj: TextObj, reveal: number) {
       ctx.strokeStyle = accent === "#E11D48" && !obj.accent ? "#111111" : accent;
       ctx.strokeText(shown, 0, y);
     }
+    if (style === "glow") {
+      // A neon glow: the letters drawn twice through a colored blur.
+      ctx.save();
+      ctx.shadowColor = accent;
+      ctx.shadowBlur = obj.size * 0.55;
+      ctx.fillStyle = accent;
+      ctx.fillText(shown, 0, y);
+      ctx.shadowBlur = obj.size * 0.22;
+      ctx.fillText(shown, 0, y);
+      ctx.restore();
+    }
     if (style === "shadow") {
       ctx.shadowColor = "rgba(0,0,0,0.45)";
       ctx.shadowBlur = obj.size * 0.18;
@@ -828,6 +839,183 @@ export function composeTransition(ctx: Ctx, kind: TransitionKind, p: number, A: 
       ctx.drawImage(B, 0, 0, w, h);
       ctx.filter = "none";
       break;
+    case "dipBlack":
+    case "flash": {
+      // Out to a color, then in from it.
+      ctx.fillStyle = kind === "flash" ? "#ffffff" : "#000000";
+      ctx.fillRect(0, 0, w, h);
+      const half = kind === "flash" ? 0.35 : 0.5;
+      if (p < half) {
+        ctx.globalAlpha = 1 - easeInOut(p / half);
+        ctx.drawImage(A, 0, 0, w, h);
+      } else {
+        ctx.globalAlpha = easeInOut((p - half) / (1 - half));
+        ctx.drawImage(B, 0, 0, w, h);
+      }
+      break;
+    }
+    case "whipLeft":
+    case "whipRight": {
+      // A fast push with motion blur at its peak.
+      const dir = kind === "whipLeft" ? -1 : 1;
+      const fast = p < 0.5 ? 2 * p * p * 2 * p : 1 - Math.pow(-2 * p + 2, 3) / 2;
+      const blur = Math.sin(Math.PI * p) * 24;
+      ctx.filter = `blur(${blur.toFixed(1)}px)`;
+      ctx.drawImage(A, dir * fast * w, 0, w, h);
+      ctx.drawImage(B, dir * (fast - 1) * w, 0, w, h);
+      ctx.filter = "none";
+      break;
+    }
+    case "zoomIn":
+    case "zoomOut": {
+      // Punch through: the old picture rushes past the camera and the new one lands.
+      const into = kind === "zoomIn";
+      ctx.save();
+      ctx.translate(w / 2, h / 2);
+      const sa = into ? 1 + e * 2.5 : 1 - e * 0.6;
+      ctx.scale(sa, sa);
+      ctx.globalAlpha = 1 - e;
+      ctx.filter = `blur(${(e * 10).toFixed(1)}px)`;
+      ctx.drawImage(A, -w / 2, -h / 2, w, h);
+      ctx.restore();
+      ctx.save();
+      ctx.translate(w / 2, h / 2);
+      const sb = into ? 0.6 + 0.4 * e : 1.8 - 0.8 * e;
+      ctx.scale(sb, sb);
+      ctx.globalAlpha = e;
+      ctx.filter = `blur(${((1 - e) * 10).toFixed(1)}px)`;
+      ctx.drawImage(B, -w / 2, -h / 2, w, h);
+      ctx.restore();
+      ctx.filter = "none";
+      break;
+    }
+    case "spin": {
+      ctx.fillStyle = "#000";
+      ctx.fillRect(0, 0, w, h);
+      ctx.translate(w / 2, h / 2);
+      if (p < 0.5) {
+        const k = easeInOut(p * 2);
+        ctx.rotate(k * Math.PI * 0.5);
+        ctx.scale(1 - k * 0.8, 1 - k * 0.8);
+        ctx.drawImage(A, -w / 2, -h / 2, w, h);
+      } else {
+        const k = easeInOut((p - 0.5) * 2);
+        ctx.rotate((k - 1) * Math.PI * 0.5);
+        ctx.scale(0.2 + k * 0.8, 0.2 + k * 0.8);
+        ctx.drawImage(B, -w / 2, -h / 2, w, h);
+      }
+      break;
+    }
+    case "diagonal": {
+      ctx.drawImage(A, 0, 0, w, h);
+      const x = e * (w + h);
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.lineTo(x, 0);
+      ctx.lineTo(x - h, h);
+      ctx.lineTo(0, h);
+      ctx.closePath();
+      ctx.clip();
+      ctx.drawImage(B, 0, 0, w, h);
+      break;
+    }
+    case "clock": {
+      ctx.drawImage(A, 0, 0, w, h);
+      ctx.beginPath();
+      ctx.moveTo(w / 2, h / 2);
+      ctx.arc(w / 2, h / 2, Math.hypot(w, h), -Math.PI / 2, -Math.PI / 2 + e * TAU);
+      ctx.closePath();
+      ctx.clip();
+      ctx.drawImage(B, 0, 0, w, h);
+      break;
+    }
+    case "barn": {
+      // Doors opening from the middle.
+      ctx.drawImage(B, 0, 0, w, h);
+      const off = (e * w) / 2;
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(0, 0, w / 2 - off, h);
+      ctx.clip();
+      ctx.drawImage(A, -off, 0, w, h);
+      ctx.restore();
+      ctx.beginPath();
+      ctx.rect(w / 2 + off, 0, w / 2 - off, h);
+      ctx.clip();
+      ctx.drawImage(A, off, 0, w, h);
+      break;
+    }
+    case "split": {
+      // The old picture tears into top and bottom halves that slide away.
+      ctx.drawImage(B, 0, 0, w, h);
+      const off = (e * h) / 2;
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(0, 0, w, h / 2 - off);
+      ctx.clip();
+      ctx.drawImage(A, 0, -off, w, h);
+      ctx.restore();
+      ctx.beginPath();
+      ctx.rect(0, h / 2 + off, w, h / 2 - off);
+      ctx.clip();
+      ctx.drawImage(A, 0, off, w, h);
+      break;
+    }
+    case "blinds": {
+      ctx.drawImage(A, 0, 0, w, h);
+      const bands = 10;
+      const bh = h / bands;
+      ctx.beginPath();
+      for (let i = 0; i < bands; i++) {
+        const local = Math.max(0, Math.min(1, p * 1.6 - (i / bands) * 0.6));
+        ctx.rect(0, i * bh, w, bh * easeInOut(local));
+      }
+      ctx.clip();
+      ctx.drawImage(B, 0, 0, w, h);
+      break;
+    }
+    case "pixelate": {
+      // Blocks grow on the old picture, then shrink away on the new one.
+      const src = p < 0.5 ? A : B;
+      const k = p < 0.5 ? p * 2 : (1 - p) * 2;
+      const block = Math.max(1, Math.round(easeInOut(k) * Math.min(w, h) * 0.06));
+      const canvas = (ctx as Ctx & { canvas?: CanvasImageSource }).canvas;
+      if (block <= 1 || !canvas) ctx.drawImage(src, 0, 0, w, h);
+      else {
+        const sw = Math.max(1, Math.round(w / block));
+        const sh = Math.max(1, Math.round(h / block));
+        ctx.imageSmoothingEnabled = true;
+        ctx.drawImage(src, 0, 0, sw, sh);
+        ctx.imageSmoothingEnabled = false;
+        ctx.drawImage(canvas, 0, 0, sw, sh, 0, 0, w, h);
+        ctx.imageSmoothingEnabled = true;
+      }
+      break;
+    }
+    case "glitch": {
+      // Bands of both pictures jump sideways with split color, settling on the new one.
+      const cur = p < 0.5 ? A : B;
+      ctx.drawImage(cur, 0, 0, w, h);
+      const strength = Math.sin(Math.PI * p);
+      const bands = 9;
+      for (let i = 0; i < bands; i++) {
+        const seed = Math.sin((i + 1) * 12.9898 + Math.floor(p * 18) * 78.233) * 43758.5453;
+        const r = seed - Math.floor(seed);
+        if (r > 0.55) continue;
+        const y = Math.floor((i / bands) * h);
+        const bh = Math.ceil(h / bands) * (0.4 + r);
+        const dx = (r - 0.27) * w * 0.25 * strength;
+        const from = r > 0.3 ? B : A;
+        ctx.drawImage(from, 0, y, w, bh, dx, y, w, bh);
+      }
+      if (strength > 0.2) {
+        ctx.globalCompositeOperation = "lighter";
+        ctx.globalAlpha = 0.18 * strength;
+        ctx.fillStyle = p * 10 % 2 < 1 ? "#ff0040" : "#00e5ff";
+        ctx.fillRect(0, 0, w, h);
+      }
+      break;
+    }
     case "flip": {
       ctx.fillStyle = "#000";
       ctx.fillRect(0, 0, w, h);

@@ -1,20 +1,30 @@
 // Small controls the editor panels are built from.
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useStore } from "@/store";
 
 export const run = (ops: unknown[]) => useStore.getState().run(ops);
 
 /** A titled, collapsible block of controls. */
-export function Section({ title, children, defaultOpen = true, actions }: { title: string; children: ReactNode; defaultOpen?: boolean; actions?: ReactNode }) {
+export function Section({ title, children, defaultOpen = true, actions, id, highlight }: { title: string; children: ReactNode; defaultOpen?: boolean; actions?: ReactNode; id?: string; highlight?: boolean }) {
   const [open, setOpen] = useState(defaultOpen);
+  // The AI tools menu can open a section and bring it into view.
+  useEffect(() => {
+    if (!id) return;
+    const reveal = (e: Event) => {
+      if ((e as CustomEvent<string>).detail === id) setOpen(true);
+    };
+    window.addEventListener("stickman-open-section", reveal);
+    return () => window.removeEventListener("stickman-open-section", reveal);
+  }, [id]);
   return (
-    <section className="border-b border-line px-4 py-3">
+    <section data-section={id} className={cn("scroll-mt-2 border-b border-line px-4 py-3", highlight && "bg-primary/[0.04]")}>
       <div className="flex items-center gap-2">
         <button type="button" onClick={() => setOpen(!open)} className="flex flex-1 items-center gap-2 text-left">
-          <span className="eyebrow">{title}</span>
+          <span className={cn("eyebrow", highlight && "text-primary")}>{title}</span>
+          {highlight && <Sparkles className="size-3 text-primary" />}
           <ChevronDown className={cn("size-3.5 text-muted-foreground transition", !open && "-rotate-90")} />
         </button>
         {actions}

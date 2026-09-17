@@ -8,17 +8,10 @@ import { Button } from "@/components/ui/button";
 import { api } from "@/lib/api";
 import { flushSave, useStore, type LeftTab } from "@/store";
 import type { Scene } from "@/engine/scene";
-import { Header } from "@/editor/Header";
-import { LeftPanel } from "@/editor/LeftPanel";
-import { Stage } from "@/editor/Stage";
-import { Timeline } from "@/editor/Timeline";
-import { RightPanel } from "@/editor/RightPanel";
-import { ExportDialog } from "@/editor/ExportDialog";
-import { VersionsDialog } from "@/editor/VersionsDialog";
+import { Workspace } from "@/editor/Workspace";
 import { useEditorKeys } from "@/editor/keys";
 import { askAnimator } from "@/ai";
 import { captureThumbnail } from "@/editor/thumbnail";
-import { importFiles } from "@/editor/importFiles";
 
 export default function Editor() {
   const { projectId = "" } = useParams();
@@ -26,10 +19,6 @@ export default function Editor() {
   const navigate = useNavigate();
   const [error, setError] = useState<string | null>(null);
   const [ready, setReady] = useState(false);
-  const [exportOpen, setExportOpen] = useState(false);
-  const [versionsOpen, setVersionsOpen] = useState(false);
-  const [timelineH, setTimelineH] = useState(270);
-  const [dragging, setDragging] = useState(false);
   const firstPrompt = useRef(search.get("prompt"));
 
   useEditorKeys();
@@ -115,56 +104,5 @@ export default function Editor() {
     );
   }
 
-  return (
-    <div className="flex h-screen min-h-[640px] flex-col bg-background">
-      <Header onExport={() => setExportOpen(true)} onVersions={() => setVersionsOpen(true)} />
-      <div className="flex min-h-0 flex-1">
-        <LeftPanel />
-        <main
-          className="relative flex min-w-0 flex-1 flex-col"
-          onDragEnter={(e) => e.dataTransfer.types.includes("Files") && setDragging(true)}
-        >
-          {dragging && (
-            <div
-              className="absolute inset-0 z-40 flex items-center justify-center bg-background/80 backdrop-blur-sm"
-              onDragOver={(e) => e.preventDefault()}
-              onDragLeave={(e) => e.currentTarget === e.target && setDragging(false)}
-              onDrop={(e) => {
-                e.preventDefault();
-                setDragging(false);
-                if (e.dataTransfer.files.length) void importFiles(e.dataTransfer.files, { place: true });
-              }}
-            >
-              <div className="pointer-events-none rounded-2xl border-2 border-dashed border-primary px-10 py-8 text-center">
-                <p className="font-display text-xl font-semibold">Drop videos, pictures, sounds or SVGs</p>
-                <p className="text-sm text-muted-foreground">They go into the media library and onto the canvas at the playhead.</p>
-              </div>
-            </div>
-          )}
-          <Stage />
-          <div
-            className="h-1.5 shrink-0 cursor-row-resize border-t border-line bg-panel hover:bg-primary/30"
-            onPointerDown={(e) => {
-              const startY = e.clientY;
-              const startH = timelineH;
-              const move = (ev: PointerEvent) => setTimelineH(Math.max(150, Math.min(window.innerHeight * 0.6, startH - (ev.clientY - startY))));
-              const up = () => {
-                window.removeEventListener("pointermove", move);
-                window.removeEventListener("pointerup", up);
-              };
-              window.addEventListener("pointermove", move);
-              window.addEventListener("pointerup", up);
-            }}
-          />
-          <section className="shrink-0 bg-panel" style={{ height: timelineH }}>
-            <Timeline />
-          </section>
-        </main>
-        <RightPanel />
-      </div>
-      <ExportDialog open={exportOpen} onOpenChange={setExportOpen} />
-      <VersionsDialog open={versionsOpen} onOpenChange={setVersionsOpen} />
-    </div>
-  );
+  return <Workspace className="h-screen min-h-[640px]" />;
 }
-
