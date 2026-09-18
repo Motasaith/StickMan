@@ -34,14 +34,14 @@ const PAGES: Record<string, Page> = {
         <h2>What is sent to other services, and when</h2>
         <p>Nothing leaves your computer until you use a feature that needs an online service. Then only what that feature needs is sent:</p>
         <ul>
-          <li><strong>The AI model you configure</strong> (<code>LLM_BASE_URL</code> in <code>.env</code>): your prompts, the scene being edited (objects, text, timings, media names) and, when "Check its work" is on, small still frames of the video. Its provider's privacy policy applies.</li>
+          <li><strong>The AI model you configure</strong> (AI service address in Settings): your prompts, the scene being edited (objects, text, timings, media names) and, when "Check its work" is on, small still frames of the video. Its provider's privacy policy applies.</li>
           <li><strong>Online voices</strong> (Microsoft Edge text to speech): the text to be spoken.</li>
           <li><strong>Stock and photo search</strong> (Pexels, Wikimedia Commons, NASA, Openverse): your search words, then downloads of the files you pick.</li>
           <li><strong>AI pictures</strong> (Hugging Face or Pollinations): the picture description.</li>
           <li><strong>YouTube competition check</strong> (only with <code>YOUTUBE_API_KEY</code>): the search phrase for each angle.</li>
           <li><strong>Model downloads</strong> (Hugging Face): ordinary file requests, the first time a local model is installed.</li>
         </ul>
-        <p>API keys you put in <code>.env</code> are sent only to the service they belong to, and are never shown in the app.</p>
+        <p>API keys entered in Settings are stored in the app data folder on the computer running the app. Existing <code>.env</code> configuration is also supported. Keys are sent to the configured services, and saved keys are never returned to the settings interface.</p>
 
         <h2>Voice cloning</h2>
         <p>

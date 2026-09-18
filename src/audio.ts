@@ -81,7 +81,7 @@ export function sceneClips(scene: Scene): Clip[] {
       const duration = soundLength(o.kind, o.duration);
       clips.push({ ...base, key: `sfx:${o.kind}:${o.duration.toFixed(2)}`, sound: { kind: o.kind, duration: o.duration, volume: o.volume }, at: o.at, duration, volume: o.volume });
     }
-    if (o.type === "audio" && o.asset && o.volume > 0) {
+    if (o.type === "audio" && o.role !== "music" && o.asset && o.volume > 0) {
       clips.push({ key: o.asset, asset: o.asset, at: o.start, duration: o.duration, in: o.in, rate: o.speed, volume: o.volume, fadeIn: o.fadeIn, fadeOut: o.fadeOut });
     }
     if (o.type === "video" && o.volume > 0 && !o.reverse) {

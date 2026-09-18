@@ -21,7 +21,10 @@ import { fillMissingArt, newArtCache } from "./artfill";
 import { fillBroll, newBrollCache } from "./autovideo/broll";
 import type { Asset } from "../src/engine/scene";
 
+import { settingsRoutes } from "./settings";
+
 export const app = new Hono();
+app.route("/", settingsRoutes);
 app.route("/", pro);
 app.route("/", voiceRoutes);
 app.route("/", autovideoRoutes);

@@ -1,11 +1,6 @@
 // Free stock photos and videos from Pexels (PEXELS_API_KEY in .env), as in PromptCut.
 
-import { config } from "dotenv";
-
-// Read .env again when a key is missing, so adding it doesn't need a restart.
-const ensureEnv = () => {
-  if (!process.env.PEXELS_API_KEY) config({ quiet: true });
-};
+import { setting } from "./settings";
 
 export interface StockItem {
   id: string;
@@ -23,14 +18,12 @@ export interface StockItem {
 const BASE = "https://api.pexels.com";
 
 export const stockConfigured = () => {
-  ensureEnv();
-  return !!process.env.PEXELS_API_KEY?.trim();
+  return !!setting("PEXELS_API_KEY");
 };
 
 async function pexels(path: string) {
-  ensureEnv();
-  const key = process.env.PEXELS_API_KEY?.trim();
-  if (!key) throw new Error("Stock media isn't set up: add PEXELS_API_KEY to .env (free at pexels.com/api).");
+  const key = setting("PEXELS_API_KEY");
+  if (!key) throw new Error("Stock media isn't set up: add your Pexels API key in Settings (free at pexels.com/api).");
   const res = await fetch(`${BASE}${path}`, { headers: { Authorization: key }, signal: AbortSignal.timeout(15_000) });
   if (!res.ok) throw new Error(`Pexels search failed (${res.status})`);
   return res.json() as Promise<Record<string, unknown>>;

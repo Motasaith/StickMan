@@ -89,7 +89,7 @@ export function StockTab() {
       useStore.getState().addAsset(asset);
       placeAsset(asset);
       setDrawn((d) => [{ src: up.src, id: up.id }, ...d].slice(0, 12));
-      if (up.watermark) setNotice("Free AI pictures carry a small watermark. Add a free HF_TOKEN or POLLINATIONS_API_KEY to .env to remove it.");
+      if (up.watermark) setNotice("Free AI pictures carry a small watermark. Add a Hugging Face token or Pollinations API key in Settings to remove it.");
     } catch (err) {
       toast.error("Couldn't draw that", { description: (err as Error).message });
     } finally {

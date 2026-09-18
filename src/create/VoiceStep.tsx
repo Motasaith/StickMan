@@ -85,7 +85,6 @@ export function VoiceStep({ state, patch, status }: { state: WizardState; patch:
           simple: help.simple,
           overlays: help.overlays,
           captions: state.captions,
-          music: help.music,
           intro: help.intro,
           outro: help.outro,
           channel: help.channel.trim() || undefined,
@@ -193,7 +192,7 @@ export function VoiceStep({ state, patch, status }: { state: WizardState; patch:
             ))}
           </select>
           {(help.visuals === "ai" || help.visuals === "mix") && status && !status.aiImages && (
-            <p className="mt-1 text-[11px] leading-4 text-muted-foreground">Free AI pictures come one every few seconds with a small watermark. A free HF_TOKEN or POLLINATIONS_API_KEY in .env removes both.</p>
+            <p className="mt-1 text-[11px] leading-4 text-muted-foreground">Free AI pictures come one every few seconds with a small watermark. A Hugging Face token or Pollinations API key in Settings removes both.</p>
           )}
           <label className="mt-3 block text-xs font-medium text-muted-foreground">Editing</label>
           <select value={help.simple ? "simple" : "full"} onChange={(e) => setHelp({ simple: e.target.value === "simple" })} className="mt-1 h-8 w-full border border-line bg-panel-sunken px-2 text-sm outline-none">
@@ -206,9 +205,6 @@ export function VoiceStep({ state, patch, status }: { state: WizardState; patch:
             </label>
             <label className="flex items-center gap-2">
               <input type="checkbox" checked={help.overlays} disabled={help.simple} onChange={(e) => setHelp({ overlays: e.target.checked })} /> On-screen titles and numbers
-            </label>
-            <label className="flex items-center gap-2">
-              <input type="checkbox" checked={help.music} onChange={(e) => setHelp({ music: e.target.checked })} /> Background music
             </label>
           </div>
           <label className="mt-3 block text-xs font-medium text-muted-foreground">Channel name (for the intro and outro)</label>

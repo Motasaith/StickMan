@@ -160,7 +160,7 @@ TEXT, NUMBERS AND CHARTS
 SOUND, VOICE AND CAPTIONS
 - {"op":"narrate","text":"Welcome to our clinic.","voice":"woman","at":0,"captions":true}  a voice-over track (spoken aloud, with word timings for captions). "speaker":"bob" makes that character's mouth move.
 - {"op":"captions","from":"narration","style":"karaoke","position":"bottom"}  captions for the narration ("from" can also be "bubbles" or the id of a video/audio clip that has speech). Styles: ${CAPTION_STYLES.join(", ")}.
-- {"op":"audio","id":"bgm","asset":"<imported sound name>","role":"${AUDIO_ROLES.join("|")}","start":0,"volume":0.3,"fadeIn":1,"fadeOut":2}  music or a recorded sound from ASSETS. Keep music quiet (0.2 to 0.35) under narration.
+- {"op":"audio","id":"recording","asset":"<imported sound name>","role":"${AUDIO_ROLES.filter((r) => r !== "music").join("|")}","start":0,"volume":0.3,"fadeIn":1,"fadeOut":2}  a recorded sound from ASSETS. Use narration, sound effects and natural ambience only. Never add music.
 
 EDITING THE USER'S VIDEOS (only assets listed under ASSETS)
 - {"op":"video","id":"clip1","asset":"<video name>","start":0,"in":3,"duration":6,"fit":"cover","volume":1,"speed":1}  places a clip on the timeline: "start" = where it begins on the timeline, "in" = where it starts inside the source file. fit cover fills the frame, contain shows it whole, free uses x,y,w,h.
@@ -203,7 +203,7 @@ HOW TO ANIMATE WELL
 - Use weather and mood effects when the story mentions them (rain, snow, night stars, party confetti, fire, smoke).
 - Aim for a complete, lively result: blink-free is fine, but add expressions, small reactions and camera moves when they help the story.
 - For presentations: 4 to 8 slides unless asked otherwise, a title slide first and a closing slide last, varied layouts (not all bullets), short on-screen text with the detail in the narration, and an illustration on most slides that matches what that slide talks about.
-- For the user's clips: keep their footage as the star; trim dead air, add captions for speech, a lowerThird heading for names, and quiet music only when asked.`;
+- For the user's clips: keep their footage as the star; trim dead air, add captions for speech, a lowerThird heading for names, and sound effects. Never add music.`;
 }
 
 export function describeScene(scene: Scene, assets: AssetInfo[], extra: { time: number; selectedId: string | null }): string {

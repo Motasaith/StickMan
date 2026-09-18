@@ -35,8 +35,6 @@ export interface Niche {
   footage: string;
   /** How AI pictures for this channel should look. */
   imageStyle: string;
-  /** A search for background music that fits. */
-  music: string;
   style: NicheStyle;
 }
 
@@ -64,7 +62,6 @@ export const NICHES: Niche[] = [
     voices: { edge: "narrator", studio: "preset:blend_anchor" },
     footage: "city skylines, people working on laptops, coins and cash, stock tickers, banks, calculators, families at home",
     imageStyle: "clean modern editorial photograph, soft daylight, shallow depth of field",
-    music: "corporate background music",
     style: { ...base, look: "bright", headingStyle: "highlight", accent: "#16A34A", caption: "karaoke" },
   },
   {
@@ -78,7 +75,6 @@ export const NICHES: Niche[] = [
     voices: { edge: "narrator", studio: "preset:blend_documentary" },
     footage: "office buildings at night, boardrooms, newspapers, city streets, empty warehouses, courthouses, dramatic skies",
     imageStyle: "cinematic film still, dramatic lighting, moody color grade, 35mm",
-    music: "dark cinematic ambient",
     style: { ...base, shotSeconds: 3.6, look: "cinematic", chapterTransition: "fade", caption: "outline", headingFont: "dmserif", headingStyle: "lowerThird", accent: "#DC2626", zoom: 0.1 },
   },
   {
@@ -92,7 +88,6 @@ export const NICHES: Niche[] = [
     voices: { edge: "man", studio: "kokoro:af_kore" },
     footage: "circuit boards, data centers, code on screens, smartphones, robots, futuristic city lights",
     imageStyle: "sleek futuristic photograph, cool blue light, high detail",
-    music: "electronic ambient background",
     style: { ...base, shotSeconds: 3.4, look: "cold", chapterTransition: "zoom", headingStyle: "gradient", accent: "#6366F1", caption: "pop" },
   },
   {
@@ -106,7 +101,6 @@ export const NICHES: Niche[] = [
     voices: { edge: "oldMan", studio: "preset:blend_storyteller" },
     footage: "old buildings, ruins, maps, candles, libraries, landscapes, historical reenactments",
     imageStyle: "historical scene, painterly cinematic lighting, rich detail, period accurate",
-    music: "epic orchestral ambient",
     style: { ...base, shotSeconds: 4.4, look: "vintage", chapterTransition: "fade", headingFont: "dmserif", headingStyle: "shadow", accent: "#B45309", zoom: 0.12 },
   },
   {
@@ -120,7 +114,6 @@ export const NICHES: Niche[] = [
     voices: { edge: "narrator", studio: "kokoro:am_michael" },
     footage: "space, galaxies, earth from orbit, laboratories, oceans, volcanoes, microscopes",
     imageStyle: "awe-inspiring scientific visualization, cinematic lighting, ultra detailed",
-    music: "space ambient music",
     style: { ...base, shotSeconds: 4.2, look: "cold", chapterTransition: "zoom", headingStyle: "outline", accent: "#0EA5E9" },
   },
   {
@@ -134,7 +127,6 @@ export const NICHES: Niche[] = [
     voices: { edge: "woman", studio: "kokoro:af_heart" },
     footage: "people thinking, walking alone, sunrise, journaling, coffee, city crowds, calm nature",
     imageStyle: "warm soft-focus photograph, calm natural light, human emotion",
-    music: "calm piano background",
     style: { ...base, shotSeconds: 4.6, look: "bright", chapterTransition: "fade", headingStyle: "highlight", accent: "#EC4899", caption: "karaoke" },
   },
   {
@@ -148,7 +140,6 @@ export const NICHES: Niche[] = [
     voices: { edge: "woman", studio: "kokoro:af_aoede" },
     footage: "people exercising, healthy food, doctors, sleeping, running outdoors, water, kitchens",
     imageStyle: "bright clean lifestyle photograph, natural light, healthy and fresh",
-    music: "calm acoustic background",
     style: { ...base, look: "bright", headingStyle: "box", accent: "#14B8A6" },
   },
   {
@@ -162,7 +153,6 @@ export const NICHES: Niche[] = [
     voices: { edge: "narrator", studio: "kokoro:am_fenrir" },
     footage: "foggy forests, night roads, old houses, flashlights, rain, empty rooms, radio equipment",
     imageStyle: "eerie atmospheric photograph, fog, low light, cinematic suspense",
-    music: "dark suspense ambient",
     style: { ...base, shotSeconds: 4, look: "moody", chapterTransition: "fade", headingFont: "bebas", headingStyle: "outline", accent: "#A855F7", zoom: 0.12 },
   },
   {
@@ -176,7 +166,6 @@ export const NICHES: Niche[] = [
     voices: { edge: "man", studio: "kokoro:bm_george" },
     footage: "aerial landscapes, rivers, ports and ships, cities from above, deserts, mountains, maps",
     imageStyle: "sweeping aerial landscape photograph, golden hour, high detail",
-    music: "world ambient background",
     style: { ...base, shotSeconds: 3.8, look: "vivid", chapterTransition: "wipe", headingStyle: "box", accent: "#2563EB" },
   },
   {
@@ -190,7 +179,6 @@ export const NICHES: Niche[] = [
     voices: { edge: "man", studio: "kokoro:bf_emma" },
     footage: "yachts, supercars, luxury hotels, private jets, jewelry, penthouses, fine dining",
     imageStyle: "luxurious high-end editorial photograph, elegant lighting, rich textures",
-    music: "lounge jazz background",
     style: { ...base, shotSeconds: 3.8, look: "cinematic", chapterTransition: "fade", headingFont: "abril", headingStyle: "shadow", accent: "#D4AF37" },
   },
   {
@@ -204,7 +192,6 @@ export const NICHES: Niche[] = [
     voices: { edge: "woman", studio: "preset:blend_hype" },
     footage: "close-ups, animals, everyday objects, colorful streets, quick action shots",
     imageStyle: "vivid eye-catching photograph, bold colors, sharp detail",
-    music: "upbeat electronic background",
     style: { ...base, shotSeconds: 2.4, look: "vivid", chapterTransition: "zoom", sceneTransition: "cut", caption: "pop", headingFont: "anton", headingStyle: "outline", accent: "#F59E0B", zoom: 0.14 },
   },
 ];
@@ -220,7 +207,6 @@ export const CUSTOM_NICHE: Niche = {
   voices: { edge: "narrator", studio: "kokoro:am_michael" },
   footage: "footage that fits the topic",
   imageStyle: "cinematic photograph, natural light, high detail",
-  music: "calm background music",
   style: base,
 };
 

@@ -1,7 +1,7 @@
 // OpenAI-compatible chat client (Ollama Cloud, local Ollama, OpenAI, OpenRouter...).
 // Same setup as PromptCut: LLM_BASE_URL, LLM_API_KEY, LLM_MODEL, VISION_LLM_MODEL.
 
-import "dotenv/config";
+import { setting } from "./settings";
 
 export type ChatContent = string | Array<{ type: "text"; text: string } | { type: "image_url"; image_url: { url: string } }>;
 
@@ -11,10 +11,10 @@ export interface ChatMessage {
 }
 
 export const llmConfig = () => ({
-  baseUrl: (process.env.LLM_BASE_URL ?? "").replace(/\/+$/, ""),
-  apiKey: process.env.LLM_API_KEY ?? "",
-  model: process.env.LLM_MODEL || "gpt-oss:120b",
-  visionModel: process.env.VISION_LLM_MODEL || process.env.LLM_MODEL || "gpt-oss:120b",
+  baseUrl: (setting("LLM_BASE_URL")).replace(/\/+$/, ""),
+  apiKey: setting("LLM_API_KEY"),
+  model: setting("LLM_MODEL") || "gpt-oss:120b",
+  visionModel: setting("VISION_LLM_MODEL") || setting("LLM_MODEL") || "gpt-oss:120b",
 });
 
 export async function chat(
@@ -22,7 +22,7 @@ export async function chat(
   opts: { model?: string; temperature?: number; jsonMode?: boolean; timeoutMs?: number; reasoning?: "low" | "medium" | "high" } = {}
 ): Promise<string> {
   const cfg = llmConfig();
-  if (!cfg.baseUrl) throw new Error("The AI is not set up. Put LLM_BASE_URL (and LLM_API_KEY) in .env, then restart.");
+  if (!cfg.baseUrl) throw new Error("The AI is not set up. Open Settings from the homepage and enter your AI service address and API key.");
   const model = opts.model ?? cfg.model;
   const body: Record<string, unknown> = { model, messages, temperature: opts.temperature ?? 0.4 };
   if (opts.jsonMode) body.response_format = { type: "json_object" };

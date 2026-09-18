@@ -1,4 +1,4 @@
-import { Box, Clapperboard, Globe2, Mic, Music, PawPrint, Presentation, Shapes, Smile, Sparkles, Type, Wand2 } from "lucide-react";
+import { Box, Clapperboard, Globe2, Mic, Volume2, PawPrint, Presentation, Shapes, Smile, Sparkles, Type, Wand2 } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { useStore, type LeftTab } from "@/store";
@@ -27,7 +27,7 @@ const TABS: { id: LeftTab; label: string; icon: typeof Box; ai?: string }[] = [
   { id: "characters", label: "People", icon: PawPrint, ai: "AI turns a photo into a puppet" },
   { id: "props", label: "3D", icon: Box },
   { id: "effects", label: "Effects", icon: Sparkles },
-  { id: "sounds", label: "Sounds", icon: Music, ai: "Music finder" },
+  { id: "sounds", label: "Sounds", icon: Volume2 },
   { id: "record", label: "Record", icon: Mic },
 ];
 

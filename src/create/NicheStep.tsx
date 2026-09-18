@@ -146,9 +146,6 @@ export function NicheStep({ state, patch }: { state: WizardState; patch: Patch }
             <label className="flex items-center gap-2 text-sm">
               <input type="checkbox" checked={help.overlays} onChange={(e) => setHelp({ overlays: e.target.checked })} /> On-screen titles, numbers and lists
             </label>
-            <label className="flex items-center gap-2 text-sm">
-              <input type="checkbox" checked={help.music} onChange={(e) => setHelp({ music: e.target.checked })} /> Background music (Creative Commons)
-            </label>
           </div>
         )}
       </section>

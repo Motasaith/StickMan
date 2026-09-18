@@ -1,9 +1,9 @@
 // Free media beyond Pexels, none of which needs a key: real photos from Wikimedia Commons
-// and NASA, Creative Commons pictures and music from Openverse, and AI pictures from
+// and NASA, Creative Commons pictures from Openverse, and AI pictures from
 // Pollinations (POLLINATIONS_API_KEY removes their watermark and the slow anonymous limit),
 // or FLUX on Hugging Face when HF_TOKEN is set.
 
-import { config } from "dotenv";
+import { setting } from "./settings";
 import { downloadStock, searchStock, type StockItem } from "./stock";
 
 export type SourceId = "pexels" | "wikimedia" | "nasa" | "openverse";
@@ -14,10 +14,7 @@ export interface MediaItem extends StockItem {
 }
 
 const UA = "StickmanStudio/1.0 (local video editor; https://github.com/)";
-const env = (name: string) => {
-  if (!process.env[name]) config({ quiet: true });
-  return process.env[name]?.trim() ?? "";
-};
+const env = setting;
 
 // Downloads are only allowed for files the server itself found, so the endpoint can't be
 // pointed at arbitrary addresses.
@@ -136,39 +133,6 @@ async function openverseImages(query: string, perPage: number): Promise<MediaIte
   }));
 }
 
-export interface MusicItem {
-  id: string;
-  title: string;
-  src: string;
-  duration: number;
-  credit: string;
-  license: string;
-  page: string;
-  genres: string[];
-}
-
-/** Creative Commons music and sound that allows commercial use. */
-export async function searchMusic(query: string, opts: { minSeconds?: number; perPage?: number } = {}): Promise<MusicItem[]> {
-  const data = (await getJson(
-    `https://api.openverse.org/v1/audio/?q=${encodeURIComponent(query)}&page_size=${opts.perPage ?? 20}&license_type=commercial,modification&mature=false`
-  )) as { results?: Array<{ id: string; title?: string; url: string; duration?: number | null; creator?: string; license: string; license_version?: string; foreign_landing_url?: string; genres?: string[] | null; filetype?: string | null }> };
-  const min = (opts.minSeconds ?? 0) * 1000;
-  const items = (data.results ?? [])
-    .filter((r) => (r.duration ?? 0) >= min && /\.(mp3|ogg|wav|m4a|flac)(\?|$)/i.test(r.url))
-    .map((r) => ({
-      id: `openverse-audio-${r.id}`,
-      title: (r.title ?? "Track").replace(/\.(mp3|wav|ogg|flac)$/i, "").slice(0, 80),
-      src: r.url,
-      duration: Math.round((r.duration ?? 0) / 100) / 10,
-      credit: `"${(r.title ?? "Track").slice(0, 60)}" by ${r.creator ?? "unknown"}, CC ${r.license.toUpperCase()} ${r.license_version ?? ""}`.trim(),
-      license: `CC ${r.license.toUpperCase()}`,
-      page: r.foreign_landing_url ?? "",
-      genres: r.genres ?? [],
-    }));
-  remember(items);
-  return items;
-}
-
 export const SOURCES: Array<{ id: SourceId; label: string; kinds: Array<"image" | "video">; blurb: string }> = [
   { id: "pexels", label: "Pexels", kinds: ["video", "image"], blurb: "Stock video and photos" },
   { id: "wikimedia", label: "Wikimedia", kinds: ["image"], blurb: "Real photos: people, places, history" },
@@ -261,7 +225,7 @@ export async function generateImage(prompt: string, w: number, h: number, seed: 
       }
       await new Promise((r) => setTimeout(r, 12_000 * (attempt + 1)));
     }
-    throw new Error("The free AI picture service is busy. Try again in a minute, or add POLLINATIONS_API_KEY to .env.");
+    throw new Error("The free AI picture service is busy. Try again in a minute, or add your Pollinations API key in Settings.");
   };
   const job = anonQueue.then(run, run);
   anonQueue = job.catch(() => {});

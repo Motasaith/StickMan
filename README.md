@@ -23,8 +23,8 @@ Open **AI video** on the home page (or `/create`). First choose how much the AI 
 - **Only visuals**: your script and voice, plain cuts, no overlays or music.
 - **Fine-tune** mixes these per part: script (AI / polish my draft / mine), voice (AI / mine),
   visuals (Pexels stock, AI pictures, real photos from Wikimedia, NASA and Openverse, a mix, or
-  none), editing (transitions and zooms, or plain cuts), on-screen text, captions, Creative
-  Commons background music, and the channel name.
+  none), editing (transitions and zooms, or plain cuts), on-screen text, captions, and the
+  channel name. Add sound effects from the editor.
 
 Then:
 
@@ -37,7 +37,7 @@ Then:
    best lines and completes the rest), length (a 60-second vertical short up to 12 minutes),
    tone and narration language.
 3. **Angle**: five fresh takes and the takes that are already everywhere on YouTube. With
-   `YOUTUBE_API_KEY` in `.env` each angle shows real competition from YouTube search (views of
+   a YouTube API key in Settings each angle shows real competition from YouTube search (views of
    the top results); without it, it is the AI's judgment.
 4. **Script**: scene by scene, with chapters, narration, Pexels searches, photo or video, and
    on-screen text (titles, counting numbers, lists, name bars, quotes). Edit anything, rewrite a
@@ -66,7 +66,7 @@ Then:
   10 seconds apart), ready to paste into the description.
 - **Subtitles** as `.srt` or `.vtt`, timed to the narration words.
 - **Make a Short**: a 9:16 video under a minute from the opening scenes of a long AI video,
-  reusing its voices, footage and music.
+  reusing its voices and footage.
 - Uploading straight to YouTube needs Google OAuth and is not built in; export the MP4 and use
   the details above.
 
@@ -77,7 +77,7 @@ Then:
 - AI pictures: FLUX.1 schnell on Hugging Face when `HF_TOKEN` is set (free monthly credits,
   `HF_IMAGE_MODEL` picks another model), otherwise Pollinations (anonymous use is slow and
   watermarked; `POLLINATIONS_API_KEY` removes both).
-- Music: Creative Commons tracks from Openverse, in the Sounds tab and in builds.
+- Sound effects and natural ambience: made locally, available in the Sounds tab.
 - The editor's Stock tab searches all of these and draws AI pictures.
 - **Finding the AI tools**: the home page lists them under "AI features". In the editor, the
   **AI tools** button in the header lists every one and jumps to it, left-rail tabs with an AI
@@ -196,7 +196,24 @@ npm install
 npm run dev          # http://localhost:5178
 ```
 
-The AI uses any OpenAI-compatible API, set in `.env` (same settings as PromptCut):
+Open **Settings** in the homepage navbar to enter your AI service address, model and API key.
+Optional Pexels, YouTube, Pollinations and Hugging Face keys are available there too.
+Use **Test connection** beside each key to check a draft or the hidden saved key without
+saving changes. The AI test makes a short request using the selected model. Other tests check
+service access or token validity; they do not generate images. Tests may use provider credit
+or quota. Each result explains what was checked and any errors.
+
+Changes apply immediately to new requests, with no restart. Saved secrets are hidden; leave
+a key field blank to keep it, or choose Remove and save to disable it. Settings are stored
+in `settings.json` in the app data folder (by default `~/.stickman-studio`), outside projects
+and browser storage. This file contains secrets; protect it like your other credentials.
+Settings are shared by this local installation and can only be managed through localhost.
+
+Music is disabled in video creation, the sound library and playback/export of tracks marked
+as music. Narration, uploaded recordings, sound effects and natural ambience are available.
+
+Advanced users can still configure an OpenAI-compatible API in `.env`. Values saved through
+Settings take precedence, including removed keys (same variable names as PromptCut):
 
 ```
 LLM_BASE_URL=https://ollama.com/v1
@@ -298,7 +315,8 @@ prompt ──> PLAN (LLM_MODEL)       returns ops: draw, character, walk, write,
 ## Tests
 
 ```bash
-npm test                                           # engine unit tests
+npm test                                           # engine and settings tests
+node scripts/settings-ui.mjs <outDir>              # isolated settings and sound-effects browser checks
 npx tsx scripts/try-ai.ts "<prompt>" out.json      # one real AI plan, no browser
 npx tsx scripts/contact-sheet.ts out.json sheet.png 4 0.5 1.5 2.5   # look at frames
 node scripts/ai-pro.mjs <outDir> --kind presentation --prompt "<prompt>" [--export]   # real AI run from the home page (dev server up)

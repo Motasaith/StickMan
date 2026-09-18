@@ -3,7 +3,7 @@
 
 import { useEffect, useState } from "react";
 import { Link } from "react-router";
-import { Captions, Clapperboard, Film, ImageIcon, Mic2, Music, Palette, PenTool, MonitorPlay, Sparkles, Wand2 } from "lucide-react";
+import { Captions, Clapperboard, Film, ImageIcon, Mic2, Palette, PenTool, MonitorPlay, Sparkles, Wand2 } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { useStore, type LeftTab } from "@/store";
@@ -45,7 +45,6 @@ const TOOLS: Tool[] = [
   { label: "Intros and outros", blurb: "Animated title and end screens", icon: Clapperboard, run: section("intro") },
   { label: "YouTube kit", blurb: "Thumbnail, Short, subtitles, chapters", icon: MonitorPlay, run: section("youtube") },
   { label: "Captions and voice", blurb: "Narration with word-timed captions", icon: Captions, run: director("Add a natural narration voice and word-by-word captions") },
-  { label: "Music finder", blurb: "Free background tracks", icon: Music, run: left("sounds") },
   { label: "Restyle the video", blurb: "Themes, color looks, transitions", icon: Palette, run: director("Give this video a more cinematic look with smoother transitions") },
   { label: "Voice studio", blurb: "Blend or clone your own voice", icon: Mic2, href: "/voices" },
   { label: "New AI video", blurb: "Idea or script to finished video", icon: Sparkles, href: "/create" },

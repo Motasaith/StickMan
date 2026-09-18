@@ -10,7 +10,7 @@ import { cancelJob } from "../jobs";
 import { rewriteScene, splitScript, suggestAngles, writeScript } from "./writer";
 import { importMedia, mediaPath, mediaUrl, MAX_UPLOAD_BYTES } from "../media";
 import { SPEECH_LANGUAGES, transcribe, type SpeechLanguage } from "../stt";
-import { SOURCES, aiImagesKeyed, downloadMedia, generateImage, searchMedia, searchMusic } from "../sources";
+import { SOURCES, aiImagesKeyed, downloadMedia, generateImage, searchMedia } from "../sources";
 import { INTROS, OUTROS } from "../../src/engine/intros";
 import { checkCompetition, youtubeConfigured } from "./youtube";
 import { startBuild } from "./pipeline";
@@ -109,7 +109,7 @@ autovideoRoutes.get("/api/media-search", async (c) => {
   const o = c.req.query("orientation");
   const orientation = o === "portrait" || o === "square" ? o : "landscape";
   if (!q) return c.json({ items: [] });
-  if (source === "pexels" && !stockConfigured()) return c.json({ items: [], error: "Add PEXELS_API_KEY to .env for Pexels." });
+  if (source === "pexels" && !stockConfigured()) return c.json({ items: [], error: "Add your Pexels API key in Settings." });
   try {
     return c.json({ items: await searchMedia(source, q, kind, orientation, 24) });
   } catch (err) {
@@ -127,16 +127,6 @@ autovideoRoutes.post("/api/media-search/import", async (c) => {
     return c.json({ ...info, src: mediaUrl(info.file) });
   } catch (err) {
     return c.json(fail(err), 502);
-  }
-});
-
-autovideoRoutes.get("/api/music/search", async (c) => {
-  const q = (c.req.query("q") ?? "").trim().slice(0, 100);
-  if (!q) return c.json({ items: [] });
-  try {
-    return c.json({ items: await searchMusic(q, { minSeconds: Number(c.req.query("min") ?? 20) || 0, perPage: 20 }) });
-  } catch (err) {
-    return c.json({ ...fail(err), items: [] }, 502);
   }
 });
 
@@ -219,7 +209,6 @@ autovideoRoutes.post("/api/autovideo/build", async (c) => {
           simple: z.boolean().default(false),
           overlays: z.boolean().default(true),
           captions: z.boolean().default(true),
-          music: z.boolean().default(false),
           intro: z.string().max(30).nullable().default(null),
           outro: z.string().max(30).nullable().default(null),
           channel: z.string().max(60).optional(),

@@ -1,8 +1,8 @@
 // Building an AI video: voice every scene (or cut the creator's own recording into scenes),
-// find visuals, cut the timeline, add intro, outro and music, and save it as a project.
+// find visuals, cut the timeline, add intro and outro, and save it as a project.
 
 import { buildFootage, type SceneMedia, type ScriptScene, type VideoScript } from "../../src/engine/footage";
-import { isLocalVoice, type Asset, type AudioObj, type VoiceRef, type Word } from "../../src/engine/scene";
+import { isLocalVoice, type Asset, type VoiceRef, type Word } from "../../src/engine/scene";
 import { nicheById } from "../../src/engine/niches";
 import { alignScenes } from "../../src/engine/align";
 import { addIntro, addOutro } from "../../src/engine/intros";
@@ -12,8 +12,7 @@ import { startJob, type Job } from "../jobs";
 import { voiceLine, type Voiced } from "../voices/speak";
 import { engineVoiceFor } from "../voices/local";
 import { assetFromInfo, gatherFootage, type VisualMode } from "./stock";
-import { importMedia, mediaInfo } from "../media";
-import { downloadMedia, searchMusic } from "../sources";
+import { mediaInfo } from "../media";
 
 export interface BuildOptions {
   visuals: VisualMode;
@@ -21,7 +20,6 @@ export interface BuildOptions {
   simple: boolean;
   overlays: boolean;
   captions: boolean;
-  music: boolean;
   intro: string | null;
   outro: string | null;
   channel?: string;
@@ -63,7 +61,6 @@ export function startBuild(req: BuildRequest): Job<BuildResult> {
     { key: "voice", label: req.recording ? "Matching your recording to the scenes" : "Recording the narration" },
     { key: "footage", label: o.visuals === "ai" ? "Planning AI pictures" : o.visuals === "none" ? "Leaving space for your visuals" : "Finding visuals" },
     { key: "download", label: o.visuals === "ai" ? "Drawing AI pictures" : "Downloading clips and photos" },
-    ...(o.music ? [{ key: "music", label: "Finding background music" }] : []),
     { key: "edit", label: "Editing the timeline" },
     { key: "save", label: "Saving the project" },
   ];
@@ -150,40 +147,7 @@ export function startBuild(req: BuildRequest): Job<BuildResult> {
     notes(footage.notes);
     if (footage.misses && o.visuals !== "none") ctl.note(`${footage.misses} scene${footage.misses > 1 ? "s" : ""} found no visuals and use a colored background; add your own from the Stock or Media tab.`);
 
-    // 3. Music.
-    let music: { asset: Asset; duration: number; credit: string } | null = null;
-    if (o.music) {
-      ctl.step("music", { state: "running" });
-      try {
-        const tracks = await searchMusic(niche.music, { minSeconds: 45 });
-        // Some music hosts are slow: try a few tracks, public domain first, each with a short timeout.
-        const slow = (t: { src: string }) => (/freesound.org/.test(t.src) ? 1 : 0);
-        const order = [...tracks].sort((a, b) => slow(a) - slow(b) || Number(b.license === "CC CC0") - Number(a.license === "CC CC0")).slice(0, 4);
-        if (!order.length) throw new Error("no track found");
-        let pick = order[0];
-        let bytes: Buffer | null = null;
-        let lastError = "";
-        for (const t of order) {
-          ctl.check();
-          try {
-            bytes = await downloadMedia(t.src, 45_000);
-            pick = t;
-            break;
-          } catch (err) {
-            lastError = (err as Error).message;
-          }
-        }
-        if (!bytes) throw new Error(lastError || "download failed");
-        const info = await importMedia(bytes, `${pick.title.slice(0, 40)}.mp3`, { origin: "music", credit: pick.credit });
-        music = { asset: assetFromInfo(info, pick.title), duration: info.duration ?? pick.duration, credit: pick.credit };
-        ctl.step("music", { state: "done", detail: pick.title });
-      } catch (err) {
-        ctl.step("music", { state: "failed", detail: (err as Error).message });
-        ctl.note("No background music was added. Add a track from the Sounds or Media tab.");
-      }
-    }
-
-    // 4. The edit.
+    // 3. The edit.
     ctl.check();
     ctl.step("edit", { state: "running" });
     const sceneMedia: SceneMedia[] = script.scenes.map((_, i) => ({ narration: media[i], shots: footage.shots[i] ?? [] }));
@@ -210,53 +174,22 @@ export function startBuild(req: BuildRequest): Job<BuildResult> {
       scene = r.scene;
       problems.push(...r.problems);
     }
-    if (music) {
-      // The track repeats under the whole video, quietly, fading in and out.
-      const len = Math.max(10, music.duration - 0.5);
-      const copies = Math.ceil(scene.duration / len);
-      for (let k = 0; k < copies; k++) {
-        const start = round(k * len);
-        const duration = round(Math.min(len, scene.duration - start));
-        if (duration < 0.5) continue;
-        const track: AudioObj = {
-          id: `music${k + 1}`,
-          name: `Music ${k + 1}`,
-          x: 0,
-          y: 0,
-          rotation: 0,
-          scale: 1,
-          opacity: 1,
-          tracks: {},
-          type: "audio",
-          asset: music.asset.id,
-          role: "music",
-          start,
-          duration,
-          in: 0,
-          speed: 1,
-          volume: 0.13,
-          fadeIn: k === 0 ? 2 : 0.4,
-          fadeOut: k === copies - 1 ? 3 : 0.4,
-        };
-        scene.objects.push(track);
-      }
-    }
     syncCaptions(scene);
     for (const p of problems.slice(0, 3)) ctl.note(`Edit: ${p}`);
     scene.publish = {
       title: script.title,
-      description: [script.description, footage.credits.length ? `\nVisuals: ${footage.credits.slice(0, 20).join("; ")}.` : "", music ? `\nMusic: ${music.credit}.` : ""].join("").trim(),
+      description: [script.description, footage.credits.length ? `\nVisuals: ${footage.credits.slice(0, 20).join("; ")}.` : ""].join("").trim(),
       tags: script.tags,
       thumbnailText: script.thumbnailText,
       checks: script.checks,
-      credits: [...footage.credits, ...(music ? [music.credit] : []), voiceCredit].filter(Boolean),
+      credits: [...footage.credits, voiceCredit].filter(Boolean),
       niche: niche.label,
     };
     ctl.step("edit", { state: "done", detail: `${script.scenes.length} scenes, ${Math.round(scene.duration)}s` });
 
-    // 5. Save.
+    // 4. Save.
     ctl.step("save", { state: "running" });
-    const assets: Asset[] = [...footage.assets, ...extraAssets, ...(music ? [music.asset] : [])];
+    const assets: Asset[] = [...footage.assets, ...extraAssets];
     const project = await createProject({ title: script.title.slice(0, 100), scene, assets, kind: "video" });
     ctl.step("save", { state: "done" });
     return { projectId: project.id, seconds: scene.duration, scenes: script.scenes.length, clips: footage.assets.length };

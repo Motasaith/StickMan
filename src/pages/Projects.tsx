@@ -50,7 +50,7 @@ interface Template {
 }
 
 const AI_FEATURES: { title: string; blurb: string; icon: typeof Film; href: string; tag: string }[] = [
-  { title: "AI video maker", blurb: "An idea, your script or your recording becomes an edited video with b-roll, music and captions.", icon: Wand2, href: "/create", tag: "YouTube" },
+  { title: "AI video maker", blurb: "An idea, your script or your recording becomes an edited video with b-roll, narration and captions.", icon: Wand2, href: "/create", tag: "YouTube" },
   { title: "Voice studio", blurb: "40 natural voices, blends no other channel has, and cloning from 10 seconds of speech.", icon: Mic2, href: "/voices", tag: "Voices" },
   { title: "AI Director", blurb: "Say what to change and it edits the timeline: scenes, captions, transitions, grades.", icon: Sparkles, href: "#demo", tag: "Editor" },
   { title: "Thumbnails and Shorts", blurb: "Four thumbnail layouts, a vertical Short from any video, chapters and subtitle files.", icon: ImagePlus, href: "#demo", tag: "Publish" },
@@ -146,9 +146,10 @@ export default function Projects() {
   return (
     <div className="min-h-full bg-background text-foreground">
       <div className="mx-auto max-w-[1200px] px-6">
-        <header className="flex h-[88px] items-center justify-between border-b border-line">
+        <header className="flex min-h-[88px] gap-4 py-4 items-center justify-between border-b border-line">
           <Logo className="h-7" />
-          <nav className="flex items-center gap-6 text-sm">
+          <nav className="flex flex-wrap items-center justify-end gap-3 text-sm lg:gap-6">
+            <Link to="/settings" className="hover:text-primary">Settings</Link>
             <Link to="/create" className="flex items-center gap-1.5 hover:text-primary">
               <Wand2 className="size-4" /> AI video
             </Link>

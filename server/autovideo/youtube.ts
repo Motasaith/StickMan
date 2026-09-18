@@ -1,7 +1,7 @@
 // How crowded a topic already is on YouTube, from real search results. Needs YOUTUBE_API_KEY
 // (YouTube Data API v3, free quota); without it the angles only carry the AI's own judgment.
 
-import { config } from "dotenv";
+import { setting } from "../settings";
 
 export interface Competition {
   level: "low" | "medium" | "high";
@@ -12,10 +12,7 @@ export interface Competition {
   top: Array<{ title: string; channel: string; views: number; published: string }>;
 }
 
-const key = () => {
-  if (!process.env.YOUTUBE_API_KEY) config({ quiet: true });
-  return process.env.YOUTUBE_API_KEY?.trim() || "";
-};
+const key = () => setting("YOUTUBE_API_KEY");
 
 export const youtubeConfigured = () => !!key();
 

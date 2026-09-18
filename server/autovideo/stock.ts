@@ -173,7 +173,7 @@ export async function gatherFootage(scenes: ScriptScene[], o: GatherOptions): Pr
     }
     o.onProgress("download", ++done, flat.length);
   });
-  if (watermark) notes.add("AI pictures from the free Pollinations service carry a small watermark. Add a free HF_TOKEN or POLLINATIONS_API_KEY to .env to remove it.");
+  if (watermark) notes.add("AI pictures from the free Pollinations service carry a small watermark. Add a Hugging Face token or Pollinations API key in Settings to remove it.");
 
   const assets: Asset[] = [];
   const credits = new Set<string>();

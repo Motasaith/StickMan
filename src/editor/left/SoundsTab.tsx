@@ -4,7 +4,6 @@ import { soundBuffer } from "@/sfx";
 import { audioContext } from "@/audio";
 import { useStore } from "@/store";
 import { PanelHeader, GroupLabel } from "./common";
-import { MusicSearch } from "./MusicSearch";
 
 const LABEL: Record<SoundKind, string> = {
   pop: "Pop", boing: "Boing", whoosh: "Whoosh", thud: "Thud", ding: "Ding", click: "Click", splash: "Splash", applause: "Applause", thunder: "Thunder", magic: "Magic",
@@ -24,10 +23,8 @@ async function hear(kind: SoundKind) {
 export function SoundsTab() {
   return (
     <>
-      <PanelHeader title="Music and sound effects" subtitle="Creative Commons music you can use in monetized videos, and effects made on your computer." />
+      <PanelHeader title="Sound effects" subtitle="Effects and natural ambience made on your computer." />
       <div className="min-h-0 flex-1 overflow-y-auto px-4 py-3">
-        <GroupLabel>Music</GroupLabel>
-        <MusicSearch />
         <GroupLabel>Effects (click to add at the playhead)</GroupLabel>
         <div className="flex flex-col gap-1">
           {SOUND_KINDS.map((k) => (
@@ -49,7 +46,7 @@ export function SoundsTab() {
             </div>
           ))}
         </div>
-        <p className="mt-3 text-xs leading-relaxed text-muted-foreground">Voices come from the AI Director (narration and speech bubbles) or from Record. Upload your own music or sounds in Media.</p>
+        <p className="mt-3 text-xs leading-relaxed text-muted-foreground">Voices come from the AI Director (narration and speech bubbles) or from Record. Upload your own recordings or sound effects in Media.</p>
       </div>
     </>
   );

@@ -127,7 +127,6 @@ export const api = {
     fetch(`/api/media-search?source=${source}&q=${encodeURIComponent(q)}&kind=${kind}&orientation=${orientation}`).then((r) => json<{ items: MediaItem[] }>(r)),
   mediaImport: (item: { src: string; credit: string; kind: "image" | "video" | "audio" }, name: string, origin?: string) =>
     post("/api/media-search/import", { src: item.src, credit: item.credit, kind: item.kind, name, origin }).then((r) => json<MediaUpload>(r)),
-  musicSearch: (q: string) => fetch(`/api/music/search?q=${encodeURIComponent(q)}`).then((r) => json<{ items: MusicItem[] }>(r)),
   aiImage: (prompt: string, w: number, h: number, seed?: number) => post("/api/ai/image", { prompt, w, h, seed }).then((r) => json<MediaUpload & { watermark: boolean }>(r)),
   stockSearch: (q: string, kind: "image" | "video", orientation: string) =>
     fetch(`/api/stock/search?q=${encodeURIComponent(q)}&kind=${kind}&orientation=${orientation}`).then((r) => json<{ items: StockItem[]; configured: boolean }>(r)),
@@ -278,7 +277,6 @@ export interface BuildOptions {
   simple: boolean;
   overlays: boolean;
   captions: boolean;
-  music: boolean;
   intro: string | null;
   outro: string | null;
   channel?: string;
@@ -304,15 +302,4 @@ export interface AutovideoStatus {
 export interface MediaItem extends StockItem {
   source: string;
   license?: string;
-}
-
-export interface MusicItem {
-  id: string;
-  title: string;
-  src: string;
-  duration: number;
-  credit: string;
-  license: string;
-  page: string;
-  genres: string[];
 }

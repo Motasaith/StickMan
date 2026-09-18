@@ -28,17 +28,16 @@ export interface HelpChoices {
   /** Straight cuts instead of the full edit (transitions, zooms, titles). */
   simple: boolean;
   overlays: boolean;
-  music: boolean;
   intro: string | null;
   outro: string | null;
   channel: string;
 }
 
 export const HELP_PRESETS: Array<{ id: string; label: string; blurb: string; help: Partial<HelpChoices> }> = [
-  { id: "full", label: "Full AI", blurb: "The AI writes, voices, finds footage and edits.", help: { script: "ai", voice: "ai", visuals: "stock", simple: false, overlays: true, music: true } },
-  { id: "script", label: "My script", blurb: "Your words, kept exactly. The AI voices, finds visuals and edits.", help: { script: "mine", voice: "ai", visuals: "stock", simple: false, overlays: true, music: true } },
-  { id: "voice", label: "My voice", blurb: "Record or upload your narration. The AI transcribes it, finds visuals and edits.", help: { script: "mine", voice: "mine", visuals: "stock", simple: false, overlays: true, music: true } },
-  { id: "visuals", label: "Only visuals", blurb: "Your script and your voice. The AI only finds footage and makes simple cuts.", help: { script: "mine", voice: "mine", visuals: "stock", simple: true, overlays: false, music: false } },
+  { id: "full", label: "Full AI", blurb: "The AI writes, voices, finds footage and edits.", help: { script: "ai", voice: "ai", visuals: "stock", simple: false, overlays: true } },
+  { id: "script", label: "My script", blurb: "Your words, kept exactly. The AI voices, finds visuals and edits.", help: { script: "mine", voice: "ai", visuals: "stock", simple: false, overlays: true } },
+  { id: "voice", label: "My voice", blurb: "Record or upload your narration. The AI transcribes it, finds visuals and edits.", help: { script: "mine", voice: "mine", visuals: "stock", simple: false, overlays: true } },
+  { id: "visuals", label: "Only visuals", blurb: "Your script and your voice. The AI only finds footage and makes simple cuts.", help: { script: "mine", voice: "mine", visuals: "stock", simple: true, overlays: false } },
 ];
 
 export interface WizardState {
@@ -61,7 +60,7 @@ export interface WizardState {
 
 const KEY = "stickman-create";
 
-export const defaultHelp = (): HelpChoices => ({ script: "ai", voice: "ai", visuals: "stock", simple: false, overlays: true, music: true, intro: null, outro: null, channel: "" });
+export const defaultHelp = (): HelpChoices => ({ script: "ai", voice: "ai", visuals: "stock", simple: false, overlays: true, intro: null, outro: null, channel: "" });
 
 const fresh = (): WizardState => ({
   help: defaultHelp(),
@@ -195,8 +194,9 @@ export default function Create() {
 
         {status && (!status.ai || (!status.stock && state.help.visuals !== "none" && state.help.visuals !== "ai")) && (
           <div className="mb-6 border border-warn/50 bg-warn/10 p-4 text-sm">
-            {!status.ai && <p>The AI isn't set up: add LLM_BASE_URL and LLM_API_KEY to .env, then restart.</p>}
-            {!status.stock && <p>Stock footage isn't set up: add PEXELS_API_KEY to .env (free at pexels.com/api). Videos will use colored backgrounds until then.</p>}
+            <Link to="/settings" className="underline">Open Settings</Link>
+            {!status.ai && <p>The AI isn't set up: open Settings and enter your AI service address and API key.</p>}
+            {!status.stock && <p>Stock footage isn't set up: add your Pexels API key in Settings (free at pexels.com/api). Videos will use colored backgrounds until then.</p>}
           </div>
         )}
 

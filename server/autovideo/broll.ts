@@ -23,7 +23,7 @@ export async function fillBroll(rawOps: unknown[], scene: Scene, cache: BrollCac
   if (!wanted.length) return { ops: rawOps, assets: [], notes: [] };
   const notes: string[] = [];
   if (!stockConfigured()) {
-    return { ops: ops.filter((o) => o?.op !== "broll"), assets: [], notes: ["New footage needs PEXELS_API_KEY in .env."] };
+    return { ops: ops.filter((o) => o?.op !== "broll"), assets: [], notes: ["New footage needs a Pexels API key in Settings."] };
   }
   const orientation = scene.height > scene.width ? "portrait" : "landscape";
   const assets: Asset[] = [];

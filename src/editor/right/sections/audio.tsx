@@ -111,7 +111,7 @@ export function AudioSection({ obj }: { obj: AudioObj }) {
       )}
       {!narration && (
         <Row label="Kind">
-          <SelectField value={obj.role} options={AUDIO_ROLES} onChange={(v) => edit({ role: v })} />
+          <SelectField value={obj.role} options={AUDIO_ROLES.filter((role) => role !== "music")} onChange={(v) => edit({ role: v })} />
         </Row>
       )}
       <div className="grid grid-cols-2 gap-x-3">

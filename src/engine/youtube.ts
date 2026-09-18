@@ -133,9 +133,6 @@ export function makeShort(scene: Scene, assets: Asset[], maxSeconds = 58): Short
   const out = built.scene;
   out.title = `${script.title} (Short)`.slice(0, 100);
   out.publish = scene.publish ? { ...scene.publish, title: `${script.title.slice(0, 90)} #shorts`, tags: [...scene.publish.tags, "shorts"].slice(0, 30) } : undefined;
-  // Keep the long video's background music under the Short.
-  const music = scene.objects.find((o): o is AudioObj => o.type === "audio" && o.role === "music" && !!o.asset);
-  if (music) out.objects.push({ ...music, id: "music1", slide: undefined, start: 0, in: 0, duration: Math.min(out.duration, byId.get(music.asset!)?.duration ?? out.duration), fadeIn: 1, fadeOut: 2 });
   syncCaptions(out);
   return { scene: out, scenes: script.scenes.length, problems: built.problems };
 }

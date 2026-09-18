@@ -19,6 +19,7 @@ import { loadFonts } from "./fonts";
 const Editor = lazy(() => import("@/pages/Editor"));
 const Create = lazy(() => import("@/pages/Create"));
 const Voices = lazy(() => import("@/pages/Voices"));
+const Settings = lazy(() => import("@/pages/Settings"));
 const Legal = lazy(() => import("@/pages/Legal"));
 
 if (import.meta.env.DEV) installDebugHandle();
@@ -39,6 +40,7 @@ createRoot(document.getElementById("root")!).render(
         <Suspense fallback={<Loading />}>
           <Routes>
             <Route path="/" element={<Projects />} />
+            <Route path="/settings" element={<Settings />} />
             <Route path="/create" element={<Create />} />
             <Route path="/voices" element={<Voices />} />
             <Route path="/legal/:page" element={<Legal />} />

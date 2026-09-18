@@ -56,7 +56,7 @@ export function AngleStep({ state, patch, youtube }: { state: WizardState; patch
           <p className="eyebrow mb-2">Stand out</p>
           <h2 className="font-display text-2xl font-semibold">Pick an angle nobody has worn out</h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            {youtube ? "Competition comes from live YouTube search results." : "Competition is the AI's judgment. Add YOUTUBE_API_KEY to .env to check real YouTube results."}
+            {youtube ? "Competition comes from live YouTube search results." : "Competition is the AI's judgment. Add your YouTube API key in Settings to check real YouTube results."}
           </p>
         </div>
         <Button variant="outline" className="gap-2 rounded-none" disabled={!!busy} onClick={more}>
